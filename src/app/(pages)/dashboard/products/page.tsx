@@ -1,5 +1,7 @@
 import { getAllCategories, getAllItems } from "@/lib/supabase/getItems";
 import ListComponent from "@/components/dashboard/listcomponent";
+import AddProductModal from "@/components/dashboard/addproductmodal";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 export default async function ProductsDashboard(){
 
@@ -12,6 +14,7 @@ export default async function ProductsDashboard(){
                {items?.map((item: any) => (
                   <ListComponent key={item.id} props={{type: "products", ...item, catList:categories}} />
                 ))}
+               <AddProductModal catList={{catList: categories}}/>
             </div>
         );
     }else{

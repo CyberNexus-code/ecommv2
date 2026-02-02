@@ -2,6 +2,7 @@
 
 import {useState, useEffect} from 'react'
 import { createClient } from '@/lib/supabase/client';
+import { updateProduct } from '@/app/_actions/productActions';
 
 export default function EditProductModal({product, onClose}: {product: any, onClose: ()=>void}) {
     const [name, setName] = useState(product.name);
@@ -10,28 +11,14 @@ export default function EditProductModal({product, onClose}: {product: any, onCl
     
     const supabase = createClient();
 
-    async function saveChanges(){
-        const {data, error} = await supabase.from('items').update({'name': name, 'price': price, 'category_id': categoryId}).eq('id', product.id).select();
-
-        if(error){
-            console.error('Error updating product:', error);
-        } else {
-            console.log('Product updated successfully:', data);
-        }
-    }
-
     async function handleSave() {
-        await saveChanges();
+       try {
+        await updateProduct(product.id, name, price, categoryId);
         onClose();
+       }catch(error){
+        console.error(error);
+       }
     }
-
-    useEffect(() => {
-        console.log("categoryId:", categoryId)
-    },[categoryId])
-
-    
-   
-
 
     return (
         <>

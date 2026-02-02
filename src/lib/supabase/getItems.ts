@@ -5,7 +5,7 @@ import type { CategoryType } from "@/types/categoryType";
 export async function getAllItems(){
 
     const supabase = await createServer();
-    const {data: items, error} = await supabase.from('items').select('*, categories(name) -> category_name').order('name', {ascending: true});
+    const {data: items, error} = await supabase.from('items').select('*, categories(name) -> category_name').eq('is_active', true).eq('is_deleted', false).order('name', {ascending: true});
 
     return {items, error}
 }
@@ -44,8 +44,6 @@ export async function getItemsByCategory(category: string){
 
     const supabase = await createServer();
     const cat = await getCategory(category);
-
-    console.log(category)
 
     if(!cat?.id){
         return { items: [], error: null}
