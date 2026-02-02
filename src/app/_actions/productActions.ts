@@ -31,10 +31,10 @@ export async function removeProduct(id: string){
 
 }
 
-export async function addProduct(name: string, category: string, description: string, price: number){
+export async function addProduct(name: string, category_id: string, description: string, price: number){
     const supabase = await createServer()
 
-    const { data, error} = await supabase.from('items').insert({name, category, description, price}).select();
+    const { data, error} = await supabase.from('items').insert({name, category_id, description, price}).select();
 
     if(error){
         console.error("Error inserting product into items table:", error);

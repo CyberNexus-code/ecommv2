@@ -8,6 +8,7 @@ export default function EditProductModal({product, onClose}: {product: any, onCl
     const [name, setName] = useState(product.name);
     const [price, setPrice] = useState(product.price);
     const [categoryId, setCategoryId] = useState(product.category_id);
+    const [description, setDescription] = useState(product.description);
     
     const supabase = createClient();
 
@@ -37,7 +38,7 @@ export default function EditProductModal({product, onClose}: {product: any, onCl
                                 <label className='block mb-2'>Price:</label>
                                 <input type="number" defaultValue={product.price} onChange={(e) => setPrice(parseFloat(e.target.value))} className='w-full border-1 p-2 rounded-md'/>
                             </div>
-                            <div className='mb-10'>
+                            <div className='mb-4'>
                                 <label className='block mb-2'>Category:</label>
                                 <select defaultValue={product.category_id} onChange={(e) => setCategoryId(e.target.value)}
                                 className='w-full border-1 p-2 rounded-md'>
@@ -45,6 +46,10 @@ export default function EditProductModal({product, onClose}: {product: any, onCl
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
                                 </select>
+                            </div>
+                              <div className="mb-10">
+                                <label className='block mb-2'>Description:</label>
+                                <textarea defaultValue={product.description} onChange={(e) => setDescription(e.target.value)} className='w-full border-1 p-2 rounded-md'/>
                             </div>
                         </div>
                         <div className='flex justify-between'>

@@ -2,18 +2,21 @@
 
 import { PlusIcon } from "@heroicons/react/24/outline"
 import { useState } from "react"
+import { addProduct } from "@/app/_actions/productActions";
 
 export default function AddProductModal({catList}: {catList: any}){
+    const [categories, setCategries] = useState(catList);
     const [showAddModal, setShowAddModal] = useState(false);
     const [name, setName] = useState('');
-    const [categoryId, setCategoryId] = useState('');
+    const [categoryId, setCategoryId] = useState(categories.catList[0]?.id || '');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState(0.00);
 
-    console.log("showAddModal:", showAddModal)
+    console.log("categories in add modal:", categoryId);
 
     async function handleSave(){
-        
+        await addProduct(name, categoryId, description, price);
+        setShowAddModal(false);
     }
 
 
@@ -25,7 +28,7 @@ export default function AddProductModal({catList}: {catList: any}){
 
             {showAddModal && 
             <div className="fixed inset-0 flex justify-center items-center">
-                <div className="flex flex-col border border-roze-900 bg-white rounded-md p-10">
+                <div className="flex flex-col border border-roze-900 bg-white rounded-md p-5 w-full max-w-md">
                     <div className='flex flex-col'>
                             <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Edit Product</h1>
                         </div>
@@ -38,19 +41,23 @@ export default function AddProductModal({catList}: {catList: any}){
                                 <label className='block mb-2'>Price:</label>
                                 <input type="number" aria-placeholder="Price" onChange={(e) => setPrice(parseFloat(e.target.value))} className='w-full border-1 p-2 rounded-md'/>
                             </div>
-                            <div className='mb-10'>
+                            <div className='mb-4'>
                                 <label className='block mb-2'>Category:</label>
                                 <select aria-placeholder="Select category" onChange={(e) => setCategoryId(e.target.value)}
                                 className='w-full border-1 p-2 rounded-md'>
-                                    {catList.map((cat: any) => (
+                                    {categories.catList.map((cat: any) => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
                                 </select>
                             </div>
+                            <div className="mb-10">
+                                <label className='block mb-2'>Description:</label>
+                                <textarea aria-placeholder="Product description" onChange={(e) => setDescription(e.target.value)} className='w-full border-1 p-2 rounded-md'/>
+                            </div>
                         </div>
                         <div className='flex justify-between'>
                             <button onClick={() => setShowAddModal(false)} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Close</button>
-                            <button onClick={} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
+                            <button onClick={handleSave} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
                         </div>
                 </div>
             </div>}
