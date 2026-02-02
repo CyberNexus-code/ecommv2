@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
     <AuthComponent />
-    <div className="w-screen mx-auto">
+    <div className="w-full mx-auto">
         <div className="flex flex-col w-full mx-auto md:flex-row px-5 max-w-8/10 max-h-2/10 justify-around items-center">
           <Image
                     src="/logo.png"

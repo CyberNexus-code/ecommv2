@@ -5,7 +5,7 @@ import type { CategoryType } from "@/types/categoryType";
 export async function getAllItems(){
 
     const supabase = await createServer();
-    const {data: items, error} = await supabase.from('items').select('*')
+    const {data: items, error} = await supabase.from('items').select('*, categories(name) -> category_name')
 
     return {items, error}
 }
