@@ -1,9 +1,74 @@
 'use client'
 
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
+import { createClient } from '@/lib/supabase/client';
 
-export default function EditProductModal(){
-    return <div className='flex flex-col justify-center item-center h-1/2 w-1/3'>
-        <h1>Modal here</h1>
-    </div>
+export default function EditProductModal({product, onClose}: {product: any, onClose: ()=>void}) {
+    const [name, setName] = useState(product.name);
+    const [price, setPrice] = useState(product.price);
+    const [categoryId, setCategoryId] = useState(product.category_id);
+    
+    const supabase = createClient();
+
+    async function saveChanges(){
+        const {data, error} = await supabase.from('items').update({'name': name, 'price': price, 'category_id': categoryId}).eq('id', product.id).select();
+
+        if(error){
+            console.error('Error updating product:', error);
+        } else {
+            console.log('Product updated successfully:', data);
+        }
+    }
+
+    async function handleSave() {
+        await saveChanges();
+        onClose();
+    }
+
+    useEffect(() => {
+        console.log("categoryId:", categoryId)
+    },[categoryId])
+
+    
+   
+
+
+    return (
+        <>
+            <div className='flex flex-col fixed rounded-lg border-1 m-auto bg-black/30 backdrop-blur-sm inset-0 p-4 z-40' onClick={onClose}>
+                <div className='fixed inset-0 z-50 flex flex-col items-center justify-center border'>
+                    <div className='bg-white rounded-lg border-1 border-rose-900 p-6 w-full max-w-md shadow-lg'  onClick={(e) => e.stopPropagation()}>
+                        <div className='flex flex-col'>
+                            <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Edit Product</h1>
+                        </div>
+                        <div>
+                            <div className='mb-4'>
+                                <label className='block mb-2'>Name:</label>
+                                <input type="text" defaultValue={product.name} onChange={(e) => setName(e.target.value)} className='w-full border-1 p-2 rounded-md'/>
+                            </div>
+                            <div className='mb-4'>
+                                <label className='block mb-2'>Price:</label>
+                                <input type="number" defaultValue={product.price} onChange={(e) => setPrice(parseFloat(e.target.value))} className='w-full border-1 p-2 rounded-md'/>
+                            </div>
+                            <div className='mb-10'>
+                                <label className='block mb-2'>Category:</label>
+                                <select defaultValue={product.category_id} onChange={(e) => setCategoryId(e.target.value)}
+                                className='w-full border-1 p-2 rounded-md'>
+                                    {product.catList.map((cat: any) => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className='flex justify-between'>
+                            <button onClick={onClose} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Close</button>
+                            <button onClick={handleSave} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    )
 }
+
+

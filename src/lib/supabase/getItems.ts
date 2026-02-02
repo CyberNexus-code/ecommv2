@@ -5,7 +5,7 @@ import type { CategoryType } from "@/types/categoryType";
 export async function getAllItems(){
 
     const supabase = await createServer();
-    const {data: items, error} = await supabase.from('items').select('*, categories(name) -> category_name')
+    const {data: items, error} = await supabase.from('items').select('*, categories(name) -> category_name').order('name', {ascending: true});
 
     return {items, error}
 }
@@ -26,6 +26,19 @@ export async function getCategory(category: string): Promise<Partial<CategoryTyp
     return data[0]
 
 }
+
+export async function getAllCategories(){
+    const supabase = await createServer();
+    const {data: categories, error} = await supabase.from('categories').select('*').order('name', {ascending: true});
+
+    if(error){
+        console.error('Error fetching categories', error);
+        return {categories: [], error}
+    }
+
+    return {categories: categories ?? [], error};
+}
+
 
 export async function getItemsByCategory(category: string){
 
