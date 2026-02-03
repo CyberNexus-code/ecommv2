@@ -1,6 +1,6 @@
 import { createServer } from '@/lib/supabase/server'
 import ProductCard from '@/components/ProductCard/ProductCard';
-import { getAllItems } from '@/lib/supabase/getItems';
+import { getAllItems } from '@/lib/supabase/get';
 import AuthComponent from '@/components/AuthComponent/authComponent';
 
 export default async function Products(){

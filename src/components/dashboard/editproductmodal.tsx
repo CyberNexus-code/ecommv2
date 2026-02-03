@@ -1,20 +1,20 @@
 'use client'
 
-import {useState, useEffect} from 'react'
+import {useState, useEffect, use} from 'react'
 import { createClient } from '@/lib/supabase/client';
 import { updateProduct } from '@/app/_actions/productActions';
 
 export default function EditProductModal({product, onClose}: {product: any, onClose: ()=>void}) {
     const [name, setName] = useState(product.name);
     const [price, setPrice] = useState(product.price);
-    const [categoryId, setCategoryId] = useState(product.category_id);
+    const [categoryId, setCategoryId] = useState<string | null>(product.category_id ?? null);
     const [description, setDescription] = useState(product.description);
     
     const supabase = createClient();
 
     async function handleSave() {
        try {
-        await updateProduct(product.id, name, price, categoryId);
+        await updateProduct(product.id, name, price, categoryId, description);
         onClose();
        }catch(error){
         console.error(error);
@@ -40,8 +40,9 @@ export default function EditProductModal({product, onClose}: {product: any, onCl
                             </div>
                             <div className='mb-4'>
                                 <label className='block mb-2'>Category:</label>
-                                <select defaultValue={product.category_id} onChange={(e) => setCategoryId(e.target.value)}
+                                <select value={categoryId ?? ''} onChange={(e) => setCategoryId(e.target.value === '' ? null : e.target.value)}
                                 className='w-full border-1 p-2 rounded-md'>
+                                    <option value="">Select category</option>
                                     {product.catList.map((cat: any) => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}

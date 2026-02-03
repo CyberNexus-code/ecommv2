@@ -29,7 +29,7 @@ export async function getCategory(category: string): Promise<Partial<CategoryTyp
 
 export async function getAllCategories(){
     const supabase = await createServer();
-    const {data: categories, error} = await supabase.from('categories').select('*').order('name', {ascending: true});
+    const {data: categories, error} = await supabase.from('categories').select('*').eq('is_active', true).eq('is_deleted', false).order('name', {ascending: true});
 
     if(error){
         console.error('Error fetching categories', error);
@@ -53,3 +53,4 @@ export async function getItemsByCategory(category: string){
 
     return { items: items ?? [], error}
 }
+

@@ -1,8 +1,14 @@
-'use client'
-
-import {useState} from 'react'
 import ListComponent from '@/components/dashboard/listcomponent'
+import { getAllCategories } from '@/lib/supabase/get'
 
-export default function CategorieDashboard(){
-    return <ListComponent props={{type: "categories"}} />
+export default async function CategorieDashboard(){
+
+    const { categories } = await getAllCategories();
+    return (
+        <div className='w-full p-2'>
+            {categories?.map((category: any) => (
+                <ListComponent key={category.id} props={{type: "categories", ...category}} />
+            ))}
+        </div>
+    )
 }

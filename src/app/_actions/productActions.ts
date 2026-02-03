@@ -3,10 +3,10 @@
 import { createServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function updateProduct(id: string, name: string, price: number, category_id: string){
+export async function updateProduct(id: string, name: string, price: number, category_id: string | null, description?: string){
     const supabase = await createServer();
 
-    const { data, error } = await supabase.from('items').update({name, price, category_id}).eq('id', id).select();
+    const { data, error } = await supabase.from('items').update({name, price, category_id, description}).eq('id', id).select();
 
     if(error) throw error;
 
@@ -43,4 +43,12 @@ export async function addProduct(name: string, category_id: string, description:
     revalidatePath("/dashboard/products");
     
     return data
+}
+
+export async function getItemImages(id: string){
+    const supabase = await createServer()
+    const {data: images, error} = await supabase.from('iem_images').select('*').eq('item_id', id);
+
+    return { images: images ?? [], error }
+
 }
