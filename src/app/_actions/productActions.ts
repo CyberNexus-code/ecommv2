@@ -45,9 +45,9 @@ export async function addProduct(name: string, category_id: string, description:
     return data
 }
 
-export async function getItemImages(id: string){
+export async function fetchImages(id: string){
     const supabase = await createServer()
-    const {data: images, error} = await supabase.from('iem_images').select('*').eq('item_id', id);
+    const {data: images, error} = await supabase.from('item_images').select('*').eq('item_id', id).order('sort_order');
 
     return { images: images ?? [], error }
 

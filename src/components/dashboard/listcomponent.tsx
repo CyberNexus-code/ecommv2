@@ -5,7 +5,8 @@ import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
 import EditProductModal from "./editproductmodal"
 import EditCategoriesModal from "./editcategoriesmodal"
 import AlertModal from "./alertModal";
-import { getItemImages } from "@/app/_actions/productActions"
+import ImageModal from "./imageModal"
+import { fetchImages } from "@/app/_actions/productActions"
 import Image from "next/image"
 
 export default function ListComponent({props}: {props: any}){
@@ -14,6 +15,7 @@ export default function ListComponent({props}: {props: any}){
     const [showCatModel, setShowCatModal] = useState(false);
     const [showCatAlertModal, setShowCatAlertModal] = useState(false);
     const [productThumbnail, setProductThumbnail] = useState('')
+    const [showImageModule, setShowImageModal] = useState(false)
     
     
     if(props.type === "products"){
@@ -22,7 +24,7 @@ export default function ListComponent({props}: {props: any}){
 
        useEffect(() => {
         async function getImages(){
-            const {images} = await getItemImages(props.id);
+            const {images} = await fetchImages(props.id);
            
             if(images.length > 0){
                  images.map(i => {
@@ -43,7 +45,7 @@ export default function ListComponent({props}: {props: any}){
             <>
              <div key={props.id} className="flex flex-column justify-between border-b-1 border-gray-400 w-full">
                             <div className="flex gap-4 m-2">
-                                <div className="flex w-20 rounded-md">
+                                <div className="flex w-20 rounded-md cursor-pointer" onClick={() => setShowImageModal(true)}>
                                     {productThumbnail ?  <Image alt="product thumbnail" src={productThumbnail}></Image> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
                                 </div>
                                 <div>
@@ -60,6 +62,7 @@ export default function ListComponent({props}: {props: any}){
 
                 {showModal && <EditProductModal product={props} onClose={() => setShowModal(false)} />}
                 {showAlertModal && <AlertModal props={{type: "products", props}} onClose={() => setShowAlertModal(false)}/>}
+                {showImageModule && <ImageModal product={props} onClose={() => setShowImageModal(false)}/>}
             </>
         )
     }
