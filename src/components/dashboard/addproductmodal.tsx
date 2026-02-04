@@ -12,8 +12,6 @@ export default function AddProductModal({catList}: {catList: any}){
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState(0.00);
 
-    console.log("categories in add modal:", categoryId);
-
     async function handleSave(){
         await addProduct(name, categoryId, description, price);
         setShowAddModal(false);

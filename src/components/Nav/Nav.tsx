@@ -14,7 +14,6 @@ export default function Nav(){
   const [currentUser, setCurrentUser] =  useState<User | null>(null)
 
   const supabase = createClient();
-  console.log(currentUser)
 
   useEffect(() => {
     
@@ -23,8 +22,6 @@ export default function Nav(){
       })
 
       //console.log(user)
-    console.log("Nav useEffect Triggered")
-
     return () => {
       subscription.unsubscribe()
     }

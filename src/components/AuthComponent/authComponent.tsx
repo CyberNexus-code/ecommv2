@@ -16,12 +16,12 @@ export default function AuthComponent(){
                 console.log("No user logged in, signing in anonymously");
                 await supabase.auth.signInAnonymously();
             }
-            else if(session.user.is_anonymous){
-                console.log("user is signed in anonymously!")
-            }
-            else{
-                console.log("User already logged in:", session.user);
-            }
+            // else if(session.user.is_anonymous){
+            //     console.log("user is signed in anonymously!")
+            // }
+            // else{
+            //     console.log("User already logged in:", session.user);
+            // }
         }
 
         intiAnonymous();

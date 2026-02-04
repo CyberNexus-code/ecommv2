@@ -7,6 +7,7 @@ import { removeCategory } from '@/app/_actions/categoryActions';
 export default function AlertModal({props, onClose}: {props: any, onClose: ()=>void}){
     
     if(props.type === "products"){
+
         async function handleRemove(){
             try{
                 await removeProduct(props.id);
