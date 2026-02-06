@@ -6,8 +6,6 @@ import EditProductModal from "./editproductmodal"
 import EditCategoriesModal from "./editcategoriesmodal"
 import AlertModal from "./alertModal";
 import ImageModal from "./imageModal"
-import { fetchImages } from "@/app/_actions/productActions"
-import Image from "next/image"
 
 export default function ListComponent({props}: {props: any}){
     const [showModal, setShowModal] = useState(false);
@@ -19,32 +17,27 @@ export default function ListComponent({props}: {props: any}){
 
     if(props.type === "products"){
 
-       useEffect(() => {
-        async function getImages(){
-            const {images} = await fetchImages(props.id);
-
-            console.log(images)
-           
-            if(images.length > 0){
-                 images.map(i => {
-                    if(i.is_thumbnail)
-                    {
-                        setProductThumbnail(i.image_url)
-                    }
-                })
+        useEffect(() => {
+            const thumbnail = props.item_images.find((i: any) => i.is_thumbnail)
+            if(thumbnail){
+                setProductThumbnail(thumbnail.image_url)
             }
+        },[])
+
+      const handleThumbnail = (url: string) => {
+        if(url){
+            setProductThumbnail(url)
+        }else{
+            setProductThumbnail('')
         }
-
-        getImages()
-
-       }, [])
+      }
 
         return (
             <>
              <div key={props.id} className="flex flex-column justify-between border-b-1 border-gray-400 w-full">
                             <div className="flex gap-4 m-2">
                                 <div className="flex w-20 rounded-md cursor-pointer" onClick={() => setShowImageModal(true)}>
-                                    {productThumbnail ?  <img className="object--cover w-full h-full" src={productThumbnail}></img> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
+                                    {productThumbnail ?  <img className="object--cover w-full h-full rounded-md" src={productThumbnail}></img> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
                                 </div>
                                 <div>
                                     <h2 className="">{props.name}</h2>
@@ -60,7 +53,7 @@ export default function ListComponent({props}: {props: any}){
 
                 {showModal && <EditProductModal product={props} onClose={() => setShowModal(false)} />}
                 {showAlertModal && <AlertModal props={props} onClose={() => setShowAlertModal(false)}/>}
-                {showImageModule && <ImageModal product={props} onClose={() => setShowImageModal(false)}/>}
+                {showImageModule && <ImageModal product={{props}} onClose={() => setShowImageModal(false)} setThumbId={handleThumbnail}/>}
             </>
         )
     }

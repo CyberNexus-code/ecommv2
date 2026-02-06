@@ -1,7 +1,6 @@
 import { getAllCategories, getAllItems } from "@/lib/supabase/get";
 import ListComponent from "@/components/dashboard/listcomponent";
 import AddProductModal from "@/components/dashboard/addproductmodal";
-import { PlusIcon } from "@heroicons/react/24/outline";
 
 export default async function ProductsDashboard(){
 

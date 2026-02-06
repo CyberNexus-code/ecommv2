@@ -2,18 +2,20 @@
 
 import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import { useState, useEffect } from "react"
-import { fetchImages, saveProductImages } from "@/app/_actions/productActions";
+import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/productActions";
 import { createClient } from "@/lib/supabase/client";
+import { convertToWebP } from "@/lib/imageHandler";
 
-export default function ImageModal({product, onClose}: {product: any,onClose: ()=>void}){
+export default function ImageModal({product, onClose, setThumbId}: {product: any,onClose: ()=>void, setThumbId: (id: string)=>void}){
     const [images, setImages] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
     const [activeImage, setActiveImage] =useState<any | null>(null)
-    const [activeImageKey, setActiveImageKey] = useState<String | null>(null)
+    const [cancelState, setCancelState] = useState(false)
 
+    console.log("active image:", activeImage)
     useEffect(() => {
         async function getImages(){
-            const {images, error} = await fetchImages(product.id);
+            const {images, error} = await fetchImages(product.props.id);
 
             if(!error) setImages(images || [])
             if(images?.length){
@@ -21,7 +23,7 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
             }
         }
         getImages()
-    },[product.id])
+    },[product.props.id])
 
     useEffect(() => {
           return () => {
@@ -33,17 +35,30 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
         }
     }, [images])
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if(!e.target.files) return
 
         const files = Array.from(e.target.files);
 
-        const newImages = files.map((file, index) => ({
-            tempId: crypto.randomUUID(),
-            file,
-            previewUrl: URL.createObjectURL(file),
-            is_thumbnail: images.length === 0 && index === 0
-        }))
+        const newImages = await Promise.all(
+            files.map(async (file, index) => {
+                const webpfile = await convertToWebP(file);
+
+                return {
+                    tempId: crypto.randomUUID(),
+                    file: webpfile,
+                    previewUrl: URL.createObjectURL(webpfile),
+                    is_thumbnail: images.length === 0 && index === 0
+                }
+            })
+        )
+
+        // const newImages = files.map((file, index) => ({
+        //     tempId: crypto.randomUUID(),
+        //     file,
+        //     previewUrl: URL.createObjectURL(file),
+        //     is_thumbnail: images.length === 0 && index === 0
+        // }))
 
         setImages(prev => {
             const updated = [...prev, ...newImages]
@@ -72,15 +87,18 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
 
             const supabase = await createClient();
 
-            const uploadedImages: {
-                image_url: string,
-                is_thumbnail: boolean
-            }[] = []
+            const uploadedImages = []
 
             for (const img of images){
-                if (!img.file) continue
-                
-                const filePath = `products/${product.id}/${crypto.randomUUID()}`;
+                if (img.image_url && !img.file) {
+                    uploadedImages.push(img);
+                    continue;
+                }
+
+                if(!img.file) continue;
+
+                console.log(product.props.id)
+                const filePath = `products/${product.props.id}/${crypto.randomUUID()}`;
 
                 const { error: uploadError } =  await supabase.storage.from('product-images').upload(filePath, img.file)
 
@@ -91,30 +109,76 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
                 const { data } = await supabase.storage.from('product-images').getPublicUrl(filePath)
 
                 uploadedImages.push({
+                    ...img,
                     image_url: data.publicUrl,
-                    is_thumbnail: img.is_thumbnail
+                    storage_path: filePath,
+                    is_thumbnail: img.is_thumbnail,
+                    file: undefined
                 });
 
             }
 
-            if(!images.some(img => img.is_thumbnail)){
+            if(images.length > 0  && !images.some(img => img.is_thumbnail)){
                 alert("Please select a thumbnail image")
                 return
             }
 
+            console.log("Images:",images)
+            console.log("Uplaoded images:",uploadedImages)
+
             await saveProductImages({
-                productId: product.id,
-                images: images.map(img => ({
+                productId: product.props.id,
+                images: uploadedImages.map(img => ({
                     id: img.id,
                     image_url: img.image_url,
+                    storage_path: img.storage_path,
                     is_thumbnail: img.is_thumbnail
                 }))
             })
 
+            const thumbnail = uploadedImages.find(i => i.is_thumbnail)
+            
+            if(thumbnail){
+                setThumbId(thumbnail.image_url);
+            }else{
+                setThumbId('')
+            }
             onClose()
+
         }finally{
             setUploading(false)
         }
+    }
+
+    const handleDelete = async () => {
+        if(!activeImage) return;
+
+        console.log(activeImage)
+
+        if(activeImage.id && activeImage.storage_path){
+            console.log("Delete storage was called:", activeImage.storage_path)
+            await deleteImage(activeImage.storage_path);
+        }
+
+        setImages(prev => {
+            const updated = prev.filter(img => getImageKey(img) !== getImageKey(activeImage))
+
+            if(updated.length === 0){
+                setActiveImage(null);
+                return [];
+            }
+
+            let hasThumbnail = updated.some(img => img.is_thumbnail);
+
+            const finalImages = hasThumbnail ? updated : updated.map((img, idx) => ({...img, is_thumbnail: idx === 0}));
+
+            setActiveImage(finalImages.find(i => i.is_thumbnail || finalImages[0]));
+
+            return finalImages;
+        });
+
+        setCancelState(true);
+        
     }
 
     return (
@@ -123,7 +187,7 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
             <div className="inset-0 z-50 bg-white m-auto rounded-md w-100">
                 <div className="flex flex-col p-5">
                     <div>
-                        <h1 className="">{product.name}</h1>
+                        <h1 className="">{product.props.name}</h1>
                     </div>
                     <div className="flex flex-col justify-center items-center p-5">
                         <div className="flex flex-col border-2 border-dashed border-gray-400 rounded-lg w-80 h-60 mb-2">
@@ -147,9 +211,14 @@ export default function ImageModal({product, onClose}: {product: any,onClose: ()
                             <button onClick={() => document.getElementById('image-upload')?.click()} className="flex justify-center items-center text-gray-400 border-2 border-dashed border-gray-400 w-10 m-1 rounded-sm cursor-pointer"><PlusCircleIcon className="size-6" /></button>
                         </div>
                     </div>
-                    <div className="flex justify-end gap-2">
-                        <button className='border border-rose-700 text-rose-700 rounded-md px-2 py-1 hover:bg-rose-700 hover:text-white' onClick={onClose}>Cancel</button>
-                        <button onClick={handleSave} className='border border-rose-700 text-white bg-rose-700 rounded-md px-2 py-1 hover:bg-rose-900 hover:text-rose-700'>{uploading ? "Saving..." : "Save"}</button>
+                    <div className="flex justify-between">
+                        <div className="flex justify-start">
+                                <button className='border border-rose-700 text-white bg-rose-600 rounded-md px-2 py-1 hover:bg-rose-900 hover:text-rose-700' onClick={handleDelete}>Delete</button>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button className='border border-rose-700 text-rose-700 rounded-md px-2 py-1 hover:bg-rose-700 hover:text-white' onClick={onClose} disabled={cancelState ? true : false}>Cancel</button>
+                            <button onClick={handleSave} className='border border-rose-700 text-white bg-rose-700 rounded-md px-2 py-1 hover:bg-rose-900 hover:text-rose-700'>{uploading ? "Saving..." : "Save"}</button>
+                        </div>
                     </div>
                 </div>
             </div>

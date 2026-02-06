@@ -2,6 +2,7 @@
 
 import { createServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { SuffixPathnameNormalizer } from "next/dist/server/normalizers/request/suffix";
 
 export async function updateProduct(id: string, name: string, price: number, category_id: string | null, description?: string){
     const supabase = await createServer();
@@ -52,20 +53,18 @@ export async function fetchImages(id: string){
     revalidatePath("/dashboard/products");
 
     return { images: images ?? [], error }
-
-
 }
 
-export async function saveProductImages({productId, images} : {productId: string, images: { id?: string; image_url: string; is_thumbnail: boolean}[]}){
+export async function saveProductImages({productId, images} : {productId: string, images: { id?: string; image_url: string; storage_path: string; is_thumbnail: boolean}[]}){
     const supabase = await createServer();
     const newImages = images.filter(img => !img.id);
-    console.log("New image arr:", newImages)
 
     if(newImages.length > 0){
          const { error: insertError } = await supabase.from('item_images').insert(
             newImages.map((img: any) => ({
                 item_id: productId,
                 image_url: img.image_url,
+                storage_path: img.storage_path,
                 is_thumbnail: img.is_thumbnail
             }))
         )
@@ -74,16 +73,15 @@ export async function saveProductImages({productId, images} : {productId: string
     }
 
     const existingImages = images.filter(img => img.id)
-    console.log("Existing image arr:", existingImages)
 
     for(const img of existingImages){
         const {data, error: updateError } = await supabase.from('item_images').update({ is_thumbnail: img.is_thumbnail}).eq('id', img.id);
 
         if(updateError) throw updateError;
 
-        revalidatePath("/dashboard/products");
-        return data
     }
+
+    revalidatePath("/dashboard/products")
 }
 
 export async function getThumbnails(id:string) {
@@ -92,4 +90,21 @@ export async function getThumbnails(id:string) {
     const {data, error} = await supabase.from('item_images').select('*').eq('item_id', id).eq('is_thumbnail', true);
 
     return data;
+}
+
+export async function deleteImage(storagePath: string){
+    const supabase = await createServer();
+
+    const { data, error: storageError} = await supabase.storage.from('product-images').remove([storagePath])
+
+    console.log("Storage data:", data)
+    if(storageError){
+        throw new Error("Error deleting image:")
+    }
+
+    const { error: dbError } = await supabase.from('item_images').delete().eq('storage_path', storagePath);
+
+    if(dbError){
+        console.error("Errod deleteing from table 'item Images':", dbError)
+    }
 }

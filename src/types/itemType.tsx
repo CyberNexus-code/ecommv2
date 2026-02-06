@@ -9,4 +9,6 @@ export type ItemType = {
     is_deleted: boolean
     created_at: string
     updated_at: string
+    item_images: [{id: string, item_id: string, image_url: string, is_thumbnail: boolean}],
+    categories: { name: string}
 }

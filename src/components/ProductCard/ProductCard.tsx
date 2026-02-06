@@ -1,13 +1,13 @@
 'use client'
 
 import type { ItemType } from "@/types/itemType";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { addToBasket } from "@/lib/supabase/basket";
 
 type ProductCardProps = { item: ItemType };
 
-export default function ProductCard({ item }: ProductCardProps) {
+export default function ProductCard( {item} : ProductCardProps)  {
 
     const supabase = createClient()
 
@@ -15,6 +15,7 @@ export default function ProductCard({ item }: ProductCardProps) {
     const [loading, setLoading ] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [itemID, setItemID ] = useState(item.id);
+    const [thumbnail, setThumbnail] = useState<string | null>(null);
 
     function min(){
         if(quantity > 1){
@@ -25,6 +26,15 @@ export default function ProductCard({ item }: ProductCardProps) {
     function add(){
         setQuantity(quantity + 1);
     }
+
+    useEffect(() => {
+        const thumbImage = item.item_images.find(i => i.is_thumbnail === true)
+        console.log(thumbImage?.image_url)
+        if(thumbImage){
+            setThumbnail(thumbImage?.image_url);
+        }
+    },[])
+
 
     // const addToBasket = async () => {
     //     try {
@@ -61,9 +71,9 @@ export default function ProductCard({ item }: ProductCardProps) {
         <div className="w-full">
             <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
                 {/* Image */}
-                <div className="flex-[3] bg-gray-300" onClick={() => setOpenModal(true)}>
+                <div className="flex-[3] bg-gray-300 h-1/2" onClick={() => setOpenModal(true)}>
                     <div className="flex flex-col h-full justify-center items-center">
-                        <h1 className="text-gray-500">Image</h1>
+                        {thumbnail ? (<img className="object--cover w-full h-full" src={thumbnail}></img>) : (<h1 className="text-gray-500">Image</h1>)}
                     </div>
                 </div>
 
