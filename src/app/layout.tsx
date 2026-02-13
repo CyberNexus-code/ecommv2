@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthComponent from "../components/AuthComponent/authComponent";
 import Nav from "@/components/Nav/Nav";
+import { getAllCategories } from "@/lib/supabase/get";
+
 
 
 const geistSans = Geist({
@@ -25,13 +27,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { categories } = await getAllCategories();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen w-full`}
-      >
+        >
         <AuthComponent />
-        <Nav />
+        <Nav categories={categories}/>
         <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35" />
           {children}
       </body>

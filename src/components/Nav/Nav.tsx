@@ -9,7 +9,7 @@ import { type User} from "@supabase/supabase-js"
 
 
 
-export default function Nav(){
+export default function Nav({categories}: any){
 
   const [currentUser, setCurrentUser] =  useState<User | null>(null)
 
@@ -27,6 +27,10 @@ export default function Nav(){
     }
 
   },[])
+
+  function formatName(name: string){
+    return name.replace('-', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+  }
 
   function Logout(){
     supabase.auth.signOut();
@@ -47,9 +51,10 @@ export default function Nav(){
                 className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50"
                 >
                   <div className="p-3 z-1000">
-                    <CloseButton  as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">All Products</CloseButton>
-                    <CloseButton  as={Link} href="/products/cake-toppers" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">Cake Toppers</CloseButton>
-                    <CloseButton as={Link} href="/products/party-boxes" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">Party Boxes</CloseButton>
+                    <CloseButton as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">All Products</CloseButton>
+                    {categories.map((c: any) => {
+                      return <CloseButton as={Link} key={categories.id} href={`/products/${c.name}`} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">{formatName(c.name)}</CloseButton>
+                    })}
                   </div>
               </PopoverPanel>
             </Popover>

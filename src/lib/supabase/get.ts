@@ -49,7 +49,7 @@ export async function getItemsByCategory(category: string){
         return { items: [], error: null}
     }
 
-    const {data: items, error} = await supabase.from('items').select('*').eq('category_id', cat.id)
+    const {data: items, error} = await supabase.from('items').select('*, categories (name), item_images (id, item_id, image_url, is_thumbnail)').eq('category_id', cat.id).eq('is_active', true).eq('is_deleted', false)
 
     return { items: items ?? [], error}
 }

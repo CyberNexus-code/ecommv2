@@ -28,10 +28,12 @@ export default function ProductCard( {item} : ProductCardProps)  {
     }
 
     useEffect(() => {
-        const thumbImage = item.item_images.find(i => i.is_thumbnail === true)
-        console.log(thumbImage?.image_url)
-        if(thumbImage){
-            setThumbnail(thumbImage?.image_url);
+        if(item){
+            const thumbImage = item.item_images.find(i => i.is_thumbnail === true)
+            console.log(thumbImage?.image_url)
+            if(thumbImage){
+                setThumbnail(thumbImage?.image_url);
+            }
         }
     },[])
 
@@ -71,9 +73,9 @@ export default function ProductCard( {item} : ProductCardProps)  {
         <div className="w-full">
             <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
                 {/* Image */}
-                <div className="flex-[3] bg-gray-300 h-1/2" onClick={() => setOpenModal(true)}>
+                <div className="flex-[3] overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
                     <div className="flex flex-col h-full justify-center items-center">
-                        {thumbnail ? (<img className="object--cover w-full h-full" src={thumbnail}></img>) : (<h1 className="text-gray-500">Image</h1>)}
+                        {thumbnail ? (<img className="object-cover w-full h-full" src={thumbnail}></img>) : (<h1 className="flex h-full items-center justify-center text-gray-500">Image</h1>)}
                     </div>
                 </div>
 
