@@ -1,13 +1,15 @@
 'use server'
 
 import { getBasket } from "@/lib/supabase/basket";
-import { setItemQuantity, removeBasketItem } from "@/app/_actions/basketActions";
+import { setItemQuantity, removeBasketItem, placeOrder } from "@/app/_actions/basketActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
 import ButtonRose from "@/components/ui/button";
 
 export default async function BasketPage() {
 
-  let basket = await getBasket()
+  const basket = await getBasket()
+
+  
 
   const subTotals = basket?.map((i, idx) => {
     const calc = i.quantity * i.items.price
@@ -47,7 +49,10 @@ export default async function BasketPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <ButtonRose variant="secondary1">Place Order</ButtonRose>
+              <form action={placeOrder}>
+                <input type="hidden" name="basket_id" value={basket[0].basket_id} />
+                <ButtonRose type="submit" variant="secondary1">Place Order</ButtonRose>
+              </form>
             </div>
             <div className="flex justify-center p-10">
               <p>Please note that all oreders are <span className="font-bold">made to order</span> and can take up to <span className="font-bold">two weeks</span> to be completed</p>

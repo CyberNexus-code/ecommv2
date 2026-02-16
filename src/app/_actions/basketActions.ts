@@ -2,6 +2,7 @@
 
 import { createServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { placeOrderLogic } from "@/lib/supabase/basket";
 
 export async function setItemQuantity(basket_id: string, id: string, qty: number) {
     const supabase = await createServer();
@@ -27,4 +28,14 @@ export async function removeBasketItem(basket_id: string, id: string){
     revalidatePath("/basket")
 
     return { success: true }
+}
+
+export async function  placeOrder(formData: FormData) {
+    const basket_id = formData.get('basket_id') as string
+
+    if(!basket_id){
+        console.error("No basket id received from form submisssion");
+    }
+
+    await placeOrderLogic(basket_id);
 }

@@ -4,14 +4,8 @@ import { createServer } from "./server";
 
 export async function addToBasket(itemId: string, quantity: number) {
 
-    console.log(itemId, quantity)
-
-    console.log("Still works")
-
     const supabase = await createServer();
     const userId = await supabase.auth.getUser().then(({data: {user}}) => user?.id);
-
-    console.log("user ID:", userId)
 
     if(!userId){
         throw new Error('User not authenticated');
@@ -53,14 +47,29 @@ export async function getBasket() {
 
     const {data: {user}, error: userError} = await supabase.auth.getUser();
 
-    const {data: basketId, error: basketError} = await supabase.from('baskets').select('id').or(`user_id.eq.${user?.id}, session_id.eq.${user?.id}`).single()
+    const {data: basketId, error: basketError} = await supabase.from('baskets').select('id').or(`user_id.eq.${user?.id}, session_id.eq.${user?.id}`).filter('status', 'eq', 'open').maybeSingle()
 
     if(basketError) throw basketError
 
-    const {data: basket, error: baketFetchError} = await supabase.from('basket_items').select('*, items(id, name, price, item_images(id, image_url, is_thumbnail))').eq('basket_id', basketId.id).order('created_at', {ascending: false})
+    const {data: basket, error: baketFetchError} = await supabase.from('basket_items').select('*, items(id, name, price, item_images(id, image_url, is_thumbnail))').eq('basket_id', basketId?.id).order('created_at', {ascending: false})
     
     return basket
 }
 
+export async function placeOrderLogic(basket_id: string){
+    const supabase = await createServer();
+
+    console.log(basket_id)
+
+    const { error } = await supabase.from('baskets').update({status: 'order_placed_pending_payment'}).eq('id', basket_id)
+
+    if(error){
+        console.error(`Error placing order: ${error.message}`);
+    }
+
+    console.log("Placing order for basket id:", basket_id)
+
+    return true;
+}
 
 
