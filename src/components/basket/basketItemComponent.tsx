@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-export default function BasketItemComponent({item, onQuantityChange}: any){
+export default function BasketItemComponent({item, onQuantityChange, setItemQuantity, removeBasketItem}: any){
 
     const [quantity, setQuantity] = useState(item.quantity)
 
@@ -10,6 +10,7 @@ export default function BasketItemComponent({item, onQuantityChange}: any){
         if(quantity > 1){
             const newQuantity = quantity - 1
             setQuantity(newQuantity);
+            setItemQuantity(item.basket_id, item.id, newQuantity)
             onQuantityChange(item.id, newQuantity);
         }
     }
@@ -17,7 +18,8 @@ export default function BasketItemComponent({item, onQuantityChange}: any){
     function add(){
         const newQuantity = quantity + 1
         setQuantity(newQuantity);
-        onQuantityChange(item.id. newQuantity)
+        setItemQuantity(item.basket_id, item.id, newQuantity)
+        onQuantityChange(item.id, newQuantity)
     }
 
     const images = item.items.item_images;
@@ -47,7 +49,7 @@ export default function BasketItemComponent({item, onQuantityChange}: any){
                     <h3>{(quantity * item.items.price).toFixed(2)}</h3>
                 </div>
                 <div className="p-1">
-                    <button className="cursor-pointer hover:text-rose-400">x</button>
+                    <button onClick={() => removeBasketItem(item.basket_id, item.id)} className="cursor-pointer hover:text-rose-400">x</button>
                 </div>
             </div>
         </div>

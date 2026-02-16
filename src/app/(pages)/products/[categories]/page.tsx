@@ -1,4 +1,3 @@
-import { createServer } from "@/lib/supabase/server"
 import ProductCard from "@/components/ProductCard/ProductCard"
 import { getItemsByCategory } from "@/lib/supabase/get";
 import AuthComponent from "@/components/AuthComponent/authComponent";

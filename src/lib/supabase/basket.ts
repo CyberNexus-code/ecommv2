@@ -1,14 +1,17 @@
-import { createClient } from "@/lib/supabase/client";
+'use server'
+
+import { createServer } from "./server";
 
 export async function addToBasket(itemId: string, quantity: number) {
 
     console.log(itemId, quantity)
 
-    const supabase = createClient();
+    console.log("Still works")
+
+    const supabase = await createServer();
     const userId = await supabase.auth.getUser().then(({data: {user}}) => user?.id);
 
     console.log("user ID:", userId)
-    console.log(typeof userId)
 
     if(!userId){
         throw new Error('User not authenticated');
@@ -31,12 +34,33 @@ export async function addToBasket(itemId: string, quantity: number) {
             const { data } = await supabase.from('basket_items').select('id, quantity').eq('basket_id', basketId).eq('item_id', itemId).limit(1);
             const basketItem = data ? data[0] : null;
 
-            const newQuantity = basketItem?.quantity + quantity;
-            console.log("current quantity:", basketItem?.quantity)
-            console.log("new quantity:", newQuantity)
-            await supabase.from('basket_items').update({'quantity':  newQuantity}).eq('basket_id', basketId).eq('item_id', itemId);
+            if(!basketItem || basketItem === null){
+                console.log("Adding item to basket")
+                await supabase.from('basket_items').insert({basket_id: basketId, item_id: itemId, quantity});
+                console.log("quantity:", quantity)
+            }
+            else{
+                console.log("Item in basket... updating quantity")
+                await supabase.from('basket_items').update({'quantity':  basketItem?.quantity + quantity}).eq('basket_id', basketId).eq('item_id', itemId);
+            }
        }
     }
 
 }
+
+export async function getBasket() {
+    const supabase = await createServer();
+
+    const {data: {user}, error: userError} = await supabase.auth.getUser();
+
+    const {data: basketId, error: basketError} = await supabase.from('baskets').select('id').or(`user_id.eq.${user?.id}, session_id.eq.${user?.id}`).single()
+
+    if(basketError) throw basketError
+
+    const {data: basket, error: baketFetchError} = await supabase.from('basket_items').select('*, items(id, name, price, item_images(id, image_url, is_thumbnail))').eq('basket_id', basketId.id).order('created_at', {ascending: false})
+    
+    return basket
+}
+
+
 

@@ -53,7 +53,7 @@ export default function Nav({categories}: any){
                   <div className="p-3 z-1000">
                     <CloseButton as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">All Products</CloseButton>
                     {categories.map((c: any) => {
-                      return <CloseButton as={Link} key={categories.id} href={`/products/${c.name}`} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">{formatName(c.name)}</CloseButton>
+                      return <CloseButton as={Link} key={categories.id + "desktop"} href={`/products/${c.name}`} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">{formatName(c.name)}</CloseButton>
                     })}
                   </div>
               </PopoverPanel>
