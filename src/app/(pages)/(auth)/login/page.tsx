@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Login(){
 
@@ -41,10 +42,12 @@ export default function Login(){
                     <input type="email" placeholder='Email' value={email} onChange={e => setEmail(e.target.value)} required className='border p-2 w-full'></input>
                     <input type="password" placeholder='Password' value={password} onChange={e => setPassword(e.target.value)} required className='border p-2 w-full'></input>
                 </div>
-
-                <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full'>
-                    {loading ? 'Logging in...' : 'Login'}
-                </button>
+                <div className='flex flex-col justify-center items-center'>
+                    <p className='text-gray-400 text-sm'>Dont't have an account? <span className='text-rose-700 font-bold'><Link href="/signup">Sign Up</Link></span></p>
+                    <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full'>
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+                </div>
             </div>
             </form>
         </div>

@@ -31,6 +31,7 @@ export default function SignupPage(){
         });
         if(error){
             setError(error.message)
+            console.log(error)
         }else{
             router.push('/');
         }

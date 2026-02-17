@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import AuthComponent from "@/components/AuthComponent/authComponent";
+import LinkButton from "@/components/ui/linkButton";
 
 
 export default function Home() {

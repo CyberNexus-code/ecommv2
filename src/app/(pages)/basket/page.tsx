@@ -34,7 +34,7 @@ export default async function BasketPage() {
         </div>
       </div>
       <div>
-        {basket ? (
+        {basket && basket?.length > 0 ? (
           <div>
             <div className="flex flex-col gap-2">
               <BasketListComponent basket={basket} setItemQuantity={setItemQuantity} removeBasketItem={removeBasketItem}/>
@@ -50,7 +50,7 @@ export default async function BasketPage() {
             </div>
             <div className="flex justify-end">
               <form action={placeOrder}>
-                <input type="hidden" name="basket_id" value={basket[0].basket_id} />
+                <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
                 <ButtonRose type="submit" variant="secondary1">Place Order</ButtonRose>
               </form>
             </div>
@@ -58,7 +58,7 @@ export default async function BasketPage() {
               <p>Please note that all oreders are <span className="font-bold">made to order</span> and can take up to <span className="font-bold">two weeks</span> to be completed</p>
             </div>
           </div>
-        ) : <div>
+        ) : <div className="flex justify-center items-center h-200">
           <h1>No items in basket!</h1>
         </div> }
       </div>

@@ -71,16 +71,20 @@ export default function ProductCard( {item} : ProductCardProps)  {
   return (
     <>
         <div className="w-full">
-            <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
+            <div className="h-full rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
                 {/* Image */}
-                <div className="flex-[3] overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
-                    <div className="flex flex-col h-full justify-center items-center">
-                        {thumbnail ? (<img className="object-cover w-full h-full" src={thumbnail}></img>) : (<h1 className="flex h-full items-center justify-center text-gray-500">Image</h1>)}
-                    </div>
+                <div className="aspect-[4/5] w-full overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
+                        {thumbnail ? (<img className="object-cover w-full h-full" src={thumbnail}></img>) : 
+                        (
+                        <div className="flex h-full items-center justify-center text-gray-500">
+                            Image
+                        </div>
+                        )}
+                    
                 </div>
 
                 {/* Content */}
-                <div className="flex-[2] p-4 flex flex-col justify-between">
+                <div className="flex flex-col flex-1 p-4 justify-between">
                 <div>
                     <h2 className="text-lg font-semibold line-clamp-2">
                     {item.name}
