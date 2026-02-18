@@ -16,7 +16,7 @@ export default function Nav({categories}: any){
   useEffect(() => {
     
      const { data: { subscription }} = supabase.auth.onAuthStateChange(
-    async (event, session) => {
+      async (event, session) => {
       const user = session?.user ?? null
       setCurrentUser(user)
 
@@ -40,8 +40,6 @@ export default function Nav({categories}: any){
 
   },[])
 
-  console.log(role)
-
   function formatName(name: string){
     return name.replace('-', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
   }
@@ -57,6 +55,8 @@ export default function Nav({categories}: any){
         {/* Desktop Nav */}
         <Link href="/"><img src="/logo2.png" alt="Cute & Creative Toppers" className="absolute -top-4 md:-top-5 -left-7 md:left-4 h-28 w-auto"/></Link>
           <div className="w-1/3 flex justify-around items-center">
+          {currentUser && role === "admin" && 
+          <Link href="/dashboard" aria-label="Dashboard" className="color-secondary hover:text-shadow-xs text-shadow-white">Dashboard</Link>}
             <Popover>
               <PopoverButton className="block text-white focus:outline-none data-active:text-white data-focus:outline data-focus:outline-white data-hover:text-shadow-xs text-shadow-white">
                 Products
