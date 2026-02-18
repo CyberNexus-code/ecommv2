@@ -6,10 +6,6 @@ import Nav from "@/components/Nav/Nav";
 import { getAllCategories } from "@/lib/supabase/get";
 import { getUserRole } from "@/lib/getuserRole";
 
-const role = await getUserRole()
-
-console.log(role)
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

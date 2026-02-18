@@ -7,26 +7,40 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { type User} from "@supabase/supabase-js"
 
-
-
 export default function Nav({categories}: any){
 
   const [currentUser, setCurrentUser] =  useState<User | null>(null)
-
+  const [role, setRole] = useState<string | null>(null)
   const supabase = createClient();
 
   useEffect(() => {
     
-      const { data: { subscription }} =  supabase.auth.onAuthStateChange((event, session) => {
-        setCurrentUser(session?.user ?? null)
-      })
+     const { data: { subscription }} = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      const user = session?.user ?? null
+      setCurrentUser(user)
 
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        setRole(data?.role ?? null)
+      } else {
+        setRole(null)
+      }
+    }
+  )
       //console.log(user)
     return () => {
       subscription.unsubscribe()
     }
 
   },[])
+
+  console.log(role)
 
   function formatName(name: string){
     return name.replace('-', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
