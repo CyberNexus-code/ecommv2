@@ -75,7 +75,14 @@ export default function Nav({categories}: any){
             <Link className="color-secondary hover:text-shadow-xs text-shadow-white" href="/about">About us</Link>
             <Link className="color-secondary hover:text-shadow-xs text-shadow-white" href="/contact">Contact Us</Link>
           </div>
-          {!currentUser || null || currentUser.is_anonymous ? (<Link className="flex color-secondary hover:text-shadow-sm text-shadow-white" href="/login">Hello, Log in<UserCircleIcon className="size-6"/></Link>) : 
+          {!currentUser || null || currentUser.is_anonymous ? (
+            <div className="flex justify-around items-center">
+              <Link href="/basket" className="group flex justify-center rounded-sm items-center border border-white px-6 py-2 mr-2 bg-transparent text-white hover:bg-white hover:text-rose-700 transition-colors">
+                <ShoppingCartIcon className="size-6"/>
+              </Link>
+            <Link className="flex color-secondary hover:text-shadow-sm text-shadow-white" href="/login">Hello, Log in<UserCircleIcon className="size-6"/></Link>
+            </div>
+            ) : 
           (<div className="flex justify-around items-center">
             <Link href="/basket" className="group flex justify-center rounded-sm items-center border border-white px-6 py-2 mr-2 bg-transparent text-white hover:bg-white hover:text-rose-700 transition-colors">
               <ShoppingCartIcon className="size-6"/>

@@ -59,8 +59,6 @@ export async function getBasket() {
 export async function placeOrderLogic(basket_id: string){
     const supabase = await createServer();
 
-    console.log(basket_id)
-
     const { error } = await supabase.from('baskets').update({status: 'order_placed_pending_payment'}).eq('id', basket_id)
 
     if(error){

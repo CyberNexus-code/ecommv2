@@ -1,4 +1,9 @@
-export default function clientOrders(){
+import { getOrders } from "@/lib/supabase/orders";
+
+export default async function clientOrders(){
+    const baskets = await getOrders();
+    
+    console.log("Order baskets:", baskets)
     return (
         <div className="p-5">
             <div>
