@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignupPage(){
     const supabase = createClient();
@@ -40,19 +41,34 @@ export default function SignupPage(){
     }
 
     return ( 
-        <div className='h-screen p-20'>
-            <form onSubmit={handleSignup} className='h-2/3 rounded-2xl p-10 space-y-4 max-w-md border-1 border-rose-700 mx-auto'>
+        <div className='h-screen p-2 md:p-20'>
+            <form onSubmit={handleSignup} className='h-2/3 min-h-130 bg-white p-6 rounded-2xl shadow-sm text-center space-y-4 m-auto md:max-w-100 md:max-h-140'>
             <div className='flex flex-col h-full justify-between'>
                 <div className='flex flex-col gap-10'>
                     <h1 className='text-2xl text-rose-700 font-bold'>Create account</h1>
-                    <input type="text" placeholder='Username' value={username} onChange={e => setUsername(e.target.value)} className='border p-2 w-full'/>
-                    <input type="email" placeholder='Email' value={email} onChange={e => setEmail(e.target.value)} required className='border p-2 w-full' />
-                    <input type="password" placeholder='Password' value={password} onChange={e => setPassword(e.target.value)} required className='border p-2 w-full' />
-                </div>
+                    <div className='flex flex-col items-start'>
+                        <label className="block mb-1 text-sm font-medium">Name</label>
+                        <input type="text" placeholder='e.g: John' name="name" value={username} onChange={e => setUsername(e.target.value)} className='border p-2 w-full rounded-md'/>
+                    </div>
 
-                <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full'>
-                    {loading ? 'Creating account...' : 'Sign up'}
-                </button>
+                    <div className='flex flex-col items-start'>
+                        <label className="block mb-1 text-sm font-medium">Email</label>
+                        <input type="email" placeholder='e.g: johnd@mail.com' value={email} name="email" onChange={e => setEmail(e.target.value)} required className='border p-2 w-full rounded-md' />
+                    </div>
+
+                    <div className='flex flex-col items-start'>
+                        <label className="block mb-1 text-sm font-medium">Password</label>
+                        <input type="password" placeholder='e.g: P@s$w0rD --Minimum 6 characters' value={password} name="passsword" onChange={e => setPassword(e.target.value)} required className='border p-2 w-full rounded-md' />
+                    </div>
+
+                </div>
+                
+                <div>
+                    <p className='text-gray-400 text-sm'>Already have an account? <span className='text-rose-700 font-bold'><Link href="/login">Login</Link></span></p>
+                    <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full rounded-md'>
+                        {loading ? 'Creating account...' : 'Sign up'}
+                    </button>
+                </div>
             </div>
             </form>
         </div>

@@ -1,15 +1,17 @@
 'use server'
 
 import { getBasket } from "@/lib/supabase/basket";
-import { setItemQuantity, removeBasketItem, placeOrder } from "@/app/_actions/basketActions";
+import { setItemQuantity, removeBasketItem, placeOrder, setEmail} from "@/app/_actions/basketActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
 import ButtonRose from "@/components/ui/button";
+import { createServer } from "@/lib/supabase/server";
 
 export default async function BasketPage() {
 
   const basket = await getBasket()
-
-  
+  const supabase = await createServer();
+  const {data: {user}} = await supabase.auth.getUser();
+  const {data: profile} = await supabase.from('profiles').select('id, email').eq('id', user?.id).single();
 
   const subTotals = basket?.map((i, idx) => {
     const calc = i.quantity * i.items.price
@@ -49,10 +51,21 @@ export default async function BasketPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <form action={placeOrder}>
-                <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
-                <ButtonRose type="submit" variant="secondary1">Place Order</ButtonRose>
-              </form>
+              {user?.is_anonymous && profile?.email === null ? (
+                <form action={setEmail}>
+                  <p className="text-xs">Please provide an email address for your order:</p>
+                  <div className="my-2">
+                  <input className='border p-2 w-full rounded-md' type="text" name="email" aria-label="Please provide an email address for your order" placeholder="john@mail.com'"></input>
+                  <input type="hidden" name="id" value={profile?.id} />
+                  </div>
+                  <ButtonRose type="submit" variant="secondary1">Sumbit Email</ButtonRose>
+                </form>
+              ) : (
+                <form action={placeOrder}>
+                  <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
+                  <ButtonRose type="submit" variant="secondary1">Place Order</ButtonRose>
+                </form>
+              )}
             </div>
             <div className="flex justify-center p-10">
               <p>Please note that all oreders are <span className="font-bold">made to order</span> and can take up to <span className="font-bold">two weeks</span> to be completed</p>

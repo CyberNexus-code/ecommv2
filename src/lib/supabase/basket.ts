@@ -70,4 +70,18 @@ export async function placeOrderLogic(basket_id: string){
     return true;
 }
 
+export async function setProfileEmail(id: string, email: string){
+    const supabase = await createServer();
+
+    const { error } = await supabase.from('profiles').update({email: email}).eq('id', id);
+
+    if(error){
+        console.error(`Error setting email: ${error}`);
+    }
+
+    console.log("Setting email for user:", id);
+
+    return true;
+}
+
 

@@ -6,12 +6,15 @@ import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/r
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { type User} from "@supabase/supabase-js"
+import { logout } from "@/app/_actions/authActions";
 
 export default function Nav({categories}: any){
 
   const [currentUser, setCurrentUser] =  useState<User | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const supabase = createClient();
+
+  console.log(currentUser)
 
   useEffect(() => {
     
@@ -44,16 +47,18 @@ export default function Nav({categories}: any){
     return name.replace('-', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
   }
 
-  function Logout(){
-    supabase.auth.signOut();
+  async function Logout(){
     setCurrentUser(null);
+    await logout();
   }
 
   return <div className="color-primary p-4 md:p-4">
     <nav>
       <div className="hidden md:flex justify-between">
         {/* Desktop Nav */}
-        <Link href="/"><img src="/logo2.png" alt="Cute & Creative Toppers" className="absolute -top-4 md:-top-5 -left-7 md:left-4 h-28 w-auto"/></Link>
+          <Link href="/"><img src="/logo2.png" alt="Cute & Creative Toppers" className="absolute -top-4 md:-top-5 -left-7 md:left-4 h-28 w-auto"/></Link>
+          <div>
+          </div>
           <div className="w-1/3 flex justify-around items-center">
           {currentUser && role === "admin" && 
           <Link href="/dashboard" aria-label="Dashboard" className="color-secondary hover:text-shadow-xs text-shadow-white">Dashboard</Link>}
@@ -94,8 +99,16 @@ export default function Nav({categories}: any){
               </div>
               </PopoverButton>
                 <PopoverPanel transition anchor="bottom" className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50">
+                <div className="p-3">
                   <CloseButton as={Link} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001" href="/account">Account</CloseButton>
-                  <CloseButton as={Link} onClick={() => Logout()} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001" href="/">Logout</CloseButton>
+                  <form action={Logout}>
+                    <CloseButton
+                      as="button"
+                      type="submit"
+                      className="flex w-full items-center color-secondary px-3 py-2 transition hover:bg-white/20"
+                    >Logout</CloseButton>
+                  </form>
+                </div>
                 </PopoverPanel>
             </Popover>
           </div>)}
@@ -114,6 +127,19 @@ export default function Nav({categories}: any){
               className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50"
               >
                <div className="p-3">
+                  {currentUser && role === "admin" ? 
+                  <Popover>
+                    <PopoverButton className="flex items-center w-full color-secondary px-3 py-2 transition hover:bg-white/20">Dashboard</PopoverButton>
+                    <PopoverPanel transition anchor="left start" className="flex flex-col divide-y divide-white bg-rose-600 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(3)] data-closed:-translate-y-1 data-closed:opacity-50">
+                    <div className="p-3">
+                      <CloseButton as={Link} href={"/dashboard/products"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Products</CloseButton>  
+                      <CloseButton as={Link} href={"/dashboard/categories"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Categories</CloseButton>  
+                      <CloseButton as={Link} href={"/dashboard/orders"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Orders</CloseButton>  
+                      <CloseButton as={Link} href={"/dashboard/accounts"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">accounts</CloseButton>  
+                    </div>
+                    </PopoverPanel> 
+                  </Popover>
+                  : null }
                   <CloseButton as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
                     All Products
                   </CloseButton>
@@ -129,7 +155,18 @@ export default function Nav({categories}: any){
                   <CloseButton as={Link} href="/contact" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
                     Contact Us
                   </CloseButton>
-                  {!currentUser || null ? (<CloseButton as={Link} className="color-secondary hover:text-shadow-sm text-shadow-white" href="/login"><UserCircleIcon className="size-6"/>Login</CloseButton>) : (<CloseButton as={Link} className="flex color-secondary hover:text-shadow-sm text-shadow-white" href="/basket"><UserCircleIcon className="size-6 mx-2 "/> Logout</CloseButton>)}
+                  {!currentUser || null || currentUser.is_anonymous ? (<CloseButton as={Link} className="flex w-full items-center color-secondary px-2 py-2 transition hover:bg-white/20" href="/login"><UserCircleIcon className="size-6 mr-2"/>Login</CloseButton>) 
+                  : 
+                  (<form action={Logout}>
+                    <CloseButton
+                      as="button"
+                      type="submit"
+                      className="flex w-full items-center color-secondary px-2 py-2 transition hover:bg-white/20"
+                    >
+                      <UserCircleIcon className="size-6 mr-2" />
+                      Logout
+                    </CloseButton>
+                  </form>)}
                 </div>
             </PopoverPanel>
           </Popover>

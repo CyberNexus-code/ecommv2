@@ -2,7 +2,7 @@
 
 import { createServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { placeOrderLogic } from "@/lib/supabase/basket";
+import { placeOrderLogic, setProfileEmail } from "@/lib/supabase/basket";
 
 export async function setItemQuantity(basket_id: string, id: string, qty: number) {
     const supabase = await createServer();
@@ -38,4 +38,20 @@ export async function  placeOrder(formData: FormData) {
     }
 
     await placeOrderLogic(basket_id);
+
+    revalidatePath("/basket")
+
+}
+
+export async function setEmail(formData: FormData){
+    const email = formData.get('email') as string
+    const id = formData.get('id') as string
+
+    if(!email){
+        console.error("No email provided");
+    }
+
+    await setProfileEmail(id, email);
+
+    revalidatePath("/basket")
 }

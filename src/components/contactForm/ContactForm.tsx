@@ -53,7 +53,7 @@ export default function ContactForm(){
     return (
           <form
           action={action}
-        className="space-y-4 bg-white p-6 rounded-2xl shadow-sm"
+        className="space-y-4 bg-white p-6 rounded-2xl shadow-sm m-auto md:max-w-200"
       >
         <div>
           <label className="block mb-1 text-sm font-medium">Name</label>
