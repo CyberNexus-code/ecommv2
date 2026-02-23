@@ -18,7 +18,7 @@ export default async function BasketPage() {
     return calc
   });
 
-  const total = subTotals?.reduce((a, b) => a + b, 2)
+  const total = subTotals?.reduce((a, b) => a + b, 0)
 
   return (
     <div className="flex flex-col w-full h-full flex p-5">
