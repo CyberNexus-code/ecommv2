@@ -1,6 +1,6 @@
 'use server'
 
-import { getBasket } from "@/lib/supabase/basket";
+import { getBasket } from "@/lib/baskets/basket";
 import { setItemQuantity, removeBasketItem, placeOrder, setEmail} from "@/app/_actions/basketActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
 import ButtonRose from "@/components/ui/button";

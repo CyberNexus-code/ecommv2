@@ -1,4 +1,4 @@
-import { createServer } from "./server";
+import { createServer } from "../supabase/server";
 
 export async function getOrders(){
 
@@ -15,10 +15,10 @@ export async function getOrders(){
 
         console.log(profile)
         if(profile?.role === "admin"){
-           const {data: baskets, error: errorBaskets} = await supabase.from('baskets').select('*,  basket_items(*, items(*, item_images(*)))').neq('status', 'open')
-           console.log(baskets?.[0].basket_items?.[0])
+           const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, profiles(email)').neq('status', 'open')
 
-           return baskets
+           console.log("get orders:", orders)
+           return orders
         }
 
     }catch(error){

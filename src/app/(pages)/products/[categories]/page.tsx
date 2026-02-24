@@ -1,5 +1,5 @@
 import ProductCard from "@/components/ProductCard/ProductCard"
-import { getItemsByCategory } from "@/lib/supabase/get";
+import { getItemsByCategory } from "@/lib/items/get";
 import AuthComponent from "@/components/AuthComponent/authComponent";
 
 type Props = { params: Promise<{ categories: string }>};

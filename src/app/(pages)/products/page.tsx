@@ -1,5 +1,5 @@
 import ProductCard from '@/components/ProductCard/ProductCard';
-import { getAllItems } from '@/lib/supabase/get';
+import { getAllItems } from '@/lib/items/get';
 import AuthComponent from '@/components/AuthComponent/authComponent';
 
 export default async function Products(){

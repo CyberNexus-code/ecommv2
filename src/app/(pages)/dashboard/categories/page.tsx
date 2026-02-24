@@ -1,5 +1,5 @@
 import ListComponent from '@/components/dashboard/listcomponent'
-import { getAllCategories } from '@/lib/supabase/get'
+import { getAllCategories } from '@/lib/items/get'
 import AddcategoryModal from '@/components/dashboard/addcategoryModal';
 
 export default async function CategorieDashboard(){

@@ -1,6 +1,6 @@
 'use server'
 
-import { createServer } from "./server";
+import { createServer } from "../supabase/server";
 
 export async function addToBasket(itemId: string, quantity: number) {
 

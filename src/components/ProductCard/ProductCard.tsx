@@ -3,7 +3,7 @@
 import type { ItemType } from "@/types/itemType";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { addToBasket } from "@/lib/supabase/basket";
+import { addToBasket } from "@/lib/baskets/basket";
 
 type ProductCardProps = { item: ItemType };
 

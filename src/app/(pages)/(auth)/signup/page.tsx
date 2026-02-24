@@ -34,6 +34,7 @@ export default function SignupPage(){
             setError(error.message)
             console.log(error)
         }else{
+            console.log('Signing up new user')
             router.push('/');
         }
 

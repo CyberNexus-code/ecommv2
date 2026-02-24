@@ -2,7 +2,7 @@
 
 import { createServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { placeOrderLogic, setProfileEmail } from "@/lib/supabase/basket";
+import { placeOrderLogic, setProfileEmail } from "@/lib/baskets/basket";
 
 export async function setItemQuantity(basket_id: string, id: string, qty: number) {
     const supabase = await createServer();

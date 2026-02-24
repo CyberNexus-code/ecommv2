@@ -1,4 +1,4 @@
-import { getAllCategories, getAllItems } from "@/lib/supabase/get";
+import { getAllCategories, getAllItems } from "@/lib/items/get";
 import ListComponent from "@/components/dashboard/listcomponent";
 import AddProductModal from "@/components/dashboard/addproductmodal";
 

@@ -1,4 +1,4 @@
-import { createServer } from "./server";
+import { createServer } from "../supabase/server";
 import type { ItemType } from "@/types/itemType";
 import type { CategoryType } from "@/types/categoryType";
 
