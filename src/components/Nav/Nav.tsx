@@ -14,8 +14,6 @@ export default function Nav({categories}: any){
   const [role, setRole] = useState<string | null>(null)
   const supabase = createClient();
 
-  console.log(currentUser)
-
   useEffect(() => {
     
      const { data: { subscription }} = supabase.auth.onAuthStateChange(

@@ -21,13 +21,17 @@ export default function Login(){
         setLoading(true)
         setError(null)
 
-        const {error} = await supabase.auth.signInWithPassword({email, password})
+        const {error} = await supabase.auth.signInWithPassword({email, password});
+        console.log("Logging in");
+        
         if(error){
             console.log(error.message)
             setError(error.message)
         }else{
             router.push('/')
         }
+
+        console.log("Logging in");
 
         setLoading(false)
     }

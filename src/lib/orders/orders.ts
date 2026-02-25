@@ -13,11 +13,13 @@ export async function getOrders(){
         
         const {data: profile, error: roleError } = await supabase.from('profiles').select('role').eq('id', user.id).single()
 
-        console.log(profile)
         if(profile?.role === "admin"){
-           const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, profiles(email)').neq('status', 'open')
+           const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, order_items(*), profiles(email)').neq('status', 'open')
 
-           console.log("get orders:", orders)
+           if(errorBaskets){
+            console.log("Error getting orders:", errorBaskets)
+            return
+           }
            return orders
         }
 

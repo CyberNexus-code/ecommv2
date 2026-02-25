@@ -1,4 +1,4 @@
-type OrderStatus = 
+export type OrderStatus = 
 "order_placed_pending_payment"
 |'order_placed_payment_received'
 |'order_shipped'
@@ -8,20 +8,21 @@ type OrderStatus =
 
 type StatusConfig = {
     bg: string;
+    tc?: string;
     text: string;
     next?: OrderStatus
 };
 
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
     order_placed_pending_payment: {
-        bg: "bg-yellow-500",
+        bg: "bg-yellow-400",
         text: "Pending Payment",
         next: "order_placed_payment_received"
     },
-     order_placed_payment_received: {
-    bg: "bg-blue-500",
-    text: "Payment Received",
-    next: "order_shipped",
+    order_placed_payment_received: {
+        bg: "bg-blue-500",
+        text: "Payment Received",
+        next: "order_shipped",
     },
     order_shipped: {
         bg: "bg-green-600",
@@ -30,6 +31,7 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
     },
     completed: {
         bg: "bg-gray-400",
+        tc: "text-white",
         text: "Order Completed"
     },
     suspended_pending_payment: {

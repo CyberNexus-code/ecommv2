@@ -4,7 +4,7 @@ import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import { useState, useEffect } from "react"
 import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/productActions";
 import { createClient } from "@/lib/supabase/client";
-import { convertToWebP } from "@/lib/imageHandler";
+import { convertToWebP } from "@/lib/items/imageHandler";
 
 export default function ImageModal({product, onClose, setThumbId}: {product: any,onClose: ()=>void, setThumbId: (id: string)=>void}){
     const [images, setImages] = useState<any[]>([]);
