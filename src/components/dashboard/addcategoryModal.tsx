@@ -17,9 +17,9 @@ export default function AddcategoryModal(){
 
         {showModal &&
             <div className="fixed inset-0 flex justify-center items-center">
-                <div className="flex flex-col border border-roze-900 bg-white rounded-md p-5 w-full max-w-md gap-5">
+                <div className="flex flex-col bg-white rounded-xl shadow-lg p-5 w-full max-w-md gap-5">
                     <div className='flex flex-col'>
-                        <h1>Add category</h1>
+                        <h1 className='text-lg font-semibold border-b-1 pb-2'>Add category</h1>
                     </div>
                     <div className="flex flex-col">
                         <label>Name</label>

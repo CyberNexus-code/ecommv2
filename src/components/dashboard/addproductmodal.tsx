@@ -26,9 +26,9 @@ export default function AddProductModal({catList}: {catList: any}){
 
             {showAddModal && 
             <div className="fixed inset-0 flex justify-center items-center">
-                <div className="flex flex-col border border-roze-900 bg-white rounded-md p-5 w-full max-w-md">
+                <div className="flex flex-col bg-white rounded-xl shadow-lg p-5 w-full max-w-md">
                     <div className='flex flex-col'>
-                            <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Edit Product</h1>
+                            <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Add Product</h1>
                         </div>
                         <div>
                             <div className='mb-4'>

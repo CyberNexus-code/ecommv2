@@ -7,6 +7,13 @@ interface ContactEmailParams {
     message: string
 }
 
+interface UpdateOrderParams {
+    name: string
+    email: string
+    message: string
+    status: string
+}
+
 export async function sendContactEmail({name, email, message}: ContactEmailParams){
     
     const transporter = nodemailer.createTransport({
@@ -32,4 +39,31 @@ export async function sendContactEmail({name, email, message}: ContactEmailParam
         ${message}`
     })
 
+}
+
+export async function sendUpdateOrder({name, email, message, status}: UpdateOrderParams){
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT),
+        secure: Number(process.env.SMTP_PORT) === 465,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
+
+    await transporter.sendMail({
+        from: `"Order Updated" <${process.env.SMTP_USER}>`,
+        to: email,
+        replyTo: process.env.CONTACT_EMAIL,
+        subject: `Order Update: ${status}`,
+        html: `
+        <div class="display-flex">
+            <h1>Your order status has updated!</h1>
+            <h2>${status}</h2>
+
+            <p>We'll notify you as soon as the order has been shipped</p>
+        </div>
+        `
+    })
 }

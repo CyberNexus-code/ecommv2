@@ -18,9 +18,9 @@ export default function EditCategoriesModal({category, onClose}: {category: any,
 
     return (
         <>
-            <div className='flex flex-col fixed rounded-lg border-1 m-auto bg-black/30 backdrop-blur-sm inset-0 p-4 z-40' onClick={onClose}>
+            <div className='flex flex-col fixed rounded-lg border-1 m-auto inset-0 p-4 z-40' onClick={onClose}>
                 <div className='fixed inset-0 z-50 flex flex-col items-center justify-center border'>
-                    <div className='bg-white rounded-lg border-1 border-rose-900 p-6 w-full max-w-md shadow-lg'  onClick={(e) => e.stopPropagation()}>
+                    <div className='bg-white rounded-xl shadow-lg p-6 w-full max-w-md'  onClick={(e) => e.stopPropagation()}>
                         <div className='flex flex-col'>
                             <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Edit Category</h1>
                         </div>

@@ -6,6 +6,7 @@ import { ORDER_STATUS_CONFIG } from "@/lib/orders/orderStatus"
 import type { Order } from "@/types/order"
 import { updateStatus } from "@/app/_actions/dashboardActions"
 import { stat } from "fs"
+import ButtonRose from "@/components/ui/button"
 
 export default function OrderListContianer({order}: {order: Order}){
 
@@ -37,6 +38,21 @@ export default function OrderListContianer({order}: {order: Order}){
 
     const ageLevel = getOrderAgeLevel(orderAge);
     const ageConfig = ORDER_AGE_CONFIG[ageLevel]
+    
+    function handleStatusUpdate(id: string, changeStatus? : string){
+        console.log("handle status:", id)
+
+        const newStatus = changeStatus ? changeStatus : status.next
+
+        console.log(newStatus)
+        if(!newStatus){
+
+            console.error("error setting new status, no next status found")
+            return 
+        }
+
+        updateStatus(id, newStatus)
+    }
 
 
     return (
@@ -66,7 +82,7 @@ export default function OrderListContianer({order}: {order: Order}){
               </div>
             </div>
         </div>
-        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)} update={handleUpdateStatus}/>}
+        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)} update={handleStatusUpdate}/>}
         </>
     )
 }
