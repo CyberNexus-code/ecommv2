@@ -1,20 +1,33 @@
 "use client"
 
-export default function OrderListModal({order, onClose} : {order: any,onClose: ()=>void}){
+import ButtonRose from "@/components/ui/button"
+
+export default function OrderListModal({order, onClose, update} : {order: any,onClose: ()=>void, update: (id: string, status:string)=>void}){
 
     console.log(order.order_items?.[0])
     return (
-        <div className="fixed inset-50 z-40 bg-white h-100 w-100 rounded-xl shadow-lg">
-            <div>
-                <h1>Orders modal</h1>
-                <button className="cursor-pointer" onClick={onClose}>X</button>
-                <div>
-                 {order.order_items.map((i: any) => 
-                 <div>
-                    <h1>{i.item_name}</h1>
-                    <p>{i.quantity}</p>
+        <div className="fixed inset-0 z-50 w-full h-full">
+            <div className="flex flex-col fixed inset-50 z-40 bg-white w-150 rounded-xl shadow-lg justify-between">
+                <div className="flex flex-col p-5 gap-5"> 
+                    <div className="flex justify-between">
+                        <h1 className="text-lg">Order Details</h1>
+                    </div>
+                    <div>
+                        <div className="flex border-b justify-between mb-4">
+                            <h1>Product</h1>
+                            <p>QTY</p>
+                        </div>
+                    {order.order_items.map((i: any) => 
+                    <div className="flex justify-between p-1" key={i.id + i.name}>
+                        <h1>{i.item_name}</h1>
+                        <p>{i.quantity}</p>
+                    </div>
+                    )}
+                    </div>
                 </div>
-                )}
+                <div className="flex justify-between p-5">
+                    <ButtonRose onClick={onClose}>Cancel</ButtonRose>
+                    <ButtonRose onClick={() => update(order.id, order.status)}>Update order</ButtonRose>
                 </div>
             </div>
         </div>

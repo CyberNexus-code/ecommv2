@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { createServer } from "../supabase/server";
 
 export async function getOrders(){
@@ -25,5 +26,24 @@ export async function getOrders(){
 
     }catch(error){
         console.log(error)
+    }
+}
+
+export async function updateOrderStatus(orderID: string, newStatus: string){
+    
+    try{
+        const supabase = await createServer();
+
+        const { error } = await supabase.from('orders').update({status: newStatus}).eq('id', orderID);
+
+        if(error){
+            throw new Error(`${error}`)
+        }
+
+        revalidatePath("/dashboard/orders")
+        return {success: "success"}
+
+    }catch(error){
+        console.error(error)
     }
 }

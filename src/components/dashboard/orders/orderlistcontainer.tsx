@@ -4,6 +4,8 @@ import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
 import { ORDER_STATUS_CONFIG } from "@/lib/orders/orderStatus"
 import type { Order } from "@/types/order"
+import { updateStatus } from "@/app/_actions/dashboardActions"
+import { stat } from "fs"
 
 export default function OrderListContianer({order}: {order: Order}){
 
@@ -36,6 +38,7 @@ export default function OrderListContianer({order}: {order: Order}){
     const ageLevel = getOrderAgeLevel(orderAge);
     const ageConfig = ORDER_AGE_CONFIG[ageLevel]
 
+
     return (
         <>
         <div onClick={() => setShowModal(true)} key={order.id} className="flex h-full justify-between gap-2 p-2 my-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100">
@@ -63,7 +66,7 @@ export default function OrderListContianer({order}: {order: Order}){
               </div>
             </div>
         </div>
-        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)}/>}
+        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)} update={handleUpdateStatus}/>}
         </>
     )
 }
