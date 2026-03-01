@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
-import { ORDER_STATUS_CONFIG } from "@/lib/orders/orderStatus"
+import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus"
 import type { Order } from "@/types/order"
 import { updateStatus, cancelOrder } from "@/app/_actions/dashboardActions"
 import { stat } from "fs"

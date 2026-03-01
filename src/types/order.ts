@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/lib/orders/orderStatus.ts"
+import type { OrderStatus } from "@/lib/dashboard/orders/orderStatus"
 
 export type Order = {
   basket_id: string,

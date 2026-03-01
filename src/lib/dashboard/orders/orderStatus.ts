@@ -43,3 +43,4 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
         text: "Order cancelled"
     }
 }
+

@@ -1,7 +1,7 @@
 "use client"
 
 import ButtonRose from "@/components/ui/button"
-import { OrderStatus } from "@/lib/orders/orderStatus"
+import { OrderStatus } from "@/lib/dashboard/orders/orderStatus"
 
 export default function OrderListModal({order, onClose, update, cancel} : 
     {

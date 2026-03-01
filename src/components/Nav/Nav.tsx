@@ -133,7 +133,6 @@ export default function Nav({categories}: any){
                       <CloseButton as={Link} href={"/dashboard/products"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Products</CloseButton>  
                       <CloseButton as={Link} href={"/dashboard/categories"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Categories</CloseButton>  
                       <CloseButton as={Link} href={"/dashboard/orders"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Orders</CloseButton>  
-                      <CloseButton as={Link} href={"/dashboard/accounts"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">accounts</CloseButton>  
                     </div>
                     </PopoverPanel> 
                   </Popover>

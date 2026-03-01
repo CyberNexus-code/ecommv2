@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import OrderListContianer from "@/components/dashboard/orders/orderlistcontainer";
-import { getOrders } from "@/lib/orders/orders";
+import { getOrders } from "@/lib/dashboard/orders/orders";
 
 export default async function clientOrders(){
     const orders = await getOrders();

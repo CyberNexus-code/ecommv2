@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { createServer } from "../supabase/server";
+import { createServer } from "../../supabase/server";
 
 export async function getOrders(){
 

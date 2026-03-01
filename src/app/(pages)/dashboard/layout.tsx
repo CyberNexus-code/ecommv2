@@ -20,7 +20,6 @@ export default async function DashboardLayout({
               <Link className={styleClass} href="/dashboard/products"><CakeIcon className="size-6"/>Products</Link>
               <Link className={styleClass} href="/dashboard/categories"><TableCellsIcon className="size-6"/>Categories</Link>
               <Link className={styleClass} href="/dashboard/orders"><TruckIcon className="size-6"/>Orders</Link>
-              <Link className={styleClass} href="/dashboard/accounts"><UserGroupIcon className="size-6"/>Accounts</Link>
             </nav>
          </aside>
   

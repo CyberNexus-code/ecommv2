@@ -1,6 +1,6 @@
 "use server"
 
-import { updateOrderStatus, cancelOrder as cancel } from "@/lib/orders/orders"
+import { updateOrderStatus, cancelOrder as cancel } from "@/lib/dashboard/orders/orders"
 
 export async function updateStatus(id: string, status: string){
     await updateOrderStatus(id, status)
