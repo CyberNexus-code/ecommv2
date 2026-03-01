@@ -30,11 +30,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen w-full`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen w-full overflow-y-auto md:overflow-y-hidden`}
         >
         <AuthComponent />
         <Nav categories={categories}/>
-        <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35" />
+        <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35 overflow-y-auto"/>
           {children}
       </body>
     </html>

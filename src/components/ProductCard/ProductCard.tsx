@@ -1,5 +1,6 @@
 'use client'
 
+import Image from "next/image";
 import type { ItemType } from "@/types/itemType";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -35,46 +36,15 @@ export default function ProductCard( {item} : ProductCardProps)  {
                 setThumbnail(thumbImage?.image_url);
             }
         }
-    },[])
-
-
-    // const addToBasket = async () => {
-    //     try {
-    //         setLoading(true)
-
-    //         const { data: { session }} = await supabase.auth.getSession();
-    
-    //         const res = await fetch('/api/basket/add', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json', ...(session?.access_token && {'Authorization': `Bearer ${session.access_token}`}
-    //         )},
-    //         credentials: "include",
-    //         body: JSON.stringify({ itemId: item.id, quantity})
-    //         })
-
-    //         console.log(res)
-    
-    //         if(!res.ok){
-    //              const errorData = await res.json();
-    //             throw new Error(errorData.error || 'Failed to add item to basket');
-    //         }
-    //     }catch(err){
-    //         console.error(err);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    //console.log(itemID)
-
+    },[item])
 
   return (
     <>
-        <div className="w-full">
-            <div className="h-full rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col">
+        <div className="flex flex-col h-full w-full">
+            <div className="h-full rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col hover:shadow-md border border-transparent hover:border-white">
                 {/* Image */}
-                <div className="aspect-[4/5] w-full overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
-                        {thumbnail ? (<img className="object-cover w-full h-full" src={thumbnail}></img>) : 
+                <div className="relative aspect-[4/5] w-full overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
+                        {thumbnail ? (<Image src={thumbnail} alt={item.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw"/>) : 
                         (
                         <div className="flex h-full items-center justify-center text-gray-500">
                             Image
@@ -113,9 +83,12 @@ export default function ProductCard( {item} : ProductCardProps)  {
         </div>
 
         {openModal && (
-            <div>
-                
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white p-6 rounded-xl">
+            Modal Content
+            <button onClick={() => setOpenModal(false)}>Close</button>
             </div>
+        </div>
         )}
     </>
   );

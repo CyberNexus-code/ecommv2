@@ -28,12 +28,10 @@ export default function Login(){
             console.log(error.message)
             setError(error.message)
         }else{
+            setLoading(false)
             router.push('/')
         }
 
-        console.log("Logging in");
-
-        setLoading(false)
     }
 
     return (

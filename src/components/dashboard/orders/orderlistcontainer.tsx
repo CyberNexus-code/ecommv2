@@ -4,7 +4,7 @@ import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
 import { ORDER_STATUS_CONFIG } from "@/lib/orders/orderStatus"
 import type { Order } from "@/types/order"
-import { updateStatus } from "@/app/_actions/dashboardActions"
+import { updateStatus, cancelOrder } from "@/app/_actions/dashboardActions"
 import { stat } from "fs"
 import ButtonRose from "@/components/ui/button"
 
@@ -51,7 +51,11 @@ export default function OrderListContianer({order}: {order: Order}){
             return 
         }
 
-        updateStatus(id, newStatus)
+        updateStatus(id, newStatus);
+    }
+
+    function handleOrderCancel(id: string, by: string){
+        cancelOrder(id, by);
     }
 
 
@@ -82,7 +86,7 @@ export default function OrderListContianer({order}: {order: Order}){
               </div>
             </div>
         </div>
-        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)} update={handleStatusUpdate}/>}
+        {showModal && <OrderListModal order={order} onClose={() => setShowModal(false)} update={handleStatusUpdate} cancel={handleOrderCancel}/>}
         </>
     )
 }

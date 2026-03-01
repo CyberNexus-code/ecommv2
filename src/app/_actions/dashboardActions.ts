@@ -1,7 +1,11 @@
 "use server"
 
-import { updateOrderStatus } from "@/lib/orders/orders"
+import { updateOrderStatus, cancelOrder as cancel } from "@/lib/orders/orders"
 
 export async function updateStatus(id: string, status: string){
     await updateOrderStatus(id, status)
+}
+
+export async function cancelOrder(id: string, by: string) {
+    await cancel(id, by);
 }

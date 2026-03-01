@@ -58,7 +58,7 @@ export async function sendUpdateOrder({name, email, message, status}: UpdateOrde
         replyTo: process.env.CONTACT_EMAIL,
         subject: `Order Update: ${status}`,
         html: `
-        <div class="display-flex">
+        <div>
             <h1>Your order status has updated!</h1>
             <h2>${status}</h2>
 

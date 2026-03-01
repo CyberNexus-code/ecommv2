@@ -34,7 +34,7 @@ export default function ListComponent({props}: {props: any}){
 
         return (
             <>
-             <div key={props.id} className="flex flex-column justify-between border-b-1 border-gray-400 w-full">
+             <div key={props.id} className="flex h-[120px] justify-between gap-2 px-2 my-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100">
                             <div className="flex gap-4 m-2">
                                 <div className="flex w-20 rounded-md cursor-pointer" onClick={() => setShowImageModal(true)}>
                                     {productThumbnail ?  <img className="object--cover w-full h-full rounded-md" src={productThumbnail}></img> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
@@ -61,7 +61,7 @@ export default function ListComponent({props}: {props: any}){
     if(props.type = "categories"){
         return (
             <>
-                <div className="flex justify-between border-b-1 border-gray-400 w-full pb-2 my-5">
+                <div className="flex items-center h-[50px] justify-between gap-2 px-2 my-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100">
                     <div>
                         <h2 className="">{props.name}</h2>
                     </div>
