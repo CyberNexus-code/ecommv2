@@ -67,16 +67,16 @@ export default function Nav({ categories }: NavProps) {
   }
 
   return (
-    <header className="color-primary sticky top-0 z-40 overflow-visible border-b border-rose-600/80 px-4 py-1.5 shadow-[0_6px_20px_-16px_rgba(15,23,42,0.9)] md:px-6">
+    <header className="color-primary sticky top-0 z-40 overflow-visible border-b border-rose-600/80 py-2 shadow-[0_6px_20px_-16px_rgba(15,23,42,0.9)] md:px-6">
       <Link
         href="/"
-        className="absolute left-3 top-1/2 z-50 -translate-y-1/2 md:left-5 md:-translate-y-[54%]"
+        className="absolute top-2 left-1 z-50 -translate-y-1/2 md:left-5 md:top-8 md:-translate-y-[54%]"
         aria-label="Home"
       >
         <Image
           src={logo2}
           alt="Cute & Creative Toppers"
-          className="block h-12 w-auto object-contain md:h-30 mt-10"
+          className="block h-20 w-auto object-contain md:h-30 mt-10"
           priority
         />
       </Link>
@@ -155,7 +155,7 @@ export default function Nav({ categories }: NavProps) {
           )}
         </div>
 
-        <div className="md:hidden">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden">
           <Popover className="relative">
             <PopoverButton className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white">
               <Bars3Icon className="size-6" />
