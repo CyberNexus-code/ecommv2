@@ -1,30 +1,19 @@
 'use client'
 
 import BasketItemComponent from "./basketItemComponent"
-import { useState, useEffect } from "react";
+import type { BasketItem } from "@/types/basket";
 
-export default function BasketListComponent({basket, setItemQuantity, removeBasketItem}: any){
+type BasketListComponentProps = {
+    basket: BasketItem[];
+    setItemQuantity: (basket_id: string, id: string, qty: number) => Promise<void> | void;
+    removeBasketItem: (basket_id: string, id: string) => Promise<void> | void;
+};
 
-    const [items, setItems] = useState(basket);
-
-    function updateQuantity(itemId: string, newQuantity: number){
-        setItems((prev : any) => prev.map((item: any) => 
-            item.id === itemId ? { ...item, quantity: newQuantity} : item
-        ))
-
-        calculateTotal();
-    }
-
-    function calculateTotal(){
-        const total = items.reduce((sum: number, item: any) => {
-            return sum + item.items.price * item.quantity
-        }, 2)
-
-    }
+export default function BasketListComponent({basket, setItemQuantity, removeBasketItem}: BasketListComponentProps){
 
     return (<>
-        {basket.map((item: any) => (
-            <BasketItemComponent key={item.id} item={item} onQuantityChange={updateQuantity} setItemQuantity={setItemQuantity} removeBasketItem={removeBasketItem}/>
+        {basket.map((item) => (
+            <BasketItemComponent key={item.id} item={item} setItemQuantity={setItemQuantity} removeBasketItem={removeBasketItem}/>
         ))}
     </>)
 }

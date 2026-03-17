@@ -1,55 +1,65 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import Image from "next/image";
+import { useState } from "react"
+import type { BasketItem } from "@/types/basket";
 
-export default function BasketItemComponent({item, onQuantityChange, setItemQuantity, removeBasketItem}: any){
+type BasketItemComponentProps = {
+    item: BasketItem;
+    setItemQuantity: (basket_id: string, id: string, qty: number) => Promise<void> | void;
+    removeBasketItem: (basket_id: string, id: string) => Promise<void> | void;
+};
+
+export default function BasketItemComponent({item, setItemQuantity, removeBasketItem}: BasketItemComponentProps){
 
     const [quantity, setQuantity] = useState(item.quantity)
 
-    function min(){
+    async function min(){
         if(quantity > 1){
             const newQuantity = quantity - 1
             setQuantity(newQuantity);
-            setItemQuantity(item.basket_id, item.id, newQuantity)
-            onQuantityChange(item.id, newQuantity);
+            await setItemQuantity(item.basket_id, item.id, newQuantity)
         }
     }
 
-    function add(){
+    async function add(){
         const newQuantity = quantity + 1
         setQuantity(newQuantity);
-        setItemQuantity(item.basket_id, item.id, newQuantity)
-        onQuantityChange(item.id, newQuantity)
+        await setItemQuantity(item.basket_id, item.id, newQuantity)
     }
 
     const images = item.items.item_images;
-    const thumbnail = images?.find((i: any) => i.is_thumbnail === true)
+    const thumbnail = images?.find((i) => i.is_thumbnail === true)
 
     return <>
-    <div className="flex">
-        <div className="flex w-full gap-2">
-            <div className="w-20 h-20 rounded-sm">
-                {thumbnail ? (<img className="object-fill h-full w-full overflow-hidden" src={thumbnail.image_url}></img>) : <div className="flex justify-center items-center text-gray-200 bg-gray-400 w-full h-full overflow-hidden">Image</div>}
+    <div className="flex w-full items-center justify-between gap-4 rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_8px_24px_-18px_rgba(190,24,93,0.6)]">
+        <div className="flex w-full items-center gap-3">
+            <div className="relative h-20 w-20 overflow-hidden rounded-lg bg-rose-50">
+                {thumbnail ? (
+                    <Image src={thumbnail.image_url} alt={item.items.name} fill className="object-cover" sizes="80px" />
+                ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-rose-400">Image</div>
+                )}
             </div>
             <div className="flex flex-col justify-center">
-                <h2>{item.items.name}</h2>
-                <p>Price: R {item.items.price}</p>
+                <h2 className="font-medium text-rose-950">{item.items.name}</h2>
+                <p className="text-sm text-stone-600">Price: R {item.items.price.toFixed(2)}</p>
             </div> 
         </div>
-        <div className="flex w-full justify-between">
+        <div className="flex w-full items-center justify-between gap-2">
             <div className="flex items-center">
-                <div className="flex rounded-full px-1 w-25 justify-between">
-                        <button onClick={min} className="bg-yellow-300 p2 rounded-full w-6">-</button>
-                        <p className="text-shadow-sm text0shadow-black">{quantity}</p>
-                        <button onClick={add} className="bg-yellow-300 p2 rounded-full w-6">+</button>
+                <div className="flex items-center rounded-full bg-amber-100 p-1">
+                        <button onClick={min} className="h-8 w-8 rounded-full bg-amber-300 text-base font-semibold text-amber-900 transition hover:bg-amber-400">-</button>
+                        <p className="w-10 text-center text-sm font-semibold text-amber-900">{quantity}</p>
+                        <button onClick={add} className="h-8 w-8 rounded-full bg-amber-300 text-base font-semibold text-amber-900 transition hover:bg-amber-400">+</button>
                 </div>
             </div>
-            <div className="flex">
-                <div className="m-auto">
-                    <h3>{(quantity * item.items.price).toFixed(2)}</h3>
+            <div className="flex items-center gap-2">
+                <div className="m-auto min-w-18 text-right">
+                    <h3 className="font-semibold text-rose-700">R {(quantity * item.items.price).toFixed(2)}</h3>
                 </div>
                 <div className="p-1">
-                    <button onClick={() => removeBasketItem(item.basket_id, item.id)} className="cursor-pointer hover:text-rose-400">x</button>
+                    <button onClick={() => removeBasketItem(item.basket_id, item.id)} aria-label={`Remove ${item.items.name}`} className="rounded-md border border-rose-200 px-2 py-1 text-sm font-medium text-rose-500 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">Remove</button>
                 </div>
             </div>
         </div>

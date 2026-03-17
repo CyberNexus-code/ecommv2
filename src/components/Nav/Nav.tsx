@@ -1,174 +1,217 @@
 'use client'
 
-import Link from "next/link"
-import { UserCircleIcon, Bars3Icon, ShoppingCartIcon } from "@heroicons/react/24/outline"
-import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/react"
+import Image from "next/image";
+import Link from "next/link";
+import { UserCircleIcon, Bars3Icon, ShoppingCartIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { type User} from "@supabase/supabase-js"
+import { type User } from "@supabase/supabase-js";
 import { logout } from "@/app/_actions/authActions";
+import type { CategoryType } from "@/types/categoryType";
+import logo2 from "../../../public/logo2.png";
 
-export default function Nav({categories}: any){
+type NavProps = {
+  categories: CategoryType[];
+};
 
-  const [currentUser, setCurrentUser] =  useState<User | null>(null)
-  const [role, setRole] = useState<string | null>(null)
+export default function Nav({ categories }: NavProps) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
-    
-     const { data: { subscription }} = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-      const user = session?.user ?? null
-      setCurrentUser(user)
-
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        setRole(data?.role ?? null)
-      } else {
-        setRole(null)
+    async function resolveRole(user: User | null) {
+      if (!user) {
+        setRole(null);
+        return;
       }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      setRole(data?.role ?? null);
     }
-  )
-      //console.log(user)
+
+    async function initializeUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      await resolveRole(user);
+    }
+
+    initializeUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      await resolveRole(user);
+    });
+
     return () => {
-      subscription.unsubscribe()
-    }
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
-  },[])
+  const isGuest = !currentUser || currentUser.is_anonymous;
 
-  function formatName(name: string){
-    return name.replace('-', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+  function formatName(name: string) {
+    return name
+      .replace(/-/g, " ")
+      .split(" ")
+      .map((n) => n.charAt(0).toUpperCase() + n.slice(1))
+      .join(" ");
   }
 
-  async function Logout(){
-    setCurrentUser(null);
-    await logout();
-  }
+  return (
+    <header className="color-primary sticky top-0 z-40 overflow-visible border-b border-rose-600/80 px-4 py-1.5 shadow-[0_6px_20px_-16px_rgba(15,23,42,0.9)] md:px-6">
+      <Link
+        href="/"
+        className="absolute left-3 top-1/2 z-50 -translate-y-1/2 md:left-5 md:-translate-y-[54%]"
+        aria-label="Home"
+      >
+        <Image
+          src={logo2}
+          alt="Cute & Creative Toppers"
+          className="block h-12 w-auto object-contain md:h-30 mt-10"
+          priority
+        />
+      </Link>
 
-  return <div className="color-primary p-4 md:p-4">
-    <nav>
-      <div className="hidden md:flex justify-between">
-        {/* Desktop Nav */}
-          <Link href="/"><img src="/logo2.png" alt="Cute & Creative Toppers" className="absolute -top-4 md:-top-5 -left-7 md:left-4 h-28 w-auto"/></Link>
-          <div>
-          </div>
-          <div className="w-1/3 flex justify-around items-center">
-          {currentUser && role === "admin" && 
-          <Link href="/dashboard" aria-label="Dashboard" className="color-secondary hover:text-shadow-xs text-shadow-white">Dashboard</Link>}
-            <Popover>
-              <PopoverButton className="block text-white focus:outline-none data-active:text-white data-focus:outline data-focus:outline-white data-hover:text-shadow-xs text-shadow-white">
-                Products
-              </PopoverButton>
-              <PopoverPanel transition anchor="bottom"
-                className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50"
+      <nav className="flex min-h-[44px] w-full items-center justify-between gap-2" aria-label="Main navigation">
+        <div className="hidden w-44 shrink-0 md:block" aria-hidden />
+
+        <div className="hidden flex-1 items-center justify-center gap-2 md:flex">
+          {currentUser && role === "admin" ? (
+            <Link href="/dashboard" className="rounded-full bg-rose-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500">
+              Dashboard
+            </Link>
+          ) : null}
+
+          <Popover className="relative">
+            <PopoverButton className="inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-medium text-white transition hover:bg-rose-600/70">
+              Products
+              <ChevronDownIcon className="size-4" />
+            </PopoverButton>
+            <PopoverPanel anchor="bottom start" className="z-50 mt-2 w-56 rounded-xl border border-rose-200 bg-white p-2 shadow-lg">
+              <CloseButton as={Link} href="/products" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                All Products
+              </CloseButton>
+              {categories.map((c) => (
+                <CloseButton
+                  as={Link}
+                  key={c.id}
+                  href={`/products/${c.name}`}
+                  className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50"
                 >
-                  <div className="p-3 z-1000">
-                    <CloseButton as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">All Products</CloseButton>
-                    {categories.map((c: any) => {
-                      return <CloseButton as={Link} key={categories.id + "desktop"} href={`/products/${c.name}`} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001">{formatName(c.name)}</CloseButton>
-                    })}
-                  </div>
+                  {formatName(c.name)}
+                </CloseButton>
+              ))}
+            </PopoverPanel>
+          </Popover>
+
+          <Link className="rounded-full px-4 py-1.5 text-sm font-medium text-white transition hover:bg-rose-600/70" href="/about">
+            About
+          </Link>
+          <Link className="rounded-full px-4 py-1.5 text-sm font-medium text-white transition hover:bg-rose-600/70" href="/contact">
+            Contact
+          </Link>
+        </div>
+
+        <div className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/basket"
+            className="group inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white transition hover:bg-white hover:text-rose-700"
+            aria-label="Basket"
+          >
+            <ShoppingCartIcon className="size-5" />
+          </Link>
+
+          {isGuest ? (
+            <Link href="/login" className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
+              Log in
+              <UserCircleIcon className="size-5" />
+            </Link>
+          ) : (
+            <Popover className="relative">
+              <PopoverButton className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
+                {`Hi, ${currentUser.user_metadata?.display_name ?? "there"}`}
+                <UserCircleIcon className="size-5" />
+              </PopoverButton>
+              <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-44 rounded-xl border border-rose-200 bg-white p-2 shadow-lg">
+                <CloseButton as={Link} href="/account" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                  Account
+                </CloseButton>
+                <form action={logout}>
+                  <button type="submit" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-800 transition hover:bg-rose-50">
+                    Logout
+                  </button>
+                </form>
               </PopoverPanel>
             </Popover>
-            <Link className="color-secondary hover:text-shadow-xs text-shadow-white" href="/about">About us</Link>
-            <Link className="color-secondary hover:text-shadow-xs text-shadow-white" href="/contact">Contact Us</Link>
-          </div>
-          {!currentUser || null || currentUser.is_anonymous ? (
-            <div className="flex justify-around items-center">
-              <Link href="/basket" className="group flex justify-center rounded-sm items-center border border-white px-6 py-2 mr-2 bg-transparent text-white hover:bg-white hover:text-rose-700 transition-colors">
-                <ShoppingCartIcon className="size-6"/>
-              </Link>
-            <Link className="flex color-secondary hover:text-shadow-sm text-shadow-white" href="/login">Hello, Log in<UserCircleIcon className="size-6"/></Link>
-            </div>
-            ) : 
-          (<div className="flex justify-around items-center">
-            <Link href="/basket" className="group flex justify-center rounded-sm items-center border border-white px-6 py-2 mr-2 bg-transparent text-white hover:bg-white hover:text-rose-700 transition-colors">
-              <ShoppingCartIcon className="size-6"/>
-            </Link>
-            <Popover>
-            <PopoverButton className="block text-white focus:outline-none data-active:text-white data-focus:outline data-focus:outline-white data-hover:text-shadow-xs text-shadow-white">
-              <div className="flex">
-                {`Hi, ${currentUser.user_metadata?.display_name}!`}<UserCircleIcon className="size-6 ml-2"/>
-              </div>
-              </PopoverButton>
-                <PopoverPanel transition anchor="bottom" className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50">
-                <div className="p-3">
-                  <CloseButton as={Link} className="color-secondary block px-3 py-2 transition hover:bg-white/20 z-1001" href="/account">Account</CloseButton>
-                  <form action={Logout}>
-                    <CloseButton
-                      as="button"
-                      type="submit"
-                      className="flex w-full items-center color-secondary px-3 py-2 transition hover:bg-white/20"
-                    >Logout</CloseButton>
-                  </form>
-                </div>
-                </PopoverPanel>
-            </Popover>
-          </div>)}
-      </div>
-      <div className="flex w-screen h-12 justify-end px-10 md:hidden">
-        {/* Mobile Nav*/}
-        <Link href="/"><img src="/logo2.png" alt="Cute & Creative Toppers" className="absolute -top-4 md:-top-5 -left-7 md:left-4 h-28 w-auto"/></Link>
-         <div className="">
-          <Popover>
-            <PopoverButton className="block text-white focus:outline-none data-active:text-white data-focus:outline data-focus:outline-white data-hover:text-shadow-xs text-shadow-white">
-              <Bars3Icon className="size-10" />
+          )}
+        </div>
+
+        <div className="md:hidden">
+          <Popover className="relative">
+            <PopoverButton className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white">
+              <Bars3Icon className="size-6" />
             </PopoverButton>
-            <PopoverPanel 
-              transition 
-              anchor="bottom"
-              className="divide-y divide-white bg-rose-700 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(5)] data-closed:-translate-y-1 data-closed:opacity-50"
-              >
-               <div className="p-3">
-                  {currentUser && role === "admin" ? 
-                  <Popover>
-                    <PopoverButton className="flex items-center w-full color-secondary px-3 py-2 transition hover:bg-white/20">Dashboard</PopoverButton>
-                    <PopoverPanel transition anchor="left start" className="flex flex-col divide-y divide-white bg-rose-600 text-sm/6 transition duration-200 ease-in-out [--anchor-gap:--spacing(3)] data-closed:-translate-y-1 data-closed:opacity-50">
-                    <div className="p-3">
-                      <CloseButton as={Link} href={"/dashboard/products"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Products</CloseButton>  
-                      <CloseButton as={Link} href={"/dashboard/categories"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Categories</CloseButton>  
-                      <CloseButton as={Link} href={"/dashboard/orders"} className="color-secondary block px-3 py-2 transition hover:bg-white/20">Orders</CloseButton>  
-                    </div>
-                    </PopoverPanel> 
-                  </Popover>
-                  : null }
-                  <CloseButton as={Link} href="/products" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
-                    All Products
+            <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-[88vw] max-w-sm rounded-xl border border-rose-200 bg-white p-3 shadow-lg">
+              <div className="mb-2 flex items-center justify-between border-b border-rose-100 pb-2">
+                <p className="text-sm font-semibold text-rose-800">Menu</p>
+                <Link href="/basket" className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
+                  <ShoppingCartIcon className="size-4" /> Basket
+                </Link>
+              </div>
+
+              {currentUser && role === "admin" ? (
+                <CloseButton as={Link} href="/dashboard" className="mb-1 block rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                  Dashboard
+                </CloseButton>
+              ) : null}
+
+              <CloseButton as={Link} href="/products" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                All Products
+              </CloseButton>
+              {categories.map((c) => (
+                <CloseButton
+                  as={Link}
+                  key={`mobile-${c.id}`}
+                  href={`/products/${c.name}`}
+                  className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50"
+                >
+                  {formatName(c.name)}
+                </CloseButton>
+              ))}
+
+              <CloseButton as={Link} href="/about" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                About
+              </CloseButton>
+              <CloseButton as={Link} href="/contact" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                Contact
+              </CloseButton>
+
+              <div className="mt-2 border-t border-rose-100 pt-2">
+                {isGuest ? (
+                  <CloseButton as={Link} href="/login" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                    <UserCircleIcon className="size-5" /> Log in
                   </CloseButton>
-                  <CloseButton as={Link} href="/products/cake-toppers" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
-                    Cake Toppers
-                  </CloseButton>
-                  <CloseButton as={Link} href="/products/party-boxes" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
-                    Party Boxes
-                  </CloseButton>
-                  <CloseButton as={Link} href="/about" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
-                    About us
-                  </CloseButton>
-                  <CloseButton as={Link} href="/contact" className="color-secondary block px-3 py-2 transition hover:bg-white/20">
-                    Contact Us
-                  </CloseButton>
-                  {!currentUser || null || currentUser.is_anonymous ? (<CloseButton as={Link} className="flex w-full items-center color-secondary px-2 py-2 transition hover:bg-white/20" href="/login"><UserCircleIcon className="size-6 mr-2"/>Login</CloseButton>) 
-                  : 
-                  (<form action={Logout}>
-                    <CloseButton
-                      as="button"
-                      type="submit"
-                      className="flex w-full items-center color-secondary px-2 py-2 transition hover:bg-white/20"
-                    >
-                      <UserCircleIcon className="size-6 mr-2" />
-                      Logout
-                    </CloseButton>
-                  </form>)}
-                </div>
+                ) : (
+                  <form action={logout}>
+                    <button type="submit" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                      <UserCircleIcon className="size-5" /> Logout
+                    </button>
+                  </form>
+                )}
+              </div>
             </PopoverPanel>
           </Popover>
         </div>
-      </div>
-    </nav>
-  </div>
+      </nav>
+    </header>
+  );
 }

@@ -16,6 +16,17 @@ export async function createServer() {
                 getAll() {
                     console.log("supabase server cookies get all")
                     return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    console.log("supabase server cookies set all")
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // setAll can be called in server component contexts where cookies are read-only.
+                        // Middleware should refresh user sessions and set cookies in that case.
+                    }
                 }
             }
         }

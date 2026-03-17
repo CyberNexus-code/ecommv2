@@ -7,7 +7,6 @@ import LinkButton from "@/components/ui/linkButton";
 export default function Home() {
   return (
     <>
-    <AuthComponent />
     <div className="h-screen w-full mx-auto md:pt-42">
         <div className="flex flex-col w-full mx-auto md:flex-row px-5 max-w-8/10 max-h-2/10 justify-around items-center">
           <Image

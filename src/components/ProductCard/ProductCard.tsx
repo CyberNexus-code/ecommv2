@@ -2,94 +2,100 @@
 
 import Image from "next/image";
 import type { ItemType } from "@/types/itemType";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMemo, useState } from "react";
 import { addToBasket } from "@/lib/baskets/basket";
 
 type ProductCardProps = { item: ItemType };
 
-export default function ProductCard( {item} : ProductCardProps)  {
-
-    const supabase = createClient()
-
-    const [openModal, setOpenModal ] = useState(false);
-    const [loading, setLoading ] = useState(false);
+export default function ProductCard({ item }: ProductCardProps) {
     const [quantity, setQuantity] = useState(1);
-    const [itemID, setItemID ] = useState(item.id);
-    const [thumbnail, setThumbnail] = useState<string | null>(null);
+    const [adding, setAdding] = useState(false);
 
-    function min(){
-        if(quantity > 1){
+    const thumbnail = useMemo(() => {
+        return item.item_images.find((img) => img.is_thumbnail)?.image_url ?? null;
+    }, [item.item_images]);
+
+    function min() {
+        if (quantity > 1) {
             setQuantity(quantity - 1);
         }
     }
 
-    function add(){
+    function add() {
         setQuantity(quantity + 1);
     }
 
-    useEffect(() => {
-        if(item){
-            const thumbImage = item.item_images.find(i => i.is_thumbnail === true)
-            console.log(thumbImage?.image_url)
-            if(thumbImage){
-                setThumbnail(thumbImage?.image_url);
-            }
+    async function handleAddToCart() {
+        try {
+            setAdding(true);
+            await addToBasket(item.id, quantity);
+            setQuantity(1);
+        } finally {
+            setAdding(false);
         }
-    },[item])
+    }
 
-  return (
-    <>
-        <div className="flex flex-col h-full w-full">
-            <div className="h-full rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col hover:shadow-md border border-transparent hover:border-white">
-                {/* Image */}
-                <div className="relative aspect-[4/5] w-full overflow-hidden cursor-pointer bg-white" onClick={() => setOpenModal(true)}>
-                        {thumbnail ? (<Image src={thumbnail} alt={item.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 25vw"/>) : 
-                        (
-                        <div className="flex h-full items-center justify-center text-gray-500">
-                            Image
-                        </div>
-                        )}
-                    
-                </div>
-
-                {/* Content */}
-                <div className="flex flex-col flex-1 p-4 justify-between">
-                <div>
-                    <h2 className="text-lg font-semibold line-clamp-2">
-                    {item.name}
-                    </h2>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                    {item.description}
-                    </p>
-                </div>
-                    <span className="font-bold text-lg">
-                    R{item.price.toFixed(2)}
-                    </span>
-
-                <div className="flex items-center justify-between mt-3">
-                    <div className="flex bg-gray-200 rounded-2xl p-1">
-                        <button onClick={min} className="bg-yellow-300 p2 rounded-xl w-6">-</button>
-                        <p className="mx-4">{quantity}</p>
-                        <button onClick={add} className="bg-yellow-300 p2 rounded-xl w-6">+</button>
+    return (
+        <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_8px_24px_-18px_rgba(190,24,93,0.6)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_-20px_rgba(190,24,93,0.55)]">
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-rose-50">
+                {thumbnail ? (
+                    <Image
+                        src={thumbnail}
+                        alt={item.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 25vw"
+                    />
+                ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-rose-400">
+                        No image
                     </div>
-                    <button onClick={async () => {await addToBasket(itemID, quantity); setQuantity(1)}} className="rounded-lg bg-rose-700 px-4 py-2 text-sm text-white">
-                    Add to cart
-                    </button>
-                </div>
+                )}
+                <div className="absolute left-3 top-3 rounded-full bg-rose-700/95 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                    Handmade
                 </div>
             </div>
 
-        </div>
+            <div className="flex flex-1 flex-col justify-between p-4">
+                <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-500">
+                        {item.categories?.name?.replace("-", " ") ?? "Collection"}
+                    </p>
+                    <h2 className="line-clamp-2 text-lg font-semibold text-rose-950">{item.name}</h2>
+                    <p className="line-clamp-2 text-sm text-stone-600">{item.description}</p>
+                </div>
 
-        {openModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white p-6 rounded-xl">
-            Modal Content
-            <button onClick={() => setOpenModal(false)}>Close</button>
+                <div className="mt-5 space-y-3">
+                    <span className="block text-xl font-bold text-rose-700">R{item.price.toFixed(2)}</span>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center rounded-full bg-amber-100 p-1">
+                            <button
+                                onClick={min}
+                                aria-label={`Decrease quantity for ${item.name}`}
+                                className="h-8 w-8 rounded-full bg-amber-300 text-base font-semibold text-amber-900 transition hover:bg-amber-400"
+                            >
+                                -
+                            </button>
+                            <p className="w-10 text-center text-sm font-semibold text-amber-900">{quantity}</p>
+                            <button
+                                onClick={add}
+                                aria-label={`Increase quantity for ${item.name}`}
+                                className="h-8 w-8 rounded-full bg-amber-300 text-base font-semibold text-amber-900 transition hover:bg-amber-400"
+                            >
+                                +
+                            </button>
+                        </div>
+                        <button
+                            onClick={handleAddToCart}
+                            disabled={adding}
+                            className="rounded-lg bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                            {adding ? "Adding..." : "Add to cart"}
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-        )}
-    </>
-  );
+        </article>
+    );
 }

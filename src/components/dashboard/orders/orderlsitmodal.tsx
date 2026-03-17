@@ -1,11 +1,22 @@
 "use client"
 
 import ButtonRose from "@/components/ui/button"
-import { OrderStatus } from "@/lib/dashboard/orders/orderStatus"
+
+type OrderModalItem = {
+    id: string;
+    quantity: number;
+    item_name?: string;
+    name?: string;
+};
+
+type OrderModalData = {
+    id: string;
+    order_items: OrderModalItem[];
+};
 
 export default function OrderListModal({order, onClose, update, cancel} : 
     {
-        order: any,
+        order: OrderModalData,
         onClose: ()=>void, 
         update: (id: string, status? : string)=>void,
         cancel: (id: string, by: string)=>void
@@ -13,9 +24,9 @@ export default function OrderListModal({order, onClose, update, cancel} :
 
     console.log(order.order_items?.[0])
     return (
-        <div className="flex flex-col fixed inset-0 z-50">
-            <div className="flex flex-col fixed inset-0 z-40 m-auto max-h-140 max-w-200 bg-white rounded-xl shadow-lg justify-between">
-                <div className="flex flex-col p-5 gap-5"> 
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+            <div className="flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-lg">
+                <div className="themed-scrollbar flex flex-1 flex-col gap-5 overflow-y-auto p-5"> 
                     <div className="flex justify-between">
                         <h1 className="text-lg">Order Details</h1>
                     </div>
@@ -24,15 +35,15 @@ export default function OrderListModal({order, onClose, update, cancel} :
                             <h1>Product</h1>
                             <p>QTY</p>
                         </div>
-                    {order.order_items.map((i: any) => 
-                    <div className="flex justify-between p-1" key={i.id + i.name}>
-                        <h1>{i.item_name}</h1>
+                    {order.order_items.map((i) => 
+                    <div className="flex justify-between gap-3 p-1" key={i.id}>
+                        <h1 className="min-w-0 truncate">{i.item_name ?? i.name ?? "Item"}</h1>
                         <p>{i.quantity}</p>
                     </div>
                     )}
                     </div>
                 </div>
-                <div className="flex flex-col gap-2 p-5">
+                <div className="flex flex-col gap-2 border-t p-5">
                     <div className="flex justify-between">
                         <ButtonRose onClick={onClose}>Cancel</ButtonRose>
                         <div className="flex gap-2">
