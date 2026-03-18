@@ -32,7 +32,7 @@ export default function BasketItemComponent({item, setItemQuantity, removeBasket
     const thumbnail = images?.find((i) => i.is_thumbnail === true)
 
     return <>
-    <div className="flex w-full items-center justify-between gap-4 rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_8px_24px_-18px_rgba(190,24,93,0.6)]">
+    <div className="flex flex-col w-full items-center justify-between gap-4 rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_8px_24px_-18px_rgba(190,24,93,0.6)] md:flex-row">
         <div className="flex w-full items-center gap-3">
             <div className="relative h-20 w-20 overflow-hidden rounded-lg bg-rose-50">
                 {thumbnail ? (

@@ -2,6 +2,7 @@
 
 import { getBasket } from "@/lib/baskets/basket";
 import { setItemQuantity, removeBasketItem, placeOrder, setEmail} from "@/app/_actions/basketActions";
+import { setAddress } from "@/app/_actions/authActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
 import ButtonRose from "@/components/ui/button";
 import { createServer } from "@/lib/supabase/server";
@@ -11,7 +12,7 @@ export default async function BasketPage() {
   const basket = await getBasket()
   const supabase = await createServer();
   const {data: {user}} = await supabase.auth.getUser();
-  const {data: profile} = await supabase.from('profiles').select('id, email').eq('id', user?.id).single();
+  const {data: profile} = await supabase.from('profiles').select('id, email, delivery_address, postal_code, city').eq('id', user?.id).single();
 
   const subTotals = basket?.map((i) => {
     const calc = i.quantity * i.items.price
@@ -36,6 +37,23 @@ export default async function BasketPage() {
               <div className="mb-3 border-b border-rose-100 pb-3">
                 <h2 className="text-lg font-semibold text-rose-900">Order Summary</h2>
               </div>
+              <div className="mb-3 border-b border-rose-100 pb-3">
+                <h2 className="text-lg font-semibold text-rose-900">Deliver to:</h2>
+                <div className="flex justify-between p-1 text-base font-semibold text-rose-800">
+                    {profile?.delivery_address && profile.postal_code ? 
+                    <div>
+                      <div>
+                      <p>{profile.delivery_address}</p>
+                      <p>{profile.city}</p>
+                      <p>{profile.postal_code}</p>
+                      </div>
+                      <p className="mt-4 text-xs text-stone-500 font-thin">*Please ensure that the provided delivery address is correct, <span className="underline text-rose-600">Cute & Creative does not take resposibility</span> if the delivery address provided is incorrect.</p>
+                    </div>
+                       :
+                      <p>No Delivery Address Set</p>
+                    }
+                </div>
+              </div>
               <div className="flex justify-between p-1 text-sm text-stone-600">
                   <p>Items:</p>
                   <p>{basket.length}</p>
@@ -55,10 +73,23 @@ export default async function BasketPage() {
                   <ButtonRose type="submit" variant="secondary1">Sumbit Email</ButtonRose>
                 </form>
               ) : (
-                <form action={placeOrder} className="w-full">
-                  <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
-                  <ButtonRose type="submit" variant="secondary1">Place Order</ButtonRose>
-                </form>
+                  profile?.delivery_address && profile.postal_code ? 
+                  <form action={placeOrder} className="w-full">
+                    <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
+                    <ButtonRose type="submit" variant="primary">Place Order</ButtonRose>
+                  </form> :
+                  <form action={setAddress} className="w-full flex flex-col gap-2 font-semibold text-rose-900">
+                    <input type="hidden" name="profile_id" value={profile?.id} />
+                    <label>Street No:</label>
+                    <input className='w-1/3 rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" name="street_no" required/>
+                    <label>Street Name:</label>
+                    <input className='w-full rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" name="street_name" required/>
+                    <label>Town/City</label>
+                    <input className='w-full rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" name="city" required/>
+                    <label>Postal Code</label>
+                    <input className='w-1/3 rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" inputMode="numeric" pattern="\d*" name="postal_code"  required/>
+                    <ButtonRose type="submit" variant="secondary1">Set Address</ButtonRose>
+                  </form>
               )}
               <p className="mt-4 text-xs text-stone-500">All orders are made to order and can take up to two weeks to be completed.</p>
             </aside>

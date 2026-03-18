@@ -26,8 +26,6 @@ export async function removeBasketItem(basket_id: string, id: string){
     }
 
     revalidatePath("/basket")
-
-    return { success: true }
 }
 
 export async function  placeOrder(formData: FormData) {
