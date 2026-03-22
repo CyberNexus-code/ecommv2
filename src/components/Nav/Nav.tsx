@@ -10,6 +10,7 @@ import { type User } from "@supabase/supabase-js";
 import { logout } from "@/app/_actions/authActions";
 import type { CategoryType } from "@/types/categoryType";
 import logo2 from "../../../public/logo2.png";
+import { profile } from "console";
 
 type NavProps = {
   categories: CategoryType[];
@@ -204,11 +205,16 @@ export default function Nav({ categories }: NavProps) {
                     <UserCircleIcon className="size-5" /> Log in
                   </CloseButton>
                 ) : (
+                  <div className="flex justify-between">
+                    <CloseButton as={Link} href="/account" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border-x-1 border-rose-200 hover:bg-rose-50">
+                      <UserCircleIcon className="size-5" /> {`${currentUser.user_metadata?.display_name}`}
+                    </CloseButton>
                   <form action={logout}>
-                    <button type="submit" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                      <UserCircleIcon className="size-5" /> Logout
+                    <button type="submit" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border-x-1 border-rose-200 hover:bg-rose-50">
+                      Logout
                     </button>
                   </form>
+                  </div>
                 )}
               </div>
             </PopoverPanel>
