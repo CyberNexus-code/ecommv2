@@ -1,71 +1,80 @@
 'use server'
 
 import { createServer } from "../supabase/server";
+import type { BasketItem } from "@/types/basket";
+import { sendOrderPlacedEmails } from "../email/sendOrderEmail";
 
 export async function addToBasket(itemId: string, quantity: number) {
 
     const supabase = await createServer();
-    const userId = await supabase.auth.getUser().then(({data: {user}}) => user?.id);
+    const { error } = await supabase.rpc("basket_add_item", {
+        p_item_id: itemId,
+        p_quantity: quantity,
+    });
 
-    if(!userId){
-        throw new Error('User not authenticated');
-    }else{
-       const { data, error } = await supabase.from('baskets').select('id').eq('user_id', userId).eq('status', 'open');
-       console.log("full Basket data:", {data, error})
-       const basketId = data ? data[0]?.id : null;
-
-       console.log("Existing basket ID:", basketId)
-
-       if(!basketId){
-            console.log("Creating new basket");
-            await supabase.from('baskets').insert({user_id: userId});
-            const { data } =  await supabase.from('baskets').select('id').eq('user_id', userId).eq('status', 'open').limit(1);
-            const newBasketId = data ? data[0]?.id : null;
-            console.log("New basket ID:", newBasketId);
-            await supabase.from('basket_items').insert({basket_id: newBasketId, item_id: itemId, quantity});
-       } else {
-        console.log("Using existing basket:",basketId );
-            const { data } = await supabase.from('basket_items').select('id, quantity').eq('basket_id', basketId).eq('item_id', itemId).limit(1);
-            const basketItem = data ? data[0] : null;
-
-            if(!basketItem || basketItem === null){
-                console.log("Adding item to basket")
-                await supabase.from('basket_items').insert({basket_id: basketId, item_id: itemId, quantity});
-                console.log("quantity:", quantity)
-            }
-            else{
-                console.log("Item in basket... updating quantity")
-                await supabase.from('basket_items').update({'quantity':  basketItem?.quantity + quantity}).eq('basket_id', basketId).eq('item_id', itemId);
-            }
-       }
+    if(error){
+        throw new Error(`Error adding item to basket: ${error.message}`);
     }
-
 }
 
 export async function getBasket() {
     const supabase = await createServer();
 
-    const {data: {user}, error: userError} = await supabase.auth.getUser();
+    const { data, error } = await supabase.rpc("get_open_basket_items");
 
-    const {data: basketId, error: basketError} = await supabase.from('baskets').select('id').or(`user_id.eq.${user?.id}, session_id.eq.${user?.id}`).filter('status', 'eq', 'open').maybeSingle()
-
-    if(basketError) throw basketError
-
-    const {data: basket, error: baketFetchError} = await supabase.from('basket_items').select('*, items(id, name, price, item_images(id, image_url, is_thumbnail))').eq('basket_id', basketId?.id).order('created_at', {ascending: false})
+    if(error){
+        throw new Error(`Error fetching basket: ${error.message}`);
+    }
     
-    return basket
+    return (data ?? []) as BasketItem[];
 }
 
 export async function placeOrderLogic(basket_id: string){
     const supabase = await createServer();
 
-    const { error } = await supabase.from('baskets').update({status: 'order_placed_pending_payment'}).eq('id', basket_id)
+    const { error } = await supabase.rpc('place_order', { p_basket_id: basket_id });
 
     if(error){
         console.error(`Error placing order: ${error.message}`);
+        throw new Error(`Error placing order: ${error.message}`);
     }
 
-    console.log("Placing order for basket id:", basket_id)
+    try {
+        const { data: placedOrder, error: orderFetchError } = await supabase
+            .from("orders")
+            .select("id, order_number, status, total, created_at, profiles(email), order_items(item_name, quantity, unit_price, line_total)")
+            .eq("basket_id", basket_id)
+            .single();
+
+        if(orderFetchError){
+            console.error("Unable to fetch placed order for email:", orderFetchError.message);
+            return true;
+        }
+
+        const customerEmail = placedOrder?.profiles?.email;
+
+        if(!customerEmail){
+            console.warn("No customer email found for placed order", placedOrder?.id);
+            return true;
+        }
+
+        await sendOrderPlacedEmails({
+            orderId: placedOrder.id,
+            orderNumber: placedOrder.order_number,
+            status: placedOrder.status,
+            total: Number(placedOrder.total ?? 0),
+            createdAt: placedOrder.created_at,
+            customerEmail,
+            items: (placedOrder.order_items ?? []).map((item) => ({
+                item_name: item.item_name,
+                quantity: Number(item.quantity ?? 0),
+                unit_price: Number(item.unit_price ?? 0),
+                line_total: Number(item.line_total ?? 0),
+            })),
+        });
+    } catch (emailError){
+        console.error("Order placed but confirmation emails failed:", emailError);
+    }
 
     return true;
 }

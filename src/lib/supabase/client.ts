@@ -5,6 +5,14 @@ export function createClient(){
     console.log("Client.ts called");
     return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+        auth: {
+            flowType: "implicit",
+            detectSessionInUrl: true,
+            persistSession: true,
+            autoRefreshToken: true,
+        },
+    }
     )
 }

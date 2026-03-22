@@ -20,7 +20,7 @@ export default async function DashboardLayout({
     ];
 
     return (
-      <div className="relative flex min-h-[calc(100dvh-96px)] w-full bg-rose-50/50">
+      <div className="relative flex min-h-[calc(100dvh-96px)] w-full">
         <aside className="hidden w-64 shrink-0 p-4 md:block">
           <div className="sticky top-4 rounded-2xl border border-rose-200 bg-rose-700 p-4 text-white shadow-[0_10px_30px_-18px_rgba(190,24,93,0.7)]">
             <h2 className="mb-1 text-lg font-semibold">Dashboard</h2>

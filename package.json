@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:introspect:dev": "node scripts/dev/export-supabase-introspection.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

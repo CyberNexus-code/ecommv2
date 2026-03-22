@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Login(){
 
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     const router = useRouter();
     const [email, setEmail] = useState('')
@@ -16,22 +15,53 @@ export default function Login(){
     const [error, setError ]= useState<string | null>(null)  
     const [loading, setLoading] = useState(false)
 
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if(event === "SIGNED_IN" && session?.user){
+                setLoading(false);
+                setError(null);
+                router.replace('/');
+                router.refresh();
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [router, supabase]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
 
-        const {error} = await supabase.auth.signInWithPassword({email, password});
-        console.log("Logging in");
-        
-        if(error){
-            console.log(error.message)
-            setError(error.message)
-        }else{
-            setLoading(false)
-            router.push('/')
-        }
+        try{
+            const { data: current } = await supabase.auth.getSession();
+            if(current.session?.user?.is_anonymous){
+                await supabase.auth.signOut();
+            }
 
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if(error){
+                setError(error.message);
+                return;
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if(session?.user){
+                router.replace('/');
+                router.refresh();
+                return;
+            }
+
+            router.replace('/');
+            router.refresh();
+        } catch {
+            setError("Unable to login right now. Please try again.");
+        } finally{
+            setLoading(false);
+        }
     }
 
     return (
@@ -50,7 +80,8 @@ export default function Login(){
                     </div>
                 </div>
                 <div className='flex flex-col justify-center items-center'>
-                    <p className='text-gray-400 text-sm'>Dont't have an account? <span className='text-rose-700 font-bold'><Link href="/signup">Sign Up</Link></span></p>
+                    <p className='text-gray-400 text-sm'>Don&apos;t have an account? <span className='text-rose-700 font-bold'><Link href="/signup">Sign Up</Link></span></p>
+                    {error ? <p className='mt-2 text-sm text-red-600'>{error}</p> : null}
                     <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full rounded-md'>
                         {loading ? 'Logging in...' : 'Login'}
                     </button>

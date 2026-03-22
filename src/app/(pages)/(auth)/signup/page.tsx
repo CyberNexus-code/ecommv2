@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import PasswordStrengthHint from '@/components/auth/PasswordStrengthHint';
 
 export default function SignupPage(){
     const supabase = createClient();
@@ -20,7 +21,7 @@ export default function SignupPage(){
         setLoading(true)
         setError(null)
 
-        const { error } = await supabase.auth.signUp({
+        const { error: signupError } = await supabase.auth.signUp({
             email, 
             password,
             options: {
@@ -30,9 +31,9 @@ export default function SignupPage(){
                 }
             }
         });
-        if(error){
-            setError(error.message)
-            console.log(error)
+        if(signupError){
+            setError(signupError.message)
+            console.log(signupError)
         }else{
             console.log('Signing up new user')
             router.push('/');
@@ -60,12 +61,14 @@ export default function SignupPage(){
                     <div className='flex flex-col items-start'>
                         <label className="block mb-1 text-sm font-medium">Password</label>
                         <input type="password" placeholder='e.g: P@s$w0rD --Minimum 6 characters' value={password} name="passsword" onChange={e => setPassword(e.target.value)} required className='border p-2 w-full rounded-md' />
+                        <PasswordStrengthHint password={password} />
                     </div>
 
                 </div>
                 
                 <div>
                     <p className='text-gray-400 text-sm'>Already have an account? <span className='text-rose-700 font-bold'><Link href="/login">Login</Link></span></p>
+                    {error ? <p className='mt-2 text-sm text-red-600'>{error}</p> : null}
                     <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full rounded-md'>
                         {loading ? 'Creating account...' : 'Sign up'}
                     </button>

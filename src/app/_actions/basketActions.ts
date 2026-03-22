@@ -7,19 +7,27 @@ import { placeOrderLogic, setProfileEmail } from "@/lib/baskets/basket";
 export async function setItemQuantity(basket_id: string, id: string, qty: number) {
     const supabase = await createServer();
 
-    const { data, error} = await supabase.from('basket_items').update({quantity: qty}).eq('basket_id', basket_id).eq('id', id);
+    const { error } = await supabase.rpc("basket_set_item_quantity", {
+        p_basket_id: basket_id,
+        p_basket_item_id: id,
+        p_quantity: qty,
+    });
+
+    if(error){
+        throw new Error(`Error updating basket item quantity: ${error.message}`);
+    }
 
     revalidatePath("/basket")
 }
 
 
 export async function removeBasketItem(basket_id: string, id: string){
-
-    console.log("Basket_id:",basket_id);
-    console.log("id:", id);
     const supabase = await createServer();
 
-    const { data: removeItem, error} = await supabase.from('basket_items').delete().eq('basket_id', basket_id).eq('id', id);
+    const { error } = await supabase.rpc("basket_remove_item", {
+        p_basket_id: basket_id,
+        p_basket_item_id: id,
+    });
 
     if(error){
          throw new Error(`Error removing item from basket: ${error.message}`);

@@ -1,32 +1,46 @@
 'use client'
 
 import { createClient } from "@/lib/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 
 
 export default function AuthComponent(){
 
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
+    const pathname = usePathname();
+
+    const isAuthPage =
+        pathname === "/login" ||
+        pathname === "/signup" ||
+        pathname === "/forgot-password" ||
+        pathname === "/reset-password" ||
+        pathname?.startsWith("/auth/");
 
     useEffect(() => {
+        if(isAuthPage){
+            return;
+        }
+
+        let active = true;
+
         const intiAnonymous = async () => {
             const { data: { session }} = await supabase.auth.getSession();
 
+            if(!active) return;
+
             if(!session){
-                console.log("No user logged in, signing in anonymously");
                 await supabase.auth.signInAnonymously();
             }
-            // else if(session.user.is_anonymous){
-            //     console.log("user is signed in anonymously!")
-            // }
-            // else{
-            //     console.log("User already logged in:", session.user);
-            // }
         }
 
         intiAnonymous();
 
-    }, [supabase.auth])
+        return () => {
+            active = false;
+        };
+
+    }, [isAuthPage, supabase])
    
    
     return <></>

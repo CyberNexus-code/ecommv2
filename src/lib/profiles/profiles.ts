@@ -14,3 +14,15 @@ export async function setProfileAdress(profile_id: string, street_no: string, st
     }
 
 }
+
+export async function getUserWithProfile(){
+
+    const supabase = await createServer();
+    const {data: {user}} = await supabase.auth.getUser();
+
+    if(!user) return { user: null, profile: null};
+
+    const {data: profile} = await supabase.from('profiles').select().eq('id', user.id).single();
+
+    return { user, profile}
+}

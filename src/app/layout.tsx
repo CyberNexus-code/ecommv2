@@ -30,7 +30,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen w-full overflow-y-auto md:overflow-y-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col w-full overflow-y-auto`}
         >
         <AuthComponent />
         <Nav categories={categories}/>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { UserCircleIcon, Bars3Icon, ShoppingCartIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/react";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type User } from "@supabase/supabase-js";
 import { logout } from "@/app/_actions/authActions";
 import type { CategoryType } from "@/types/categoryType";
@@ -18,7 +18,7 @@ type NavProps = {
 export default function Nav({ categories }: NavProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function resolveRole(user: User | null) {
@@ -27,12 +27,15 @@ export default function Nav({ categories }: NavProps) {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
+      if (error) {
+        console.error("Unable to resolve role:", error.message);
+      }
       setRole(data?.role ?? null);
     }
 
