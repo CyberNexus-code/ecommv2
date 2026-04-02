@@ -19,6 +19,37 @@ import type { AuthContextType, AuthRole } from '@/types/auth'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function getAuthFallbackDisplayName(user: User | null): string | null {
+  if (!user || user.is_anonymous) {
+    return null
+  }
+
+  const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
+  const givenName = typeof metadata.given_name === 'string' ? metadata.given_name.trim() : ''
+  const familyName = typeof metadata.family_name === 'string' ? metadata.family_name.trim() : ''
+  const fullName = [givenName, familyName].filter(Boolean).join(' ').trim()
+
+  if (fullName) {
+    return fullName
+  }
+
+  const metadataNameCandidates = [
+    metadata.full_name,
+    metadata.name,
+    metadata.preferred_username,
+    metadata.username,
+  ]
+
+  for (const candidate of metadataNameCandidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim()
+    }
+  }
+
+  const emailPrefix = user.email?.split('@')[0]?.trim()
+  return emailPrefix || null
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
   const pathname = usePathname()
@@ -59,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!active) return
 
-      const fallbackName = nextUser.email?.split('@')[0] ?? 'there'
+      const fallbackName = getAuthFallbackDisplayName(nextUser) ?? 'there'
 
       if (error) {
         void logClientError('auth.resolveRole', error, { userId: nextUser.id, pathname })
@@ -113,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(nextUser)
+      setDisplayName(getAuthFallbackDisplayName(nextUser))
       await resolveRole(nextUser)
 
       if (nextUser && !nextUser.is_anonymous) {
