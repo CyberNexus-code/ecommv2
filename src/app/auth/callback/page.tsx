@@ -14,7 +14,6 @@ export default function AuthCallbackPage() {
   const searchParams = useSearchParams()
   const handledRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
-  const code = searchParams.get('code')
   const safeNext = sanitizeNextPath(searchParams.get('next'))
 
   useEffect(() => {
@@ -25,42 +24,24 @@ export default function AuthCallbackPage() {
     handledRef.current = true
 
     async function completeAuth() {
-      if (code) {
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      // The browser Supabase client (created by @supabase/ssr) has
+      // detectSessionInUrl enabled. When the page loads with ?code=…,
+      // the client automatically performs the PKCE code exchange during
+      // its initialization. Calling exchangeCodeForSession manually
+      // would race with that and fail because the code verifier is
+      // consumed on the first exchange.
+      //
+      // We simply wait for initialization to finish and then check
+      // whether a session was established.
+      const { error: initError } = await supabase.auth.initialize()
 
-        if (exchangeError) {
-          void logClientError('auth.callback.exchangeCodeForSession', exchangeError, { safeNext })
-          setError('We could not complete sign in. Please try again.')
-          return
-        }
-
-        const tokenPayload = getOAuthTokenPayload(data.session)
-
-        if (tokenPayload) {
-          const response = await fetch('/api/auth/oauth-tokens', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(tokenPayload),
-          })
-
-          if (!response.ok) {
-            void logClientError('auth.callback.persistOAuthTokens', new Error('Failed to persist OAuth tokens'), {
-              safeNext,
-              status: response.status,
-            })
-          }
-        }
-
-        if (data.session?.user && !data.session.user.is_anonymous) {
-          router.replace(safeNext)
-          router.refresh()
-          return
-        }
+      if (initError) {
+        void logClientError('auth.callback.initialize', initError, { safeNext })
+        setError('We could not complete sign in. Please try again.')
+        return
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      const { data, error: sessionError } = await supabase.auth.getSession()
 
       if (sessionError) {
         void logClientError('auth.callback.getSession', sessionError, { safeNext })
@@ -68,7 +49,21 @@ export default function AuthCallbackPage() {
         return
       }
 
-      if (sessionData.session?.user && !sessionData.session.user.is_anonymous) {
+      if (data.session?.user && !data.session.user.is_anonymous) {
+        const tokenPayload = getOAuthTokenPayload(data.session)
+
+        if (tokenPayload) {
+          try {
+            await fetch('/api/auth/oauth-tokens', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(tokenPayload),
+            })
+          } catch {
+            // Non-critical – token persistence failures are logged server-side
+          }
+        }
+
         router.replace(safeNext)
         router.refresh()
         return
@@ -78,7 +73,7 @@ export default function AuthCallbackPage() {
     }
 
     void completeAuth()
-  }, [code, router, safeNext, supabase])
+  }, [router, safeNext, supabase])
 
   return (
     <div className="flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10">
