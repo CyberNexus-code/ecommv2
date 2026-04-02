@@ -4,23 +4,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import Nav from '@/components/Nav/Nav'
+import { isAuthPath } from '@/lib/auth/paths'
 import { AuthProvider } from '@/lib/auth/context'
 import type { CategoryType } from '@/types/categoryType'
 
 type AppShellProps = {
   categories: CategoryType[]
   children: ReactNode
-}
-
-function isAuthPath(pathname: string | null) {
-  return (
-    pathname === '/login' ||
-    pathname === '/signup' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password' ||
-    pathname === '/update-password' ||
-    pathname?.startsWith('/auth/')
-  )
 }
 
 export default function AppShell({ categories, children }: AppShellProps) {

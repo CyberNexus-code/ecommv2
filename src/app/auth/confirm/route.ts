@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServer } from "@/lib/supabase/server";
+import { sanitizeNextPath } from '@/lib/auth/paths'
 import type { EmailOtpType } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
@@ -7,23 +8,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const code = requestUrl.searchParams.get("code");
   const type = requestUrl.searchParams.get("type") as EmailOtpType | null;
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  let next = requestUrl.searchParams.get("next") ?? "/";
-
-  if (!next.startsWith("/")) {
-    next = "/";
-  }
-
-  const authFinalizePath = code
-    ? `/auth/finalize?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`
-    : `/auth/finalize?next=${encodeURIComponent(next)}`;
-
-  const redirectUrl =
-    process.env.NODE_ENV === "development"
-      ? `${requestUrl.origin}${authFinalizePath}`
-      : forwardedHost
-        ? `https://${forwardedHost}${authFinalizePath}`
-        : `${requestUrl.origin}${authFinalizePath}`;
+  const next = sanitizeNextPath(requestUrl.searchParams.get('next'));
 
   const supabase = await createServer();
 
@@ -48,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   // Flow B: code (PKCE/code flow)
   if (code) {
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(new URL(`/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`, requestUrl.origin));
   }
 
   // Flow C: links that carry tokens in URL hash are not visible to server routes.

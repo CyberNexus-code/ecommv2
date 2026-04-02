@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client';
+import { getOAuthProviderLabel, startOAuthSignIn } from '@/lib/auth/oauth';
 import { rememberPendingGuestMerge } from '@/lib/auth/pendingGuestMerge';
 import Link from 'next/link';
 
@@ -20,6 +21,7 @@ export default function Login(){
     const [oauthLoading, setOAuthLoading] = useState<string | null>(null)
     const next = searchParams.get('next') ?? '/'
     const showResetSuccess = searchParams.get('reset') === 'success'
+    const googleLabel = getOAuthProviderLabel('google')
 
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -68,10 +70,6 @@ export default function Login(){
                 return;
             }
         } catch {
-            const { data: current } = await supabase.auth.getSession();
-            if(!current.session && window.location.pathname === '/login'){
-                await supabase.auth.signInAnonymously();
-            }
             setError("Unable to login right now. Please try again.");
         } finally{
             setLoading(false);
@@ -83,36 +81,17 @@ export default function Login(){
         setError(null);
 
         try {
-            const { data: current } = await supabase.auth.getSession();
-            if(current.session?.user){
-                if(current.session.user.is_anonymous){
-                    rememberPendingGuestMerge(current.session.user.id);
-                }
-
-                const { error: signOutError } = await supabase.auth.signOut();
-
-                if(signOutError){
-                    setError(signOutError.message);
-                    return;
-                }
-            }
-
-            const { error: oauthError } = await supabase.auth.signInWithOAuth({
+            const { error: oauthError } = await startOAuthSignIn({
+                supabase,
                 provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'select_account consent',
-                    },
-                },
+                next,
             });
 
             if(oauthError){
                 setError(oauthError.message);
             }
         } catch {
-            setError('Unable to sign in with Google. Please try again.');
+            setError(`Unable to sign in with ${googleLabel}. Please try again.`);
         } finally {
             setOAuthLoading(null);
         }
@@ -143,7 +122,7 @@ export default function Login(){
                                 <path fill='currentColor' d='M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z'/>
                                 <path fill='currentColor' d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'/>
                             </svg>
-                            {oauthLoading === 'google' ? 'Signing in...' : 'Continue with Google'}
+                            {oauthLoading === 'google' ? 'Signing in...' : `Continue with ${googleLabel}`}
                         </button>
                     </div>
 

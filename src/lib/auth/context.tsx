@@ -11,23 +11,13 @@ import {
 } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
+import { isAuthPath } from '@/lib/auth/paths'
 import { createClient } from '@/lib/supabase/client'
 import { logClientError } from '@/lib/logging/client'
 import { clearPendingGuestMerge, getPendingGuestMergeUserId } from '@/lib/auth/pendingGuestMerge'
 import type { AuthContextType, AuthRole } from '@/types/auth'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-function isAuthPath(pathname: string | null) {
-  return (
-    pathname === '/login' ||
-    pathname === '/signup' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password' ||
-    pathname === '/update-password' ||
-    pathname?.startsWith('/auth/')
-  )
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
@@ -39,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const lastMergedGuestUserId = useRef<string | null>(null)
   const isSigningOut = useRef(false)
+  const guestSessionPromiseRef = useRef<Promise<User | null> | null>(null)
 
   useEffect(() => {
     let active = true
@@ -98,65 +89,103 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.refresh()
     }
 
-    async function ensureSession() {
+    async function syncAuthState(nextUser: User | null) {
+      if (!active) {
+        return
+      }
+
+      setUser(nextUser)
+      await resolveRole(nextUser)
+
+      if (nextUser && !nextUser.is_anonymous) {
+        await mergePendingGuestData(nextUser)
+      }
+    }
+
+    async function ensureGuestSession(reason: string) {
+      if (!active || isAuthPath(pathname) || isSigningOut.current) {
+        return null
+      }
+
+      const { data: current, error: currentError } = await supabase.auth.getSession()
+
+      if (!active) {
+        return null
+      }
+
+      if (currentError) {
+        void logClientError('auth.ensureGuestSession.getSession', currentError, { pathname, reason })
+      }
+
+      const currentUser = current.session?.user ?? null
+
+      if (currentUser) {
+        return currentUser
+      }
+
+      if (!guestSessionPromiseRef.current) {
+        guestSessionPromiseRef.current = (async () => {
+          const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
+
+          if (anonymousError) {
+            void logClientError('auth.ensureGuestSession.signInAnonymously', anonymousError, { pathname, reason })
+            return null
+          }
+
+          return anonymousData.user ?? anonymousData.session?.user ?? null
+        })().finally(() => {
+          guestSessionPromiseRef.current = null
+        })
+      }
+
+      return guestSessionPromiseRef.current
+    }
+
+    async function hydrateSession(reason: string) {
       const { data, error } = await supabase.auth.getSession()
 
       if (!active) return
 
       if (error) {
-        void logClientError('auth.ensureSession.getSession', error, { pathname })
+        void logClientError('auth.hydrateSession.getSession', error, { pathname, reason })
       }
 
       let nextUser = data.session?.user ?? null
 
       if (!nextUser && !isAuthPath(pathname) && !isSigningOut.current) {
-        const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
-
-        if (!active) return
-
-        if (anonymousError) {
-          void logClientError('auth.ensureSession.signInAnonymously', anonymousError, { pathname })
-        } else {
-          nextUser = anonymousData.user ?? anonymousData.session?.user ?? null
-        }
+        nextUser = await ensureGuestSession(reason)
       }
 
-      setUser(nextUser)
-      await resolveRole(nextUser)
-      await mergePendingGuestData(nextUser)
+      await syncAuthState(nextUser)
+
       if (active) {
         setLoading(false)
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return
 
-      const nextUser = session?.user ?? null
-      setUser(nextUser)
-      await resolveRole(nextUser)
-      await mergePendingGuestData(nextUser)
+      if (event === 'SIGNED_OUT') {
+        lastMergedGuestUserId.current = null
+      }
+
+      let nextUser = session?.user ?? null
 
       if (!nextUser && !isAuthPath(pathname) && !isSigningOut.current) {
-        const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
-
-        if (!active) return
-
-        if (anonymousError) {
-          void logClientError('auth.onAuthStateChange.restoreGuestSession', anonymousError, { pathname })
-        } else {
-          const guestUser = anonymousData.user ?? anonymousData.session?.user ?? null
-          setUser(guestUser)
-          await resolveRole(guestUser)
-        }
+        nextUser = await ensureGuestSession(`auth:${event}`)
       }
+
+      await syncAuthState(nextUser)
 
       if (active) {
         setLoading(false)
       }
     })
 
-    ensureSession()
+    void hydrateSession('initial')
 
     return () => {
       active = false
