@@ -3,6 +3,7 @@
 import { PlusIcon } from "@heroicons/react/24/outline"
 import { useState} from 'react'
 import { addCategory } from "@/app/_actions/categoryActions";
+import DashboardViewportPortal from "./DashboardViewportPortal";
 
 export default function AddcategoryModal(){
 
@@ -21,8 +22,9 @@ export default function AddcategoryModal(){
         </div>
 
         {showModal &&
-            <div className="fixed inset-0 flex justify-center items-center">
-                <div className="flex flex-col bg-white rounded-xl shadow-lg p-5 w-full max-w-md gap-5">
+            <DashboardViewportPortal>
+            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4" onClick={() => setShowModal(false)}>
+                <div className="flex w-full max-w-md flex-col gap-5 rounded-xl bg-white p-5 shadow-lg" onClick={(event) => event.stopPropagation()}>
                     <div className='flex flex-col'>
                         <h1 className='text-lg font-semibold border-b-1 pb-2'>Add category</h1>
                     </div>
@@ -36,6 +38,7 @@ export default function AddcategoryModal(){
                     </div>
                 </div>
             </div>
+            </DashboardViewportPortal>
         }
     </>)
 }

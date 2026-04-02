@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { TagType } from '@/types/itemType'
 import { createTag, updateTag, deleteTag } from '@/lib/items/tags'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import DashboardViewportPortal from './DashboardViewportPortal'
 
 type TagsModalProps = {
   tags: TagType[]
@@ -77,7 +78,8 @@ export default function TagsModal({ tags, isOpen, onClose, onUpdate }: TagsModal
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+    <DashboardViewportPortal>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4">
       <div className="flex max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-200 p-4">
           <h2 className="text-lg font-semibold text-rose-900">Manage Tags</h2>
@@ -227,5 +229,6 @@ export default function TagsModal({ tags, isOpen, onClose, onUpdate }: TagsModal
         </div>
       </div>
     </div>
+    </DashboardViewportPortal>
   )
 }

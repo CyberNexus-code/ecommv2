@@ -2,7 +2,9 @@
 
 import {useState} from 'react'
 import { updateProduct } from '@/app/_actions/productActions';
+import { addCategory } from '@/app/_actions/categoryActions';
 import TagManager from './TagManager';
+import DashboardViewportPortal from './DashboardViewportPortal';
 import type { CategoryType } from '@/types/categoryType';
 import type { ItemType, ProductFormValues, TagType } from '@/types/itemType';
 
@@ -12,6 +14,12 @@ type EditableProduct = ItemType & {
 }
 
 export default function EditProductModal({product, onClose}: {product: EditableProduct, onClose: ()=>void}) {
+    const createCategoryValue = '__create_new_category__'
+    const [categories, setCategories] = useState(product.catList)
+    const [isAddingCategory, setIsAddingCategory] = useState(false)
+    const [newCategoryName, setNewCategoryName] = useState('')
+    const [categoryError, setCategoryError] = useState<string | null>(null)
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false)
     const [values, setValues] = useState<ProductFormValues>({
         name: product.name,
         price: product.price,
@@ -23,6 +31,35 @@ export default function EditProductModal({product, onClose}: {product: EditableP
 
     function updateValue<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
         setValues((current) => ({ ...current, [key]: value }));
+    }
+
+    async function handleCreateCategory() {
+        const normalizedName = newCategoryName.trim()
+
+        if (!normalizedName) {
+            return
+        }
+
+        setIsCreatingCategory(true)
+        setCategoryError(null)
+
+        try {
+            const createdCategory = await addCategory(normalizedName)
+            setCategories((current) => {
+                if (current.some((category) => category.id === createdCategory.id)) {
+                    return current
+                }
+
+                return [...current, createdCategory].sort((left, right) => left.name.localeCompare(right.name))
+            })
+            updateValue('category_id', createdCategory.id)
+            setIsAddingCategory(false)
+            setNewCategoryName('')
+        } catch (error) {
+            setCategoryError(error instanceof Error ? error.message : 'Failed to create category')
+        } finally {
+            setIsCreatingCategory(false)
+        }
     }
 
     async function handleSave() {
@@ -39,10 +76,9 @@ export default function EditProductModal({product, onClose}: {product: EditableP
     };
 
     return (
-        <>
-            <div className='flex flex-col fixed rounded-lg m-auto inset-0 p-4 z-40' onClick={onClose}>
-                <div className='fixed inset-0 z-50 flex flex-col items-center justify-center'>
-                    <div className='bg-white rounded-xl shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto'  onClick={(e) => e.stopPropagation()}>
+        <DashboardViewportPortal>
+            <div className='fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4' onClick={onClose}>
+                    <div className='w-full max-w-md max-h-[min(90vh,52rem)] overflow-y-auto rounded-xl bg-white p-6 shadow-lg' onClick={(e) => e.stopPropagation()}>
                         <div className='flex flex-col'>
                             <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Edit Product</h1>
                         </div>
@@ -57,13 +93,58 @@ export default function EditProductModal({product, onClose}: {product: EditableP
                             </div>
                             <div className='mb-4'>
                                 <label className='block mb-2'>Category:</label>
-                                <select value={values.category_id ?? ''} onChange={(e) => updateValue('category_id', e.target.value === '' ? null : e.target.value)}
+                                <select value={isAddingCategory ? createCategoryValue : values.category_id ?? ''} onChange={(e) => {
+                                    if (e.target.value === createCategoryValue) {
+                                        setIsAddingCategory(true)
+                                        setCategoryError(null)
+                                        return
+                                    }
+
+                                    setIsAddingCategory(false)
+                                    setCategoryError(null)
+                                    updateValue('category_id', e.target.value === '' ? null : e.target.value)
+                                }}
                                 className='w-full border-1 p-2 rounded-md'>
                                     <option value="">Select category</option>
-                                    {product.catList.map((cat) => (
+                                    {categories.map((cat) => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
+                                    <option value={createCategoryValue}>+ Add new category</option>
                                 </select>
+                                {isAddingCategory ? (
+                                <div className='mt-3 border-t border-rose-100 pt-3'>
+                                    <p className='mb-2 text-xs font-medium text-gray-600'>Create and select a new category</p>
+                                    <div className='flex flex-col gap-2 sm:flex-row'>
+                                        <input
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(event) => setNewCategoryName(event.target.value)}
+                                            placeholder="New category name"
+                                            className='w-full rounded-md border-1 p-2'
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleCreateCategory}
+                                            disabled={!newCategoryName.trim() || isCreatingCategory}
+                                            className='rounded-md border border-rose-700 bg-rose-700 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-60'
+                                        >
+                                            {isCreatingCategory ? 'Creating...' : 'Create'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAddingCategory(false)
+                                                setNewCategoryName('')
+                                                setCategoryError(null)
+                                            }}
+                                            className='rounded-md border border-rose-200 px-3 py-2 text-sm text-rose-700 hover:bg-rose-50'
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    {categoryError ? <p className='mt-2 text-xs text-red-600'>{categoryError}</p> : null}
+                                </div>
+                                ) : null}
                             </div>
                               <div className="mb-4">
                                 <label className='block mb-2'>Description:</label>
@@ -90,9 +171,8 @@ export default function EditProductModal({product, onClose}: {product: EditableP
                             <button onClick={handleSave} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
                         </div>
                     </div>
-                </div>
             </div>
-        </>
+        </DashboardViewportPortal>
     )
 }
 

@@ -3,6 +3,7 @@
 import { PlusIcon } from "@heroicons/react/24/outline"
 import { useState } from "react"
 import { addProduct } from "@/app/_actions/productActions";
+import DashboardViewportPortal from "./DashboardViewportPortal";
 import type { CategoryType } from "@/types/categoryType";
 import type { ProductFormValues } from "@/types/itemType";
 
@@ -49,8 +50,9 @@ export default function AddProductModal({catList}: AddProductModalProps){
             </div>
 
             {showAddModal && 
-            <div className="fixed inset-0 flex justify-center items-center">
-                <div className="flex flex-col bg-white rounded-xl shadow-lg p-5 w-full max-w-md">
+            <DashboardViewportPortal>
+            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4" onClick={() => setShowAddModal(false)}>
+                <div className="flex max-h-[min(90vh,52rem)] w-full max-w-md flex-col overflow-y-auto rounded-xl bg-white p-5 shadow-lg" onClick={(event) => event.stopPropagation()}>
                     <div className='flex flex-col'>
                             <h1 className='text-lg font-semibold border-b-1 pb-2 mb-10'>Add Product</h1>
                         </div>
@@ -91,7 +93,8 @@ export default function AddProductModal({catList}: AddProductModalProps){
                             <button onClick={handleSave} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
                         </div>
                 </div>
-            </div>}
+            </div>
+            </DashboardViewportPortal>}
         </>
     )
 }

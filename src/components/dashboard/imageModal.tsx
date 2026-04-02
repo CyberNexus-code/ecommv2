@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/productActions";
 import { createClient } from "@/lib/supabase/client";
 import { convertToWebP } from "@/lib/items/imageHandler";
+import DashboardViewportPortal from "./DashboardViewportPortal";
 import type { ItemType } from "@/types/itemType";
 
 type EditableImage = {
@@ -228,8 +229,8 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     }
 
     return (
-        <>
-        <div className="fixed inset-0 z-40 flex bg-black/30 p-3 backdrop-blur-xs sm:p-5">
+        <DashboardViewportPortal>
+        <div className="fixed inset-0 z-[80] flex bg-black/30 p-3 backdrop-blur-xs sm:p-5">
             <div className="z-50 m-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] sm:max-h-[calc(100dvh-2.5rem)]">
                 <div className="flex min-h-0 flex-col p-4 sm:p-5">
                     <div className="min-w-0 border-b border-rose-100 pb-3">
@@ -288,6 +289,6 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                 </div>
             </div>
         </div>
-        </>
+        </DashboardViewportPortal>
     )
 }
