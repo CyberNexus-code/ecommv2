@@ -16,7 +16,8 @@ export default function Nav({ categories }: NavProps) {
   const { user: currentUser, role, displayName, isAuthenticated, signOut } = useAuth();
 
   const isAnonymousGuest = !!currentUser?.is_anonymous;
-  const isLoggedOut = !isAuthenticated;
+  const hasSession = !!currentUser;
+  const showLoginCta = !hasSession;
 
   function formatName(name: string) {
     return name
@@ -94,7 +95,7 @@ export default function Nav({ categories }: NavProps) {
             <ShoppingCartIcon className="size-5" />
           </Link>
 
-          {isLoggedOut ? (
+          {showLoginCta ? (
             <Link href="/login" className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
               Log in
               <UserCircleIcon className="size-5" />
@@ -167,7 +168,7 @@ export default function Nav({ categories }: NavProps) {
                 </CloseButton>
 
                 <div className="mt-2 border-t border-rose-100 pt-2">
-                  {isLoggedOut ? (
+                  {showLoginCta ? (
                     <CloseButton as={Link} href="/login" className="inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
                       <UserCircleIcon className="size-5" /> Log in
                     </CloseButton>
