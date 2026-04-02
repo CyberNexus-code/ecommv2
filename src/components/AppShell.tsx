@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import Nav from '@/components/Nav/Nav'
@@ -34,7 +35,19 @@ export default function AppShell({ categories, children }: AppShellProps) {
       <Nav categories={categories} />
       <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35 overflow-y-auto" />
       <div className='no-scrollbar flex-1 overflow-y-auto'>
-        {children}
+        <div className="flex min-h-full flex-col">
+          <div className="flex-1">{children}</div>
+          <footer className="border-t border-rose-100 bg-white/85 px-4 py-5 backdrop-blur md:px-6">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 text-sm text-stone-600 md:flex-row md:items-center md:justify-between">
+              <p>© 2026 Cute & Creative Toppers. All rights reserved.</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Link href="/privacy-policy" className="transition hover:text-rose-700">Privacy Policy</Link>
+                <Link href="/terms-of-service" className="transition hover:text-rose-700">Terms of Service</Link>
+                <Link href="/contact" className="transition hover:text-rose-700">Contact</Link>
+              </div>
+            </div>
+          </footer>
+        </div>
       </div>
     </AuthProvider>
   )

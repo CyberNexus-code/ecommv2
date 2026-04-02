@@ -40,10 +40,16 @@ export async function removeBasketItem(basket_id: string, id: string){
 
 export async function  placeOrder(formData: FormData) {
     const basket_id = formData.get('basket_id') as string
+    const checkoutConfirmation = formData.get('checkout_confirmation') as string
 
     if(!basket_id){
         await logServerError('basketActions.placeOrder.missingBasketId', new Error('No basket id received from form submission'));
         throw new Error("Unable to place order: missing basket reference.");
+    }
+
+    if(checkoutConfirmation !== 'accepted'){
+        await logServerError('basketActions.placeOrder.missingConfirmation', new Error('Checkout confirmation checkbox was not accepted before order submission'));
+        throw new Error("Please confirm the terms and that your delivery address is accurate before placing the order.");
     }
 
     await placeOrderLogic(basket_id);

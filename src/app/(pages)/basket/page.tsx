@@ -1,10 +1,11 @@
 'use server'
 
 import { getBasket } from "@/lib/baskets/basket";
-import { setItemQuantity, removeBasketItem, placeOrder } from "@/app/_actions/basketActions";
+import { setItemQuantity, removeBasketItem } from "@/app/_actions/basketActions";
 import { setAddress } from "@/app/_actions/authActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
 import GuestCheckoutEmailForm from "@/components/basket/GuestCheckoutEmailForm";
+import PlaceOrderForm from "@/components/basket/PlaceOrderForm";
 import ButtonRose from "@/components/ui/button";
 import { hasRegisteredAccountEmail } from "@/lib/auth/accountLookup";
 import { createServer } from "@/lib/supabase/server";
@@ -55,7 +56,11 @@ export default async function BasketPage() {
                       <p>{profile.city}</p>
                       <p>{profile.postal_code}</p>
                       </div>
-                      <p className="mt-4 text-xs text-stone-500 font-thin">*Please ensure that the provided delivery address is correct, <span className="underline text-rose-600">Cute & Creative does not take resposibility</span> if the delivery address provided is incorrect.</p>
+                      <p className="mt-4 text-xs font-thin text-stone-500">
+                        Please ensure your delivery address is complete and correct. Cute & Creative Toppers is not
+                        responsible for failed, delayed, or misdirected delivery caused by incorrect customer-provided
+                        address information.
+                      </p>
                     </div>
                        :
                       <p>No Delivery Address Set</p>
@@ -79,10 +84,7 @@ export default async function BasketPage() {
                 />
               ) : (
                   profile?.delivery_address && profile.postal_code ? 
-                  <form action={placeOrder} className="w-full">
-                    <input type="hidden" name="basket_id" value={basket[0]?.basket_id} />
-                    <ButtonRose type="submit" variant="primary">Place Order</ButtonRose>
-                  </form> :
+                  <PlaceOrderForm basketId={basket[0]?.basket_id ?? ''} /> :
                   <form action={setAddress} className="w-full flex flex-col gap-2 font-semibold text-rose-900">
                     <input type="hidden" name="profile_id" value={profile?.id} />
                     <label>Street No:</label>
@@ -93,6 +95,10 @@ export default async function BasketPage() {
                     <input className='w-full rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" name="city" required/>
                     <label>Postal Code</label>
                     <input className='w-1/3 rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" inputMode="numeric" pattern="\d*" name="postal_code"  required/>
+                    <p className="text-xs font-normal leading-5 text-stone-500">
+                      Please double-check your delivery details before saving them. Incorrect or incomplete address
+                      information can delay delivery and remains the customer&apos;s responsibility.
+                    </p>
                     <ButtonRose type="submit" variant="secondary1">Set Address</ButtonRose>
                   </form>
               )}
