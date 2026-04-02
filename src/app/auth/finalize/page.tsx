@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { logClientError } from '@/lib/logging/client'
 
 export default function AuthFinalizePage() {
   const supabase = useMemo(() => createClient(), [])
@@ -25,8 +26,10 @@ export default function AuthFinalizePage() {
         if (!active) return
 
         if (exchangeError) {
-          setError(exchangeError.message)
-          return
+          void logClientError('auth.finalize.exchangeCodeForSession', exchangeError, {
+            safeNext,
+            hasCode: true,
+          })
         }
 
         if (exchangeData.session?.user && !exchangeData.session.user.is_anonymous) {
@@ -42,8 +45,7 @@ export default function AuthFinalizePage() {
       if (!active) return
 
       if (sessionError) {
-        setError(sessionError.message)
-        return
+        void logClientError('auth.finalize.getSession', sessionError, { safeNext })
       }
 
       if (data.session?.user && !data.session.user.is_anonymous) {
@@ -57,9 +59,9 @@ export default function AuthFinalizePage() {
 
     const timeoutId = window.setTimeout(() => {
       if (!redirectedRef.current && active) {
-        setError('We could not finish signing you in. Please try again.')
+        setError('Sign in took longer than expected. Please try again.')
       }
-    }, 4000)
+    }, 5000)
 
     const {
       data: { subscription },
@@ -98,7 +100,10 @@ export default function AuthFinalizePage() {
             </Link>
           </div>
         ) : (
-          <p className="text-sm text-stone-500">Please wait...</p>
+          <div className="space-y-3">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-rose-200 border-t-rose-700" />
+            <p className="text-sm text-stone-500">Please wait...</p>
+          </div>
         )}
       </div>
     </div>
