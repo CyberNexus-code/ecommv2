@@ -2,10 +2,11 @@
 
 import { createServer } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getAccountDeletionOrderSummary } from "@/lib/orders/accountDeletion"
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { setProfileAdress } from "@/lib/profiles/profiles";
-import { logServerError } from "@/lib/logging/server";
+import { logServerError, logServerWarning } from "@/lib/logging/server";
 
 export async function logout() {
     const supabase = await createServer();
@@ -78,6 +79,24 @@ export async function deleteOwnAccount(){
 
     if(!user){
         throw new Error("Not authenticated");
+    }
+
+    const orderSummary = await getAccountDeletionOrderSummary(user.id);
+
+    if(orderSummary.hasActiveOrders){
+        await logServerWarning(
+            'authActions.deleteOwnAccount.activeOrders',
+            'Account deletion requested while active orders still require fulfilment or payment handling.',
+            {
+                deletedUserId: user.id,
+                activeOrderCount: orderSummary.activeOrderCount,
+                activeOrders: orderSummary.activeOrders.map((order) => ({
+                    id: order.id,
+                    orderNumber: order.orderNumber,
+                    status: order.status,
+                })),
+            }
+        );
     }
 
     // 1. Redact PII and close baskets (runs as the authenticated user)

@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic"
 
 import OrderListContianer from "@/components/dashboard/orders/orderlistcontainer";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import { getOrders } from "@/lib/dashboard/orders/orders";
 
 export default async function clientOrders(){
-    const orders = await getOrders();
+    const [orders, settings] = await Promise.all([getOrders(), getBusinessSettings()]);
     const now = Date.now();
     const activeOrders = orders?.filter(order => (order.status !== "completed") && (order.status !== "cancelled")) ?? [];
     const closedOrders = orders?.filter(order => (order.status === "completed") || (order.status === "cancelled")) ?? [];
@@ -28,14 +29,14 @@ export default async function clientOrders(){
                     <h2 className="mb-2 text-lg font-semibold text-rose-900">Active Orders</h2>
                     <p className="mb-3 text-sm text-stone-600">Awaiting payment, processing, or shipping.</p>
                     {activeOrders.length > 0 ? activeOrders.map(order => (
-                        <OrderListContianer key={order.id} order={order} now={now} />
+                        <OrderListContianer key={order.id} order={order} now={now} referencePrefix={settings.payment_reference_prefix} />
                     )) : <p className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">No active orders right now.</p>}
                 </div>
                 <div className="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
                     <h2 className="mb-2 text-lg font-semibold text-rose-900">Completed & Cancelled</h2>
                     <p className="mb-3 text-sm text-stone-600">Recently closed order history.</p>
                     {closedOrders.length > 0 ? closedOrders.map(order => (
-                        <OrderListContianer key={order.id} order={order} now={now} />
+                        <OrderListContianer key={order.id} order={order} now={now} referencePrefix={settings.payment_reference_prefix} />
                     )) : <p className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">No closed orders yet.</p>}
                 </div>
             </div>

@@ -135,8 +135,10 @@ export default function TermsOfServicePage() {
 
       <Section title="Account Deletion and Record Retention">
         <p>
-          If you request deletion of your account through the application, your profile may be anonymised rather than
-          permanently erased where we need to retain accounting, tax, fraud-prevention, audit, or order records.
+          If you request deletion of your account through the application, your sign-in access is removed immediately.
+          We may still retain order, payment, delivery, and related business records that were already attached to an
+          order where they are needed for fulfilment, customer support, returns, fraud-prevention, accounting, tax,
+          audit, or other legal compliance purposes.
         </p>
       </Section>
 

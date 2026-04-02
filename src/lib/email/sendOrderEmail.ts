@@ -4,6 +4,7 @@ import {
   buildAdminReceiptText,
   buildInvoiceHtml,
   buildInvoiceText,
+  getInvoiceReference,
   getInvoiceLogoAttachment,
   type InvoicePayload,
 } from "@/lib/orders/invoice";
@@ -53,8 +54,9 @@ export async function sendOrderPlacedEmails(payload: OrderEmailPayload) {
   const adminEmail = process.env.ORDER_ADMIN_EMAIL ?? smtpUser;
   const invoiceLogo = await getInvoiceLogoAttachment();
 
+  const invoiceReference = getInvoiceReference(payload);
   const adminSubject = `New Order Receipt #${payload.orderNumber}`;
-  const clientSubject = `Invoice #${payload.orderNumber}`;
+  const clientSubject = `Invoice ${invoiceReference}`;
 
   await Promise.all([
     transporter.sendMail({
@@ -81,7 +83,7 @@ export async function sendOrderStatusUpdateEmail(
   const transporter = createTransporter();
   const smtpUser = getRequiredEnv("SMTP_USER");
 
-  const subject = `Order Update #${payload.orderNumber}: ${statusLabel(payload.status)}`;
+  const subject = `Order Update ${getInvoiceReference(payload)}: ${statusLabel(payload.status)}`;
   const intro = `Your order status changed from "${statusLabel(
     payload.previousStatus
   )}" to "${statusLabel(payload.status)}".`;

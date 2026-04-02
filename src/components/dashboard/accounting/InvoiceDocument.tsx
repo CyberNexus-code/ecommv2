@@ -6,12 +6,13 @@ import { formatCurrency, formatInvoiceDate, getInvoiceReference, type InvoicePay
 export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }) {
   const customerDisplay = getCustomerDisplay(invoice.customerName, invoice.customerEmail)
   const deletedAccount = isDeletedAccountEmail(invoice.customerEmail)
+  const invoiceReference = getInvoiceReference(invoice)
 
   return (
     <article className="mx-auto w-full max-w-4xl rounded-[28px] border border-rose-200 bg-white p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)] md:p-8 print:max-w-none print:rounded-none print:border-none print:p-0 print:shadow-none">
       <header className="flex flex-col gap-6 border-b border-rose-100 pb-6 md:flex-row md:items-start md:justify-between">
         <div className="space-y-3">
-          <Image src="/logo2.png" alt="Cute & Creative Toppers" width={220} height={80} className="h-16 w-auto object-contain" />
+          <Image src="/logo.png" alt="Cute & Creative Toppers" width={280} height={110} className="h-20 w-auto object-contain" />
           <div className="text-sm text-stone-600">
             <p>{invoice.businessSettings.business_name}</p>
             {invoice.businessSettings.business_email ? <p>{invoice.businessSettings.business_email}</p> : null}
@@ -20,9 +21,9 @@ export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }
         </div>
         <div className="text-left md:text-right">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">Invoice</p>
-          <h1 className="mt-1 text-3xl font-semibold text-rose-950">#{invoice.orderNumber}</h1>
+          <h1 className="mt-1 text-3xl font-semibold text-rose-950">{invoiceReference}</h1>
           <p className="mt-2 text-sm text-stone-600">Issued {formatInvoiceDate(invoice.createdAt)}</p>
-          <p className="mt-1 text-sm text-stone-600">Reference {getInvoiceReference(invoice)}</p>
+          <p className="mt-1 text-sm text-stone-600">Reference {invoiceReference}</p>
         </div>
       </header>
 
@@ -46,7 +47,7 @@ export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }
             <div className="flex justify-between gap-4"><dt>Account Number</dt><dd>{invoice.businessSettings.account_number || 'Not set'}</dd></div>
             <div className="flex justify-between gap-4"><dt>Branch Code</dt><dd>{invoice.businessSettings.branch_code || 'Not set'}</dd></div>
             <div className="flex justify-between gap-4"><dt>Account Type</dt><dd>{invoice.businessSettings.account_type || 'Not set'}</dd></div>
-            <div className="flex justify-between gap-4 font-semibold text-rose-800"><dt>Payment Reference</dt><dd>{getInvoiceReference(invoice)}</dd></div>
+            <div className="flex justify-between gap-4 font-semibold text-rose-800"><dt>Payment Reference</dt><dd>{invoiceReference}</dd></div>
           </dl>
         </div>
       </section>

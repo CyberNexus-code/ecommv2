@@ -1,6 +1,6 @@
 begin;
 
-select plan(7);
+select plan(11);
 
 create or replace function pg_temp.create_user(
   p_id uuid,
@@ -70,6 +70,30 @@ end;
 $$;
 
 select pg_temp.create_user('11111111-1111-4111-8111-111111111111', 'before@example.com');
+select pg_temp.create_user('22222222-2222-4222-8222-222222222222', 'pending@example.com');
+
+update public.profiles
+set
+  first_name = 'Pending',
+  last_name = 'Customer',
+  username = 'pending-customer',
+  delivery_address = '123 Test Street',
+  city = 'Durban',
+  postal_code = 4001,
+  updated_at = now()
+where id = '22222222-2222-4222-8222-222222222222';
+
+insert into public.categories (id, name)
+values ('55555555-5555-4555-8555-555555555555', 'Lifecycle Test Category');
+
+insert into public.items (id, category_id, name, price, quantity)
+values (
+  '66666666-6666-4666-8666-666666666666',
+  '55555555-5555-4555-8555-555555555555',
+  'Lifecycle Cake Topper',
+  12.50,
+  100
+);
 
 update auth.users
 set email = 'after@example.com'
@@ -89,9 +113,9 @@ values
 select pg_temp.authenticate_as('11111111-1111-4111-8111-111111111111');
 
 select is(
-  public.soft_delete_my_account() ->> 'success',
+  public.redact_and_orphan_profile() ->> 'success',
   'true',
-  'soft_delete_my_account reports success'
+  'redact_and_orphan_profile reports success for a user without active orders'
 );
 
 reset role;
@@ -99,19 +123,19 @@ reset role;
 select is(
   (select is_deleted::text from public.profiles where id = '11111111-1111-4111-8111-111111111111'),
   'true',
-  'soft_delete_my_account marks the profile as deleted'
+  'redact_and_orphan_profile marks the profile as deleted'
 );
 
 select matches(
   (select email from public.profiles where id = '11111111-1111-4111-8111-111111111111'),
   '^deleted\+[0-9a-f]+@redacted\.local$',
-  'soft_delete_my_account redacts the profile email'
+  'redact_and_orphan_profile redacts the profile email'
 );
 
 select is(
   (select status from public.baskets where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'),
   'closed',
-  'soft_delete_my_account closes open baskets'
+  'redact_and_orphan_profile closes open baskets'
 );
 
 select pg_temp.authenticate_as('11111111-1111-4111-8111-111111111111');
@@ -126,6 +150,41 @@ select is(
   public.is_active_account()::text,
   'false',
   'deleted users are no longer considered active accounts'
+);
+
+reset role;
+
+insert into public.baskets (id, user_id, status)
+values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3', '22222222-2222-4222-8222-222222222222', 'open');
+
+insert into public.basket_items (id, basket_id, item_id, quantity)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3', '66666666-6666-4666-8666-666666666666', 1);
+
+select pg_temp.authenticate_as('22222222-2222-4222-8222-222222222222');
+
+select lives_ok(
+  $$ select public.place_order('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3'::uuid); $$,
+  'place_order succeeds before account deletion for the user with an active order'
+);
+
+select is(
+  public.redact_and_orphan_profile() ->> 'success',
+  'true',
+  'redact_and_orphan_profile also succeeds for a user with active orders'
+);
+
+reset role;
+
+select is(
+  (select customer_email from public.orders where user_id = '22222222-2222-4222-8222-222222222222' and status = 'order_placed_pending_payment' limit 1),
+  'pending@example.com',
+  'active order keeps its snapshotted customer email after account redaction'
+);
+
+select is(
+  (select delivery_address from public.orders where user_id = '22222222-2222-4222-8222-222222222222' and status = 'order_placed_pending_payment' limit 1),
+  '123 Test Street',
+  'active order keeps its snapshotted delivery address after account redaction'
 );
 
 select * from finish();

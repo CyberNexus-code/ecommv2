@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { BusinessSettings } from '@/types/businessSettings'
+import { getInvoiceReferenceFromOrderNumber } from '@/lib/orders/reference'
 
 export type InvoiceItem = {
   item_name?: string | null
@@ -48,8 +49,7 @@ export function formatInvoiceDate(value: string): string {
 }
 
 export function getInvoiceReference(payload: InvoicePayload): string {
-  const prefix = payload.businessSettings.payment_reference_prefix?.trim() || 'INV'
-  return `${prefix}-${payload.orderNumber}`
+  return getInvoiceReferenceFromOrderNumber(payload.orderNumber, payload.businessSettings.payment_reference_prefix)
 }
 
 function buildItemsRows(payload: InvoicePayload) {
@@ -70,6 +70,7 @@ function buildItemsRows(payload: InvoicePayload) {
 export function buildInvoiceHtml(payload: InvoicePayload): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const settings = payload.businessSettings
+  const invoiceReference = getInvoiceReference(payload)
 
   return `
   <div style="background:#fff7f8;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#1c1917;">
@@ -77,11 +78,11 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
       <div style="padding:24px;background:linear-gradient(135deg,#fff1f2,#ffffff);border-bottom:1px solid #fecdd3;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div>
-            <img src="cid:logo2" alt="Cute & Creative Toppers" style="height:64px;width:auto;display:block;" />
+            <img src="cid:invoice-logo" alt="Cute & Creative Toppers" style="height:82px;width:auto;display:block;" />
           </div>
           <div style="text-align:right;">
             <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#e11d48;font-weight:700;">Invoice</p>
-            <p style="margin:6px 0 0;font-size:22px;font-weight:700;color:#881337;">Order #${payload.orderNumber}</p>
+            <p style="margin:6px 0 0;font-size:22px;font-weight:700;color:#881337;">${escapeHtml(invoiceReference)}</p>
             <p style="margin:4px 0 0;color:#57534e;">Issued ${escapeHtml(formatInvoiceDate(payload.createdAt))}</p>
           </div>
         </div>
@@ -102,7 +103,7 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
             <p style="margin:6px 0 0;color:#57534e;"><strong>Account Number:</strong> ${escapeHtml(settings.account_number || 'Not set')}</p>
             <p style="margin:6px 0 0;color:#57534e;"><strong>Branch Code:</strong> ${escapeHtml(settings.branch_code || 'Not set')}</p>
             <p style="margin:6px 0 0;color:#57534e;"><strong>Account Type:</strong> ${escapeHtml(settings.account_type || 'Not set')}</p>
-            <p style="margin:10px 0 0;font-weight:700;color:#881337;">Reference: ${escapeHtml(getInvoiceReference(payload))}</p>
+            <p style="margin:10px 0 0;font-weight:700;color:#881337;">Reference: ${escapeHtml(invoiceReference)}</p>
           </div>
         </div>
 
@@ -144,10 +145,11 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
 
 export function buildInvoiceText(payload: InvoicePayload): string {
   const settings = payload.businessSettings
+  const invoiceReference = getInvoiceReference(payload)
   const lines = [
     `${settings.business_name} Invoice`,
-    `Order #: ${payload.orderNumber}`,
-    `Invoice reference: ${getInvoiceReference(payload)}`,
+    `Invoice: ${invoiceReference}`,
+    `Payment reference: ${invoiceReference}`,
     `Issued: ${formatInvoiceDate(payload.createdAt)}`,
     `Customer: ${payload.customerName || payload.customerEmail}`,
     `Email: ${payload.customerEmail}`,
@@ -170,6 +172,8 @@ export function buildInvoiceText(payload: InvoicePayload): string {
 }
 
 export function buildAdminReceiptHtml(payload: InvoicePayload): string {
+  const invoiceReference = getInvoiceReference(payload)
+
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#fff7f8;padding:20px;">
     <div style="max-width:700px;margin:0 auto;background:#fff;border:1px solid #fecdd3;border-radius:12px;overflow:hidden;">
@@ -178,7 +182,7 @@ export function buildAdminReceiptHtml(payload: InvoicePayload): string {
       </div>
       <div style="padding:16px;color:#1c1917;">
         <p style="margin:0 0 12px;">A new order has been placed and a customer invoice has been sent.</p>
-        <p style="margin:0 0 8px;"><strong>Order #:</strong> ${payload.orderNumber}</p>
+        <p style="margin:0 0 8px;"><strong>Invoice:</strong> ${escapeHtml(invoiceReference)}</p>
         <p style="margin:0 0 8px;"><strong>Customer:</strong> ${escapeHtml(payload.customerName || payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Email:</strong> ${escapeHtml(payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery:</strong> ${escapeHtml([payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', '))}</p>
@@ -200,8 +204,10 @@ export function buildAdminReceiptHtml(payload: InvoicePayload): string {
 }
 
 export function buildAdminReceiptText(payload: InvoicePayload): string {
+  const invoiceReference = getInvoiceReference(payload)
+
   return [
-    `New order receipt #${payload.orderNumber}`,
+    `New order receipt ${invoiceReference}`,
     `Customer: ${payload.customerName || payload.customerEmail}`,
     `Email: ${payload.customerEmail}`,
     `Delivery: ${[payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', ')}`,
@@ -212,11 +218,11 @@ export function buildAdminReceiptText(payload: InvoicePayload): string {
 }
 
 export async function getInvoiceLogoAttachment() {
-  const content = await readFile(path.join(process.cwd(), 'public', 'logo2.png'))
+  const content = await readFile(path.join(process.cwd(), 'public', 'logo.png'))
 
   return {
-    filename: 'logo2.png',
+    filename: 'logo.png',
     content,
-    cid: 'logo2',
+    cid: 'invoice-logo',
   }
 }

@@ -6,6 +6,7 @@ import { getBusinessSettings } from '@/lib/businessSettings'
 import { getCustomerDisplay } from '@/lib/customers/display'
 import { getAccountingOrders } from '@/lib/dashboard/accounting'
 import { formatCurrency } from '@/lib/orders/invoice'
+import { getInvoiceReferenceFromOrderNumber } from '@/lib/orders/reference'
 
 export default async function AccountingPage() {
   const [settings, orders] = await Promise.all([
@@ -28,7 +29,7 @@ export default async function AccountingPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Accounting</p>
           <h1 className="text-2xl font-semibold text-rose-900">Invoices and Exports</h1>
-          <p className="text-sm text-stone-600">Manage banking details, print invoices, and export order records for spreadsheets.</p>
+          <p className="text-sm text-stone-600">Manage banking details, print invoices, and export accountant-ready order records without exposing internal database identifiers.</p>
         </div>
         <Link href="/dashboard/accounting/export" className="inline-flex rounded-full bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-800">
           Export CSV
@@ -58,7 +59,7 @@ export default async function AccountingPage() {
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold text-rose-900">Export Ready</h2>
-          <p className="mt-1 text-sm text-stone-600">Use the order register export for invoice-level reporting and the line-item export for spreadsheet bookkeeping.</p>
+          <p className="mt-1 text-sm text-stone-600">Use the invoice register for summary handoff to your accountant and the line-item export for detailed bookkeeping support. Both exports use invoice references instead of internal order IDs.</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link href="/dashboard/accounting/export" className="inline-flex rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
               Export Invoice Register
@@ -71,9 +72,9 @@ export default async function AccountingPage() {
 
         <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold text-rose-900">Payment Reference</h2>
-          <p className="mt-1 text-sm text-stone-600">Invoices currently use the prefix below when generating EFT references.</p>
+          <p className="mt-1 text-sm text-stone-600">Customer-facing invoices and accounting exports use this full reference format.</p>
           <p className="mt-4 inline-flex rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">
-            {settings.payment_reference_prefix}-1234
+            {getInvoiceReferenceFromOrderNumber(1234, settings.payment_reference_prefix)}
           </p>
         </section>
       </div>
@@ -84,7 +85,7 @@ export default async function AccountingPage() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold text-rose-900">Invoice Register</h2>
-            <p className="text-sm text-stone-600">Recent orders with print-friendly invoice pages.</p>
+            <p className="text-sm text-stone-600">Recent orders with invoice references and print-friendly invoice pages.</p>
           </div>
         </div>
 
@@ -107,7 +108,7 @@ export default async function AccountingPage() {
 
                   return (
                     <tr key={order.orderId} className="border-b border-rose-50 last:border-b-0">
-                      <td className="px-3 py-3 font-medium text-rose-900">#{order.orderNumber}</td>
+                      <td className="px-3 py-3 font-medium text-rose-900">{getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix)}</td>
                       <td className="px-3 py-3 text-stone-700">
                         <p>{customerDisplay.primary}</p>
                         <p className="text-xs text-stone-500">{customerDisplay.secondary}</p>
@@ -116,7 +117,7 @@ export default async function AccountingPage() {
                       <td className="px-3 py-3 text-stone-700">{formatCurrency(order.total)}</td>
                       <td className="px-3 py-3 text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-ZA')}</td>
                       <td className="px-3 py-3">
-                        <Link href={`/dashboard/accounting/invoices/${order.orderId}`} className="inline-flex rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
+                        <Link href={`/dashboard/accounting/invoices/${getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix)}`} className="inline-flex rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
                           Open Invoice
                         </Link>
                       </td>

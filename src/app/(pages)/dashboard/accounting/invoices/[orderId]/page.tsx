@@ -1,11 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import InvoiceDocument from '@/components/dashboard/accounting/InvoiceDocument'
 import InvoicePrintButton from '@/components/dashboard/accounting/InvoicePrintButton'
 import { getBusinessSettings } from '@/lib/businessSettings'
 import { getAccountingOrderById } from '@/lib/dashboard/accounting'
+import { getInvoiceReferenceFromOrderNumber } from '@/lib/orders/reference'
 
 export default async function InvoicePage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params
@@ -16,6 +17,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ orderI
 
   if (!order) {
     notFound()
+  }
+
+  const invoiceReference = getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix)
+
+  if (orderId !== invoiceReference) {
+    redirect(`/dashboard/accounting/invoices/${invoiceReference}`)
   }
 
   return (

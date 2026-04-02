@@ -3,6 +3,7 @@ import { Field } from "@/components/ui/field";
 import { Section } from "@/components/ui/section";
 import { InlineEdit } from "@/components/ui/inlineEdit";
 import DeleteAccountForm from "@/components/account/DeleteAccountForm";
+import { getAccountDeletionOrderSummary } from "@/lib/orders/accountDeletion";
 import Link from "next/link";
 
 export default async function AccountPage() {
@@ -18,6 +19,8 @@ export default async function AccountPage() {
       </div>
     );
   }
+
+  const orderSummary = await getAccountDeletionOrderSummary(user.id);
 
   return (
     <div className="space-y-5">
@@ -121,9 +124,9 @@ export default async function AccountPage() {
 
         <Field
           label="Delete Account"
-          hint="This anonymizes your profile for audit retention and signs you out."
+          hint="Deletes your sign-in account immediately. Existing order and business records are retained only where fulfilment, support, or legal record-keeping still requires them."
         >
-          <DeleteAccountForm />
+          <DeleteAccountForm activeOrderCount={orderSummary.activeOrderCount} />
         </Field>
       </Section>
 

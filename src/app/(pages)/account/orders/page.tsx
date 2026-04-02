@@ -2,12 +2,14 @@ import Link from "next/link";
 import { getMyOrders } from "@/lib/orders/getMyOrders";
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus";
 import { getUserWithProfile } from "@/lib/profiles/profiles";
+import { getBusinessSettings } from "@/lib/businessSettings";
+import { getInvoiceReferenceFromOrderNumber } from "@/lib/orders/reference";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountOrdersPage() {
   const { user } = await getUserWithProfile();
-  const orders = await getMyOrders();
+  const [orders, settings] = await Promise.all([getMyOrders(), getBusinessSettings()]);
   const isGuestUser = !!user?.is_anonymous;
 
   return (
@@ -58,7 +60,7 @@ export default async function AccountOrdersPage() {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-rose-100 pb-3">
                   <div>
                     <p className="text-lg font-semibold text-rose-900">
-                      Order #{order.order_number}
+                      {getInvoiceReferenceFromOrderNumber(order.order_number, settings.payment_reference_prefix)}
                     </p>
                     <p className="text-sm text-stone-600">
                       {order.created_at.replace("T", " ").split(".")[0]}

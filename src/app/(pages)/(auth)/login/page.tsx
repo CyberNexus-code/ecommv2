@@ -7,6 +7,12 @@ import { getOAuthProviderLabel, startOAuthSignIn } from '@/lib/auth/oauth';
 import { rememberPendingGuestMerge } from '@/lib/auth/pendingGuestMerge';
 import Link from 'next/link';
 
+type AccountMethod = 'google' | 'password' | 'unknown'
+
+function normalizeEmail(value: string) {
+    return value.trim().toLowerCase()
+}
+
 export default function Login(){
 
     const supabase = useMemo(() => createClient(), []);
@@ -19,9 +25,49 @@ export default function Login(){
     const [error, setError ]= useState<string | null>(null)  
     const [loading, setLoading] = useState(false)
     const [oauthLoading, setOAuthLoading] = useState<string | null>(null)
+    const [accountMethod, setAccountMethod] = useState<AccountMethod>('unknown')
+    const [methodLoading, setMethodLoading] = useState(false)
     const next = searchParams.get('next') ?? '/'
     const showResetSuccess = searchParams.get('reset') === 'success'
     const googleLabel = getOAuthProviderLabel('google')
+
+    const emailLooksValid = normalizeEmail(email).includes('@')
+
+    async function fetchAccountMethod(targetEmail: string) {
+        const normalizedEmail = normalizeEmail(targetEmail)
+
+        if (!normalizedEmail || !normalizedEmail.includes('@')) {
+            setAccountMethod('unknown')
+            return 'unknown' as const
+        }
+
+        setMethodLoading(true)
+
+        try {
+            const response = await fetch('/api/auth/account-method', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: normalizedEmail }),
+            })
+
+            if (!response.ok) {
+                setAccountMethod('unknown')
+                return 'unknown' as const
+            }
+
+            const payload = (await response.json()) as { method?: AccountMethod }
+            const method = payload.method ?? 'unknown'
+            setAccountMethod(method)
+            return method
+        } catch {
+            setAccountMethod('unknown')
+            return 'unknown' as const
+        } finally {
+            setMethodLoading(false)
+        }
+    }
 
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -47,6 +93,13 @@ export default function Login(){
         setError(null)
 
         try{
+            const detectedMethod = await fetchAccountMethod(email)
+
+            if(detectedMethod === 'google'){
+                setError(`This email is already configured for ${googleLabel} sign-in. Use "Continue with ${googleLabel}" instead of a password.`)
+                return;
+            }
+
             const { data: current } = await supabase.auth.getSession();
             const currentUser = current.session?.user;
 
@@ -108,6 +161,9 @@ export default function Login(){
                             Password updated successfully. Sign in with your new password.
                         </p>
                     ) : null}
+                    <p className='rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-800'>
+                        Use one sign-in method per email. If you created the account with {googleLabel}, continue with {googleLabel} here instead of using a password.
+                    </p>
                     
                     <div className='flex flex-col gap-2'>
                         <button
@@ -137,19 +193,27 @@ export default function Login(){
 
                     <div className='flex flex-col items-start'>
                         <label className="block mb-1 text-sm font-medium">Email</label>
-                        <input type="email" placeholder='johnd@mail.com' name="email" value={email} onChange={e => setEmail(e.target.value)} required className='border p-2 w-full rounded-md'></input>
+                        <input type="email" placeholder='johnd@mail.com' name="email" value={email} onChange={e => {
+                            setEmail(e.target.value)
+                            setAccountMethod('unknown')
+                        }} onBlur={() => {
+                            void fetchAccountMethod(email)
+                        }} required className='border p-2 w-full rounded-md'></input>
+                        {methodLoading && emailLooksValid ? <p className='mt-1 text-xs text-stone-500'>Checking sign-in method...</p> : null}
+                        {accountMethod === 'google' ? <p className='mt-1 text-xs text-amber-700'>This email uses {googleLabel} sign-in. Continue with {googleLabel} instead of entering a password.</p> : null}
                     </div>
                     <div className='flex flex-col items-start'>
                         <label className="block mb-1 text-sm font-medium">Password</label>
                         <input type="password" placeholder='P@s$w0rd' name="password" value={password} onChange={e => setPassword(e.target.value)} required className='border p-2 w-full rounded-md'></input>
+                        {accountMethod === 'google' ? <p className='mt-1 text-xs text-stone-500'>Password login is disabled for this email to avoid duplicate sign-in methods.</p> : null}
                     </div>
                 </div>
                 <div className='flex flex-col justify-center items-center gap-2'>
                     <p className='text-gray-400 text-sm'>Don&apos;t have an account? <span className='text-rose-700 font-bold'><Link href={`/signup${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`}>Sign Up</Link></span></p>
                     <p className='text-gray-400 text-sm'><Link href="/forgot-password" className='text-rose-700 font-bold'>Forgot password?</Link></p>
                     {error ? <p className='mt-2 text-sm text-red-600'>{error}</p> : null}
-                    <button type="submit" disabled={loading} className='bg-rose-700 text-white px-4 py-2 w-full rounded-md disabled:bg-gray-400'>
-                        {loading ? 'Logging in...' : 'Login'}
+                    <button type="submit" disabled={loading || accountMethod === 'google'} className='bg-rose-700 text-white px-4 py-2 w-full rounded-md disabled:bg-gray-400'>
+                        {loading ? 'Logging in...' : accountMethod === 'google' ? `Use ${googleLabel} Above` : 'Login'}
                     </button>
                 </div>
             </div>

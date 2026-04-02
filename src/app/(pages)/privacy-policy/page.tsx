@@ -84,8 +84,10 @@ export default function PrivacyPolicyPage() {
           for as long as required by law, accounting, tax, fraud-prevention, or audit obligations.
         </p>
         <p>
-          If you request account deletion through the application, your profile data may be anonymised while order,
-          payment, and related business records are retained where necessary for legal and financial record-keeping.
+          If you request account deletion through the application, we delete your sign-in account and remove profile
+          details from ongoing account use. Order, payment, delivery, and related business records that were already
+          captured as part of an order may still be retained where necessary to complete fulfilment, provide support,
+          process returns or disputes, prevent fraud, and satisfy legal, tax, accounting, or audit obligations.
         </p>
       </Section>
 

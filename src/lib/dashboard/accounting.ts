@@ -1,6 +1,7 @@
 import { createServer } from '@/lib/supabase/server'
 import { logServerError } from '@/lib/logging/server'
 import type { InvoicePayload } from '@/lib/orders/invoice'
+import { getInvoiceReferenceFromOrderNumber, parseInvoiceLookup } from '@/lib/orders/reference'
 import type { BusinessSettings } from '@/types/businessSettings'
 
 type AccountingOrderRow = {
@@ -88,10 +89,12 @@ export async function getAccountingOrders(): Promise<AccountingOrder[]> {
 export async function getAccountingOrderById(orderId: string): Promise<AccountingOrder | null> {
   try {
     const supabase = await requireAdminSupabase()
+    const lookup = parseInvoiceLookup(orderId)
+
     const { data, error } = await supabase
       .from('orders')
       .select('id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(id, item_name, quantity, unit_price, line_total)')
-      .eq('id', orderId)
+      .or(lookup.orderNumber !== null ? `order_number.eq.${lookup.orderNumber}${lookup.isUuid ? `,id.eq.${orderId}` : ''}` : `id.eq.${orderId}`)
       .maybeSingle<AccountingOrderRow>()
 
     if (error) {
@@ -107,33 +110,35 @@ export async function getAccountingOrderById(orderId: string): Promise<Accountin
 
 export function buildAccountingCsv(orders: AccountingOrder[], settings: BusinessSettings): string {
   const header = [
-    'invoice_number',
-    'order_id',
-    'created_at',
+    'invoice_reference',
+    'invoice_date',
+    'payment_reference',
+    'currency',
+    'order_status',
     'customer_name',
     'customer_email',
-    'status',
-    'total',
+    'item_count',
+    'order_total_zar',
     'delivery_address',
     'delivery_city',
     'delivery_postal_code',
-    'payment_reference_prefix',
   ]
 
   const escape = (value: string) => `"${value.replaceAll('"', '""')}"`
 
   const rows = orders.map((order) => [
-    String(order.orderNumber),
-    order.orderId,
+    getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix),
     order.createdAt,
+    getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix),
+    'ZAR',
+    order.status,
     order.customerName,
     order.customerEmail,
-    order.status,
+    String(order.items.length),
     order.total.toFixed(2),
     order.deliveryAddress,
     order.deliveryCity,
     order.deliveryPostalCode,
-    settings.payment_reference_prefix,
   ].map((value) => escape(String(value ?? ''))).join(','))
 
   return [header.join(','), ...rows].join('\n')
@@ -141,34 +146,38 @@ export function buildAccountingCsv(orders: AccountingOrder[], settings: Business
 
 export function buildAccountingLineItemsCsv(orders: AccountingOrder[], settings: BusinessSettings): string {
   const header = [
-    'invoice_number',
-    'order_id',
-    'created_at',
+    'invoice_reference',
+    'invoice_date',
+    'payment_reference',
+    'currency',
+    'order_status',
     'customer_name',
     'customer_email',
-    'status',
-    'item_name',
+    'delivery_city',
+    'delivery_postal_code',
+    'item_description',
     'quantity',
-    'unit_price',
-    'line_total',
-    'payment_reference_prefix',
+    'unit_price_zar',
+    'line_total_zar',
   ]
 
   const escape = (value: string) => `"${value.replaceAll('"', '""')}"`
 
   const rows = orders.flatMap((order) =>
     order.items.map((item) => [
-      String(order.orderNumber),
-      order.orderId,
+      getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix),
       order.createdAt,
+      getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix),
+      'ZAR',
+      order.status,
       order.customerName,
       order.customerEmail,
-      order.status,
+      order.deliveryCity,
+      order.deliveryPostalCode,
       item.item_name ?? 'Item',
       String(item.quantity),
       item.unit_price.toFixed(2),
       item.line_total.toFixed(2),
-      settings.payment_reference_prefix,
     ].map((value) => escape(String(value ?? ''))).join(','))
   )
 
