@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { saveGoogleOAuthTokens } from "@/lib/auth/oauthTokens";
 import { createServer } from "@/lib/supabase/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
@@ -14,6 +15,13 @@ export async function GET(request: NextRequest) {
   if (!next.startsWith("/")) {
     next = "/";
   }
+
+  const redirectUrl =
+    process.env.NODE_ENV === "development"
+      ? `${requestUrl.origin}${next}`
+      : forwardedHost
+        ? `https://${forwardedHost}${next}`
+        : `${requestUrl.origin}${next}`;
 
   const supabase = await createServer();
 
@@ -38,23 +46,35 @@ export async function GET(request: NextRequest) {
 
   // Flow B: code (PKCE/code flow)
   if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    let response = NextResponse.redirect(redirectUrl);
+
+    const exchangeClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.redirect(redirectUrl);
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      },
+    );
+
+    const { data, error } = await exchangeClient.auth.exchangeCodeForSession(code);
 
     if (error) {
       return NextResponse.redirect(new URL("/login?reset=invalid", requestUrl.origin));
     }
 
     await saveGoogleOAuthTokens(data.session);
-
-    if (process.env.NODE_ENV === "development") {
-      return NextResponse.redirect(`${requestUrl.origin}${next}`);
-    }
-
-    if (forwardedHost) {
-      return NextResponse.redirect(`https://${forwardedHost}${next}`);
-    }
-
-    return NextResponse.redirect(`${requestUrl.origin}${next}`);
+    return response;
   }
 
   // Flow C: links that carry tokens in URL hash are not visible to server routes.
