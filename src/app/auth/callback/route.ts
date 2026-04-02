@@ -12,12 +12,14 @@ export async function GET(request: NextRequest) {
     next = "/";
   }
 
+  const authFinalizePath = `/auth/finalize?next=${encodeURIComponent(next)}`;
+
   const redirectUrl =
     process.env.NODE_ENV === "development"
-      ? `${origin}${next}`
+      ? `${origin}${authFinalizePath}`
       : forwardedHost
-        ? `https://${forwardedHost}${next}`
-        : `${origin}${next}`;
+        ? `https://${forwardedHost}${authFinalizePath}`
+        : `${origin}${authFinalizePath}`;
 
   if (code) {
     let response = NextResponse.redirect(redirectUrl);

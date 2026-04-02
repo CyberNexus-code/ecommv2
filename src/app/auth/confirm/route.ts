@@ -16,12 +16,14 @@ export async function GET(request: NextRequest) {
     next = "/";
   }
 
+  const authFinalizePath = `/auth/finalize?next=${encodeURIComponent(next)}`;
+
   const redirectUrl =
     process.env.NODE_ENV === "development"
-      ? `${requestUrl.origin}${next}`
+      ? `${requestUrl.origin}${authFinalizePath}`
       : forwardedHost
-        ? `https://${forwardedHost}${next}`
-        : `${requestUrl.origin}${next}`;
+        ? `https://${forwardedHost}${authFinalizePath}`
+        : `${requestUrl.origin}${authFinalizePath}`;
 
   const supabase = await createServer();
 
