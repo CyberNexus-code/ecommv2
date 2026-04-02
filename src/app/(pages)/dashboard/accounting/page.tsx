@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import BankingDetailsForm from '@/components/dashboard/accounting/BankingDetailsForm'
 import { getBusinessSettings } from '@/lib/businessSettings'
+import { getCustomerDisplay } from '@/lib/customers/display'
 import { getAccountingOrders } from '@/lib/dashboard/accounting'
 import { formatCurrency } from '@/lib/orders/invoice'
 
@@ -101,21 +102,27 @@ export default async function AccountingPage() {
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.orderId} className="border-b border-rose-50 last:border-b-0">
-                  <td className="px-3 py-3 font-medium text-rose-900">#{order.orderNumber}</td>
-                  <td className="px-3 py-3 text-stone-700">
-                    <p>{order.customerName || order.customerEmail}</p>
-                    <p className="text-xs text-stone-500">{order.customerEmail}</p>
-                  </td>
-                  <td className="px-3 py-3 text-stone-700">{order.status.replaceAll('_', ' ')}</td>
-                  <td className="px-3 py-3 text-stone-700">{formatCurrency(order.total)}</td>
-                  <td className="px-3 py-3 text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-ZA')}</td>
-                  <td className="px-3 py-3">
-                    <Link href={`/dashboard/accounting/invoices/${order.orderId}`} className="inline-flex rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
-                      Open Invoice
-                    </Link>
-                  </td>
-                </tr>
+                (() => {
+                  const customerDisplay = getCustomerDisplay(order.customerName, order.customerEmail)
+
+                  return (
+                    <tr key={order.orderId} className="border-b border-rose-50 last:border-b-0">
+                      <td className="px-3 py-3 font-medium text-rose-900">#{order.orderNumber}</td>
+                      <td className="px-3 py-3 text-stone-700">
+                        <p>{customerDisplay.primary}</p>
+                        <p className="text-xs text-stone-500">{customerDisplay.secondary}</p>
+                      </td>
+                      <td className="px-3 py-3 text-stone-700">{order.status.replaceAll('_', ' ')}</td>
+                      <td className="px-3 py-3 text-stone-700">{formatCurrency(order.total)}</td>
+                      <td className="px-3 py-3 text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-ZA')}</td>
+                      <td className="px-3 py-3">
+                        <Link href={`/dashboard/accounting/invoices/${order.orderId}`} className="inline-flex rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
+                          Open Invoice
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })()
               ))}
             </tbody>
           </table>

@@ -1,8 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { getCustomerDisplay, isDeletedAccountEmail } from '@/lib/customers/display'
 import { formatCurrency, formatInvoiceDate, getInvoiceReference, type InvoicePayload } from '@/lib/orders/invoice'
 
 export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }) {
+  const customerDisplay = getCustomerDisplay(invoice.customerName, invoice.customerEmail)
+  const deletedAccount = isDeletedAccountEmail(invoice.customerEmail)
+
   return (
     <article className="mx-auto w-full max-w-4xl rounded-[28px] border border-rose-200 bg-white p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)] md:p-8 print:max-w-none print:rounded-none print:border-none print:p-0 print:shadow-none">
       <header className="flex flex-col gap-6 border-b border-rose-100 pb-6 md:flex-row md:items-start md:justify-between">
@@ -25,10 +29,14 @@ export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }
       <section className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Invoice To</p>
-          <p className="mt-2 text-lg font-semibold text-rose-950">{invoice.customerName || invoice.customerEmail}</p>
-          <p className="mt-1 text-sm text-stone-600">{invoice.customerEmail}</p>
-          <p className="mt-3 text-sm text-stone-600">{invoice.deliveryAddress || 'Delivery address pending'}</p>
-          <p className="text-sm text-stone-600">{[invoice.deliveryCity, invoice.deliveryPostalCode].filter(Boolean).join(', ')}</p>
+          <p className="mt-2 text-lg font-semibold text-rose-950">{customerDisplay.primary}</p>
+          <p className="mt-1 text-sm text-stone-600">{customerDisplay.secondary}</p>
+          <p className="mt-3 text-sm text-stone-600">
+            {deletedAccount ? 'Delivery details redacted after account deletion' : invoice.deliveryAddress || 'Delivery address pending'}
+          </p>
+          <p className="text-sm text-stone-600">
+            {deletedAccount ? '' : [invoice.deliveryCity, invoice.deliveryPostalCode].filter(Boolean).join(', ')}
+          </p>
         </div>
         <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Banking Details</p>

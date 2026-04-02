@@ -3,6 +3,7 @@
 import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus"
+import { getCustomerDisplay } from "@/lib/customers/display"
 import { logClientError } from "@/lib/logging/client"
 import type { Order } from "@/types/order"
 import { updateStatus, cancelOrder } from "@/app/_actions/dashboardActions"
@@ -11,6 +12,7 @@ export default function OrderListContianer({order, now}: {order: Order, now: num
 
     const [showModal, setShowModal] = useState(false);
     const status = ORDER_STATUS_CONFIG[order.status] 
+    const customerDisplay = getCustomerDisplay(order.customer_name, order.customer_email)
 
     const orderAge = Math.floor((now - new Date(order.created_at).getTime()) / (1000 * 60 * 60 * 24));
 
@@ -59,7 +61,7 @@ export default function OrderListContianer({order, now}: {order: Order, now: num
             <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <h2 className="text-base font-semibold text-rose-900">{`# ${order.order_number}`}</h2>
-                    <p className="truncate text-sm text-stone-600">User: {order.customer_email}</p>
+                    <p className="truncate text-sm text-stone-600">User: {customerDisplay.primary}</p>
                     <p className="text-sm text-stone-500">{(order.created_at).replace('T',' ').split('.')[0]}</p>
                     <p className="mt-1 font-medium text-rose-700">Total: R {order.total}</p>
                 </div>
