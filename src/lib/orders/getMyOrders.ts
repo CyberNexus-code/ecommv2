@@ -1,4 +1,5 @@
 import { createServer } from "@/lib/supabase/server";
+import { logServerError } from "@/lib/logging/server";
 
 export type MyOrderItem = {
   id: string;
@@ -17,6 +18,21 @@ export type MyOrder = {
   order_items: MyOrderItem[];
 };
 
+type MyOrderRow = {
+  id: string;
+  order_number: number | string;
+  status: string;
+  total: number | string | null;
+  created_at: string;
+  order_items: {
+    id: string;
+    item_name: string | null;
+    quantity: number | string | null;
+    unit_price: number | string | null;
+    line_total: number | string | null;
+  }[];
+};
+
 export async function getMyOrders(): Promise<MyOrder[]> {
   const supabase = await createServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,10 +46,23 @@ export async function getMyOrders(): Promise<MyOrder[]> {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching my orders:", error.message);
+    await logServerError('orders.getMyOrders', error, { userId: user.id });
     return [];
   }
 
-  return (data ?? []) as MyOrder[];
+  return ((data ?? []) as MyOrderRow[]).map((order) => ({
+    id: order.id,
+    order_number: Number(order.order_number),
+    status: order.status,
+    total: Number(order.total ?? 0),
+    created_at: order.created_at,
+    order_items: (order.order_items ?? []).map((item) => ({
+      id: item.id,
+      item_name: item.item_name,
+      quantity: Number(item.quantity ?? 0),
+      unit_price: Number(item.unit_price ?? 0),
+      line_total: Number(item.line_total ?? 0),
+    })),
+  }));
 }
 

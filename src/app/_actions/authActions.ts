@@ -4,6 +4,7 @@ import { createServer } from "@/lib/supabase/server"
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { setProfileAdress } from "@/lib/profiles/profiles";
+import { logServerError } from "@/lib/logging/server";
 
 export async function logout() {
     const supabase = await createServer();
@@ -23,8 +24,6 @@ export async function setAddress(formData: FormData) {
     }
 
     revalidatePath("/basket")
-
-    console.log(profile_id, street_name, street_no, postal_code, city)
 }
 
 export async function updateProfileField(field: string, value: string){
@@ -38,7 +37,7 @@ export async function updateProfileField(field: string, value: string){
         const { error } = await supabase.auth.updateUser({ email: value });
 
         if(error){
-            console.error(error);
+            await logServerError('authActions.updateProfileField.updateUserEmail', error, { field });
             throw new Error("Failed to request email change");
         }
 
@@ -63,7 +62,7 @@ export async function updateProfileField(field: string, value: string){
     const { error } = await supabase.from('profiles').update({ [field]: value}).eq('id', user.id);
 
     if(error){
-        console.error(error);
+        await logServerError('authActions.updateProfileField.updateProfile', error, { field });
         throw new Error("Failed to upload profile");
     }
 
@@ -83,7 +82,7 @@ export async function deleteOwnAccount(){
     const { error } = await supabase.rpc("soft_delete_my_account");
 
     if(error){
-        console.error(error);
+        await logServerError('authActions.deleteOwnAccount', error);
         throw new Error("Failed to delete account");
     }
 

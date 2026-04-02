@@ -22,6 +22,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login?reset=invalid", requestUrl.origin));
     }
 
+    // If this is a recovery type, redirect to reset password page
+    if (type === "recovery") {
+      return NextResponse.redirect(new URL("/auth/reset-password", requestUrl.origin));
+    }
+
     return NextResponse.redirect(new URL(next, requestUrl.origin));
   }
 
@@ -38,5 +43,5 @@ export async function GET(request: NextRequest) {
 
   // Flow C: links that carry tokens in URL hash are not visible to server routes.
   // Let the client reset page handle them instead of failing immediately.
-  return NextResponse.redirect(new URL("/reset-password", requestUrl.origin));
+  return NextResponse.redirect(new URL("/auth/reset-password", requestUrl.origin));
 }

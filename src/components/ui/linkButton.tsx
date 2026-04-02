@@ -11,10 +11,10 @@ type LinkButtonProps = LinkProps & Omit<AnchorHTMLAttributes<HTMLAnchorElement>,
 
 export default function LinkButton({ children, variant="primary", loading = false, className="", ...props} : LinkButtonProps){
 
-    const base = `inline-flex items-center justify-center ${tokens.radius.md} px-4 py-2 ${tokens.text.sm} font-medium transition`
+    const base = `inline-flex items-center justify-center ${tokens.radius.md} px-4 py-2 ${tokens.text.sm} font-medium transition ${loading ? 'pointer-events-none opacity-70' : ''}`
 
     return (
-        <Link className={`${base} ${tokens.button[variant]} ${className}`} {...props}>
+        <Link aria-busy={loading} className={`${base} ${tokens.button[variant]} ${className}`} {...props}>
             {children}
         </Link>
     ) 

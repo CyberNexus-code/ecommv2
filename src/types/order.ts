@@ -13,7 +13,7 @@ export type Order = {
     quantity: number,
     unit_price: number,
     updated_at: string
-  },
+  }[],
   order_number: number,
   profiles: {
     email: string

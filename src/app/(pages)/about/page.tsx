@@ -1,16 +1,23 @@
 import Image from "next/image";
 import Link from "next/link"
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: "Learn about Cute & Creative Toppers, a handmade celebration brand creating custom 3D cake toppers and party decor in Amanzimtoti.",
+};
 
 export default function About() {
   return (
-    <div className="max-w-3xl mx-auto p-6 justify-center">
+    <section className="max-w-3xl mx-auto p-6 justify-center" aria-labelledby="about-heading">
         <Image
           src="/about_us_2_2.png"
-          alt="about us"
+          alt="Owner of Cute & Creative Toppers holding branded celebration products"
           width={400} // fixed width
           height={200} // auto-height maintained
           className="object-contain mx-auto"
         />
+        <h1 id="about-heading" className="mb-6 text-3xl font-bold text-rose-950">About Cute & Creative Toppers</h1>
         <p>
           Hi, I’m Elize! I’m the proud owner of our little creative corner, where we
           turn ideas into memorable celebrations.
@@ -35,6 +42,6 @@ export default function About() {
           make your celebrations unforgettable.
         </p>
         <Link href="/products" aria-label="Shop now!" className="bg-rose-700 text-white rounded-xl py-3 px-6">Shop now!</Link>
-    </div>
+    </section>
   );
 }

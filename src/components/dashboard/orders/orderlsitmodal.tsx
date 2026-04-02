@@ -22,7 +22,6 @@ export default function OrderListModal({order, onClose, update, cancel} :
         cancel: (id: string, by: string)=>void
     }){
 
-    console.log(order.order_items?.[0])
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
             <div className="flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-lg">

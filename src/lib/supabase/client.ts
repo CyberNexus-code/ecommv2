@@ -1,18 +1,22 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-export function createClient(){
-
-    console.log("Client.ts called");
+function createBrowserSupabaseClient() {
     return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-        auth: {
-            flowType: "implicit",
-            detectSessionInUrl: true,
-            persistSession: true,
-            autoRefreshToken: true,
-        },
-    }
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     )
+}
+
+let browserClient: ReturnType<typeof createBrowserSupabaseClient> | undefined;
+
+export function createClient(){
+    if (typeof window === "undefined") {
+        return createBrowserSupabaseClient();
+    }
+
+    if (!browserClient) {
+        browserClient = createBrowserSupabaseClient();
+    }
+
+    return browserClient;
 }

@@ -49,7 +49,8 @@ begin
                   jsonb_build_object(
                     'id', ii.id,
                     'image_url', ii.image_url,
-                    'is_thumbnail', ii.is_thumbnail
+                    'is_thumbnail', ii.is_thumbnail,
+                    'alt_text', ii.alt_text
                   )
                   order by ii.sort_order asc, ii.created_at asc
                 )

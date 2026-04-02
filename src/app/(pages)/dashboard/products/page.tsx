@@ -1,4 +1,5 @@
 import { getAllCategories, getAllItems } from "@/lib/items/get";
+import { getAllTags } from "@/lib/items/tags";
 import ListComponent from "@/components/dashboard/listcomponent";
 import AddProductModal from "@/components/dashboard/addproductmodal";
 import type { ItemType } from "@/types/itemType";
@@ -7,8 +8,9 @@ export default async function ProductsDashboard(){
 
     const {items} = await getAllItems();
     const {categories} = await getAllCategories();
+  const {tags} = await getAllTags();
 
-    if(items!.length > 0){
+    if(items && items.length > 0){
         return (
             <div className="space-y-4">
                <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
@@ -23,7 +25,7 @@ export default async function ProductsDashboard(){
                </div>
                <div className="rounded-2xl border border-rose-200 bg-white p-3 shadow-sm md:p-4">
                {items?.map((item: ItemType) => (
-                  <ListComponent key={item.id} props={{type: "products", ...item, catList:categories}} />
+                <ListComponent key={item.id} props={{type: "products", ...item, catList:categories, allTags: tags}} />
                 ))}
                </div>
                <AddProductModal catList={{catList: categories}}/>

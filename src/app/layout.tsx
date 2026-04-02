@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AuthComponent from "../components/AuthComponent/authComponent";
-import Nav from "@/components/Nav/Nav";
+import AppShell from "@/components/AppShell";
+import ClientLogger from "@/components/observability/ClientLogger";
 import { getAllCategories } from "@/lib/items/get";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteName = "Cute & Creative Toppers";
+const defaultTitle = "Handmade cake toppers and party decorations";
+const defaultDescription = "Shop handmade cake toppers, party boxes, and custom celebration decor with nationwide delivery from Amanzimtoti.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +21,50 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cute & Creative Toppers",
-  description: "Handmade cake toppers and party boxes for every occasion",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${siteName} | ${defaultTitle}`,
+    template: `%s | ${siteName}`,
+  },
+  description: defaultDescription,
+  applicationName: siteName,
+  keywords: [
+    "cake toppers",
+    "custom cake toppers",
+    "party boxes",
+    "party decor",
+    "handmade toppers",
+    "South Africa party supplies",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "en_ZA",
+    url: siteUrl,
+    siteName,
+    title: `${siteName} | ${defaultTitle}`,
+    description: defaultDescription,
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: `${siteName} logo`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${siteName} | ${defaultTitle}`,
+    description: defaultDescription,
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default async function RootLayout({
@@ -32,10 +79,8 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col w-full overflow-y-auto`}
         >
-        <AuthComponent />
-        <Nav categories={categories}/>
-        <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35 overflow-y-auto"/>
-          {children}
+        <ClientLogger />
+        <AppShell categories={categories}>{children}</AppShell>
       </body>
     </html>
   );

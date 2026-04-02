@@ -18,22 +18,34 @@ function escapeHtml(input: string): string {
         .replaceAll("'", "&#039;");
 }
 
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+
+  if(!value){
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
 export async function sendContactEmail({name, email, message, basketTextSummary, basketHtmlSummary}: ContactEmailParams){
 
-    
     const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: Number(process.env.SMTP_PORT) === 465,
+    host: getRequiredEnv("SMTP_HOST"),
+    port: Number(getRequiredEnv("SMTP_PORT")),
+    secure: Number(getRequiredEnv("SMTP_PORT")) === 465,
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+      user: getRequiredEnv("SMTP_USER"),
+      pass: getRequiredEnv("SMTP_PASS")
         }
     })
 
+  const smtpUser = getRequiredEnv("SMTP_USER");
+  const contactEmail = getRequiredEnv("CONTACT_EMAIL");
+
     await transporter.sendMail({
-        from: `"Contact Form" <${process.env.SMTP_USER}>`,
-        to: process.env.CONTACT_EMAIL,
+    from: `"Contact Form" <${smtpUser}>`,
+    to: contactEmail,
         replyTo: email,
         subject: `New Contact Message from ${name}`,
         text: `

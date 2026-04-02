@@ -42,3 +42,9 @@ next-env.d.ts
 
 # local dev db introspection exports
 .dev/
+
+# editor settings
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json

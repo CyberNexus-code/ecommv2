@@ -4,63 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserCircleIcon, Bars3Icon, ShoppingCartIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/react";
-import { createClient } from "@/lib/supabase/client";
-import { useEffect, useMemo, useState } from "react";
-import { type User } from "@supabase/supabase-js";
-import { logout } from "@/app/_actions/authActions";
 import type { CategoryType } from "@/types/categoryType";
 import logo2 from "../../../public/logo2.png";
-import { profile } from "console";
+import { useAuth } from "@/lib/auth/context";
 
 type NavProps = {
   categories: CategoryType[];
 };
 
 export default function Nav({ categories }: NavProps) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const supabase = useMemo(() => createClient(), []);
+  const { user: currentUser, role, signOut } = useAuth();
 
-  useEffect(() => {
-    async function resolveRole(user: User | null) {
-      if (!user) {
-        setRole(null);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Unable to resolve role:", error.message);
-      }
-      setRole(data?.role ?? null);
-    }
-
-    async function initializeUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
-      setCurrentUser(user);
-      await resolveRole(user);
-    }
-
-    initializeUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user ?? null;
-      setCurrentUser(user);
-      await resolveRole(user);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  const isGuest = !currentUser || currentUser.is_anonymous;
+  const isAnonymousGuest = !!currentUser?.is_anonymous;
+  const isLoggedOut = !currentUser;
 
   function formatName(name: string) {
     return name
@@ -68,6 +24,10 @@ export default function Nav({ categories }: NavProps) {
       .split(" ")
       .map((n) => n.charAt(0).toUpperCase() + n.slice(1))
       .join(" ");
+  }
+
+  async function handleSignOut() {
+    await signOut();
   }
 
   return (
@@ -134,7 +94,7 @@ export default function Nav({ categories }: NavProps) {
             <ShoppingCartIcon className="size-5" />
           </Link>
 
-          {isGuest ? (
+          {isLoggedOut ? (
             <Link href="/login" className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
               Log in
               <UserCircleIcon className="size-5" />
@@ -142,18 +102,24 @@ export default function Nav({ categories }: NavProps) {
           ) : (
             <Popover className="relative">
               <PopoverButton className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
-                {`Hi, ${currentUser.user_metadata?.display_name ?? "there"}`}
+                {isAnonymousGuest ? 'Guest account' : `Hi, ${currentUser.user_metadata?.display_name ?? "there"}`}
                 <UserCircleIcon className="size-5" />
               </PopoverButton>
               <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-44 rounded-xl border border-rose-200 bg-white p-2 shadow-lg">
                 <CloseButton as={Link} href="/account" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
                   Account
                 </CloseButton>
-                <form action={logout}>
-                  <button type="submit" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-800 transition hover:bg-rose-50">
-                    Logout
-                  </button>
-                </form>
+                <CloseButton as={Link} href="/account/orders" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                  My Orders
+                </CloseButton>
+                {isAnonymousGuest ? (
+                  <CloseButton as={Link} href="/login" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
+                    Log in
+                  </CloseButton>
+                ) : null}
+                <CloseButton as="button" type="button" onClick={handleSignOut} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-800 transition hover:bg-rose-50">
+                  Logout
+                </CloseButton>
               </PopoverPanel>
             </Popover>
           )}
@@ -200,20 +166,26 @@ export default function Nav({ categories }: NavProps) {
               </CloseButton>
 
               <div className="mt-2 border-t border-rose-100 pt-2">
-                {isGuest ? (
+                {isLoggedOut ? (
                   <CloseButton as={Link} href="/login" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
                     <UserCircleIcon className="size-5" /> Log in
                   </CloseButton>
                 ) : (
-                  <div className="flex justify-between">
-                    <CloseButton as={Link} href="/account" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border-x-1 border-rose-200 hover:bg-rose-50">
-                      <UserCircleIcon className="size-5" /> {`${currentUser.user_metadata?.display_name}`}
+                  <div className="space-y-1">
+                    <CloseButton as={Link} href="/account" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border border-rose-200 hover:bg-rose-50">
+                      <UserCircleIcon className="size-5" /> {isAnonymousGuest ? 'Guest account' : `${currentUser.user_metadata?.display_name ?? 'Account'}`}
                     </CloseButton>
-                  <form action={logout}>
-                    <button type="submit" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border-x-1 border-rose-200 hover:bg-rose-50">
+                    <CloseButton as={Link} href="/account/orders" className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                      My Orders
+                    </CloseButton>
+                    {isAnonymousGuest ? (
+                      <CloseButton as={Link} href="/login" className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                        Log in
+                      </CloseButton>
+                    ) : null}
+                    <CloseButton as="button" type="button" onClick={handleSignOut} className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
                       Logout
-                    </button>
-                  </form>
+                    </CloseButton>
                   </div>
                 )}
               </div>

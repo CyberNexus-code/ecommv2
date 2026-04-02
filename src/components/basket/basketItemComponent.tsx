@@ -36,7 +36,7 @@ export default function BasketItemComponent({item, setItemQuantity, removeBasket
         <div className="flex w-full items-center gap-3">
             <div className="relative h-20 w-20 overflow-hidden rounded-lg bg-rose-50">
                 {thumbnail ? (
-                    <Image src={thumbnail.image_url} alt={item.items.name} fill className="object-cover" sizes="80px" />
+                    <Image src={thumbnail.image_url} alt={thumbnail.alt_text?.trim() || item.items.name} fill className="object-cover" sizes="80px" />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs text-rose-400">Image</div>
                 )}

@@ -9,6 +9,11 @@ export default function AddcategoryModal(){
     const [showModal, setShowModal] = useState(false);
     const [catName, setCatName] = useState('');
 
+    async function handleSave() {
+        await addCategory(catName);
+        setShowModal(false);
+    }
+
     return (
     <>
         <div className="flex justify-end">
@@ -27,7 +32,7 @@ export default function AddcategoryModal(){
                     </div>
                     <div className='flex justify-end gap-2'>
                         <button onClick={() => setShowModal(false)} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Close</button>
-                        <button onClick={() => {addCategory(catName), setShowModal(false)}} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
+                        <button onClick={handleSave} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Save</button>
                     </div>
                 </div>
             </div>

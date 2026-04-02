@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { getMyOrders } from "@/lib/orders/getMyOrders";
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus";
+import { getUserWithProfile } from "@/lib/profiles/profiles";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountOrdersPage() {
+  const { user } = await getUserWithProfile();
   const orders = await getMyOrders();
+  const isGuestUser = !!user?.is_anonymous;
 
   return (
     <div className="space-y-5">
@@ -17,13 +20,20 @@ export default async function AccountOrdersPage() {
         <p className="mt-1 text-sm text-stone-600">
           Track your placed orders and latest fulfillment status.
         </p>
+        {isGuestUser ? (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            These orders belong to your current guest session. Sign in or create an account from this browser to merge them into a permanent account.
+          </p>
+        ) : null}
       </div>
 
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-rose-200 bg-white p-6 text-center shadow-sm">
           <p className="text-lg font-semibold text-rose-800">No orders yet.</p>
           <p className="mt-1 text-sm text-stone-600">
-            When you place an order, it will appear here.
+            {isGuestUser
+              ? "When you place an order as a guest in this session, it will appear here."
+              : "When you place an order, it will appear here."}
           </p>
           <Link
             href="/products"

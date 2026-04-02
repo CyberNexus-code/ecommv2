@@ -1,6 +1,7 @@
 export type BasketImage = {
     image_url: string;
     is_thumbnail: boolean;
+    alt_text?: string | null;
 };
 
 export type BasketProduct = {

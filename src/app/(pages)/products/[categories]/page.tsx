@@ -1,14 +1,36 @@
-import ProductCard from "@/components/ProductCard/ProductCard"
+import type { Metadata } from "next";
 import { getItemsByCategory } from "@/lib/items/get";
-import AuthComponent from "@/components/AuthComponent/authComponent";
+import { getAllTags } from "@/lib/items/tags";
+import ProductsCategoryClient from "@/components/ProductsCategoryClient";
+import ProductListStructuredData from '@/components/seo/ProductListStructuredData';
 
-type Props = { params: { categories: string }};
+type Props = { params: Promise<{ categories: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { categories } = await params;
+    const displayCategory = categories.replace(/-/g, ' ');
+    const { items } = await getItemsByCategory(categories);
+    const highlightedProducts = (items ?? []).slice(0, 3).map((item) => item.meta_title?.trim() || item.name);
+    const description = highlightedProducts.length > 0
+        ? `Browse ${displayCategory} products including ${highlightedProducts.join(', ')}.`
+        : `Browse ${displayCategory} cake toppers and party decor.`;
+
+    return {
+        title: displayCategory,
+        description,
+        alternates: {
+            canonical: `/products/${categories}`,
+        },
+    };
+}
 
 export default async function ProductCategories({ params }: Props){
 
     const {categories} = await params;
+    const displayCategory = categories.replace(/-/g, ' ');
 
-    const {items, error} = await getItemsByCategory(categories)
+    const {items, error} = await getItemsByCategory(categories);
+    const { tags } = await getAllTags();
 
     if(error){
         return <div>Error Loading Products</div>
@@ -21,21 +43,13 @@ export default async function ProductCategories({ params }: Props){
     }
 
     return (
-        <>
-        <AuthComponent />
-        <div className='themed-scrollbar relative mx-auto h-[calc(100dvh-120px)] max-w-7xl overflow-y-auto px-4 py-8 pr-2 md:h-[calc(100dvh-140px)] md:px-6'>
-          <div className='relative mb-6'>
-            <h1 className='text-2xl font-semibold text-rose-900 md:text-3xl'>
-              {categories.replace("-", " ")}
-            </h1>
-            <p className='text-sm text-rose-700/80 md:text-base'>Browse this category and add your favorites to basket.</p>
-          </div>
-          <div className='relative grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-            {items.map((item) => (
-              <ProductCard key={item.id} item={item} />
-            ))}
-          </div>
-        </div>
-        </>
-      );
+                <>
+                        <ProductListStructuredData items={items} title={displayCategory} description={`Browse ${displayCategory} handmade products from Cute & Creative Toppers.`} />
+                        <ProductsCategoryClient 
+                            categoryName={categories} 
+                            initialItems={items}
+                            initialTags={tags}
+                        />
+                </>
+    );
 }

@@ -1,9 +1,11 @@
 import type { User } from "@supabase/supabase-js";
-import { UUID } from "./uuid";
+
+export type AuthRole = "admin" | "client" | "guest";
 
 export type AuthContextType = {
     user: User | null;
+    loading: boolean;
     isAuthenticated: boolean;
-    role: "admin" | "client" | "guest";
-    basketSession: UUID
+    role: AuthRole;
+    signOut: () => Promise<void>;
 }

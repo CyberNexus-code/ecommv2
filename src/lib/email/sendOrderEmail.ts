@@ -30,6 +30,16 @@ function formatCurrency(value: number): string {
   return `R ${value.toFixed(2)}`;
 }
 
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
     order_placed_pending_payment: "Pending Payment",
@@ -113,34 +123,37 @@ function orderText(payload: OrderEmailPayload, heading: string, intro: string): 
 }
 
 function createTransporter() {
+  const smtpPort = Number(getRequiredEnv("SMTP_PORT"));
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: Number(process.env.SMTP_PORT) === 465,
+    host: getRequiredEnv("SMTP_HOST"),
+    port: smtpPort,
+    secure: smtpPort === 465,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: getRequiredEnv("SMTP_USER"),
+      pass: getRequiredEnv("SMTP_PASS"),
     },
   });
 }
 
 export async function sendOrderPlacedEmails(payload: OrderEmailPayload) {
   const transporter = createTransporter();
-  const adminEmail = process.env.ORDER_ADMIN_EMAIL ?? "shanejoubert12@gmail.com";
+  const smtpUser = getRequiredEnv("SMTP_USER");
+  const adminEmail = process.env.ORDER_ADMIN_EMAIL ?? smtpUser;
 
   const adminSubject = `New Order Placed #${payload.orderNumber}`;
   const clientSubject = `Order Confirmation #${payload.orderNumber}`;
 
   await Promise.all([
     transporter.sendMail({
-      from: `"Cute & Creative Orders" <${process.env.SMTP_USER}>`,
+      from: `"Cute & Creative Orders" <${smtpUser}>`,
       to: adminEmail,
       subject: adminSubject,
       text: orderText(payload, "New order received", "A customer placed a new order."),
       html: orderHtml(payload, "New Order Received", "A customer placed a new order."),
     }),
     transporter.sendMail({
-      from: `"Cute & Creative Orders" <${process.env.SMTP_USER}>`,
+      from: `"Cute & Creative Orders" <${smtpUser}>`,
       to: payload.customerEmail,
       subject: clientSubject,
       text: orderText(
@@ -161,6 +174,7 @@ export async function sendOrderStatusUpdateEmail(
   payload: OrderEmailPayload & { previousStatus: string }
 ) {
   const transporter = createTransporter();
+  const smtpUser = getRequiredEnv("SMTP_USER");
 
   const subject = `Order Update #${payload.orderNumber}: ${statusLabel(payload.status)}`;
   const intro = `Your order status changed from "${statusLabel(
@@ -168,7 +182,7 @@ export async function sendOrderStatusUpdateEmail(
   )}" to "${statusLabel(payload.status)}".`;
 
   await transporter.sendMail({
-    from: `"Cute & Creative Orders" <${process.env.SMTP_USER}>`,
+    from: `"Cute & Creative Orders" <${smtpUser}>`,
     to: payload.customerEmail,
     subject,
     text: orderText(payload, "Order status update", intro),

@@ -1,18 +1,26 @@
 'use client'
 
-import {useState} from 'react';
 import { removeProduct } from '@/app/_actions/productActions';
 import { removeCategory } from '@/app/_actions/categoryActions';
 
-export default function AlertModal({props, onClose}: {props: any, onClose: ()=>void}){
+type AlertModalProps = {
+    props: {
+        id: string
+        name: string
+        type: 'products' | 'categories'
+    }
+    onClose: ()=>void
+}
+
+export default function AlertModal({props, onClose}: AlertModalProps){
     
     if(props.type === "products"){
 
         async function handleRemove(){
             try{
                 await removeProduct(props.id);
-            }catch(err){
-                console.error(err);
+            }catch{
+                return;
             }
             onClose();
         }
@@ -39,8 +47,8 @@ export default function AlertModal({props, onClose}: {props: any, onClose: ()=>v
             try{
              await removeCategory(props.id);
             onClose();
-            }catch(err){
-                console.error(err);
+            }catch{
+                return;
             }
             onClose();
         }

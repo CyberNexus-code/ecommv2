@@ -3,6 +3,8 @@
 import { createServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { placeOrderLogic, setProfileEmail } from "@/lib/baskets/basket";
+import { hasRegisteredAccountEmail, normalizeEmail } from "@/lib/auth/accountLookup";
+import { logServerError } from "@/lib/logging/server";
 
 export async function setItemQuantity(basket_id: string, id: string, qty: number) {
     const supabase = await createServer();
@@ -40,7 +42,8 @@ export async function  placeOrder(formData: FormData) {
     const basket_id = formData.get('basket_id') as string
 
     if(!basket_id){
-        console.error("No basket id received from form submisssion");
+        await logServerError('basketActions.placeOrder.missingBasketId', new Error('No basket id received from form submission'));
+        throw new Error("Unable to place order: missing basket reference.");
     }
 
     await placeOrderLogic(basket_id);
@@ -49,15 +52,60 @@ export async function  placeOrder(formData: FormData) {
 
 }
 
-export async function setEmail(formData: FormData){
+export type GuestCheckoutEmailState = {
+    success: boolean;
+    error: string | null;
+    accountExists: boolean;
+    email: string;
+}
+
+export async function saveGuestCheckoutEmail(
+    _prevState: GuestCheckoutEmailState,
+    formData: FormData,
+): Promise<GuestCheckoutEmailState> {
     const email = formData.get('email') as string
     const id = formData.get('id') as string
 
-    if(!email){
-        console.error("No email provided");
+    if(!email || !id){
+        return {
+            success: false,
+            error: 'Please provide an email address.',
+            accountExists: false,
+            email: '',
+        }
     }
 
-    await setProfileEmail(id, email);
+    const normalizedEmail = normalizeEmail(email)
+    const supabase = await createServer();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    revalidatePath("/basket")
+    if(!user || user.id !== id){
+        return {
+            success: false,
+            error: 'Unable to update the guest email for this basket.',
+            accountExists: false,
+            email: normalizedEmail,
+        }
+    }
+
+    try {
+        await setProfileEmail(normalizedEmail);
+        const accountExists = await hasRegisteredAccountEmail(normalizedEmail, id);
+
+        revalidatePath("/basket")
+
+        return {
+            success: true,
+            error: null,
+            accountExists,
+            email: normalizedEmail,
+        }
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unable to save the email address.',
+            accountExists: false,
+            email: normalizedEmail,
+        }
+    }
 }

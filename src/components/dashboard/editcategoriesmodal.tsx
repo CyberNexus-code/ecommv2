@@ -2,18 +2,18 @@
 
 import { updateCategory } from "@/app/_actions/categoryActions";
 import { useState} from 'react'
+import type { CategoryType } from '@/types/categoryType';
 
-export default function EditCategoriesModal({category, onClose}: {category: any, onClose: ()=>void}) {
+export default function EditCategoriesModal({category, onClose}: {category: CategoryType, onClose: ()=>void}) {
 
-    const [categoryId, setCategoryId] = useState(category.id);
     const [name, setName] = useState(category.name);
 
     async function handleSave() {
        try {
-        await updateCategory(categoryId, name);
+    await updateCategory(category.id, name);
         onClose();
        }
-         catch(error){}
+                 catch{}
     }
 
     return (

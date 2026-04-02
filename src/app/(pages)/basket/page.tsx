@@ -1,10 +1,12 @@
 'use server'
 
 import { getBasket } from "@/lib/baskets/basket";
-import { setItemQuantity, removeBasketItem, placeOrder, setEmail} from "@/app/_actions/basketActions";
+import { setItemQuantity, removeBasketItem, placeOrder } from "@/app/_actions/basketActions";
 import { setAddress } from "@/app/_actions/authActions";
 import BasketListComponent from "@/components/basket/BasketListComponent";
+import GuestCheckoutEmailForm from "@/components/basket/GuestCheckoutEmailForm";
 import ButtonRose from "@/components/ui/button";
+import { hasRegisteredAccountEmail } from "@/lib/auth/accountLookup";
 import { createServer } from "@/lib/supabase/server";
 
 export default async function BasketPage() {
@@ -13,6 +15,12 @@ export default async function BasketPage() {
   const supabase = await createServer();
   const {data: {user}} = await supabase.auth.getUser();
   const {data: profile} = await supabase.from('profiles').select('id, email, delivery_address, postal_code, city').eq('id', user?.id).single();
+  const guestShouldSignIn = Boolean(
+    user?.is_anonymous &&
+    profile?.email &&
+    profile?.id &&
+    await hasRegisteredAccountEmail(profile.email, profile.id)
+  );
 
   const subTotals = basket?.map((i) => {
     const calc = i.quantity * i.items.price
@@ -63,15 +71,12 @@ export default async function BasketPage() {
                   <p>R {total?.toFixed(2)}</p>
               </div>
               <div className="my-4 h-px bg-rose-100" />
-              {user?.is_anonymous && profile?.email === null ? (
-                <form action={setEmail} className="space-y-2">
-                  <p className="text-xs text-stone-600">Please provide an email address for your order:</p>
-                  <div className="my-2">
-                  <input className='w-full rounded-md border border-rose-200 p-2 focus:border-rose-400 focus:outline-none' type="text" name="email" aria-label="Please provide an email address for your order" placeholder="john@mail.com"></input>
-                  <input type="hidden" name="id" value={profile?.id} />
-                  </div>
-                  <ButtonRose type="submit" variant="secondary1">Sumbit Email</ButtonRose>
-                </form>
+              {user?.is_anonymous && profile?.id && (profile?.email === null || guestShouldSignIn) ? (
+                <GuestCheckoutEmailForm
+                  profileId={profile.id}
+                  initialEmail={profile?.email ?? ''}
+                  requiresSignIn={guestShouldSignIn}
+                />
               ) : (
                   profile?.delivery_address && profile.postal_code ? 
                   <form action={placeOrder} className="w-full">

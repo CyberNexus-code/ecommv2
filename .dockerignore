@@ -1,0 +1,11 @@
+.git
+.github
+.next
+node_modules
+npm-debug.log*
+.env*
+.dev
+.vscode
+coverage
+supabase/.temp
+tsconfig.tsbuildinfo

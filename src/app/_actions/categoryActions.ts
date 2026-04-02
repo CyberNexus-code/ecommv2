@@ -10,8 +10,6 @@ export async function updateCategory(id: string, name: string){
 
     if(error) throw error;
 
-    console.log("Category update was called");
-
     revalidatePath("/dashboard/categories");
 
     return data;
@@ -20,12 +18,10 @@ export async function updateCategory(id: string, name: string){
 export async function removeCategory(id: string){
     const supabase = await createServer();
 
-    console.log("Remove category was called");
-
     const { data, error } = await supabase.from('categories').update({'is_active': false, 'is_deleted': true}).eq('id', id)
 
     if(error){
-        console.error("There was an error deleteing the category:", error)
+        throw new Error(`There was an error deleting the category: ${error.message}`)
     };
 
     revalidatePath("/dashboard/categories");
@@ -38,7 +34,7 @@ export async function addCategory(name: string){
     const { data, error} = await supabase.from('categories').insert({name}).select();
 
     if(error){
-        console.error("Error inserting category into categories table:", error);
+        throw new Error(`Error inserting category into categories table: ${error.message}`);
     };
 
     revalidatePath("/dashboard/categories");

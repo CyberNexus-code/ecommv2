@@ -21,6 +21,19 @@ export default async function AccountPage() {
 
   return (
     <div className="space-y-5">
+      {user.is_anonymous ? (
+        <Section
+          title="Guest Orders"
+          description="Guest baskets and placed orders stay attached to this guest session until you sign in or create an account."
+        >
+          <Field label="Order Contact Email" hint="Used for receipts and order updates while you are checking out as a guest.">
+            <p className="rounded-md bg-amber-50 px-3 py-1.5 text-sm text-amber-900">
+              {profile?.email ?? "Add an email address below so we can send guest order updates and receipts."}
+            </p>
+          </Field>
+        </Section>
+      ) : null}
+
       <Section
         title="Profile Information"
         description="This information is stored on your profile and used across your orders."
@@ -116,7 +129,7 @@ export default async function AccountPage() {
 
       <Section
         title="Orders"
-        description="Review your placed orders and fulfillment updates."
+        description={user.is_anonymous ? "Review orders placed in this guest session, or sign in to merge them into a permanent account." : "Review your placed orders and fulfillment updates."}
       >
         <Field label="Order History">
           <Link

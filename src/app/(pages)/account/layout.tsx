@@ -18,6 +18,7 @@ export default async function AccountsLayout({
     "Guest";
 
   const accountEmail = profile?.email || user?.email || "No email on file";
+  const isGuestUser = !!user?.is_anonymous;
 
   const completionFields = [
     profile?.first_name,
@@ -42,6 +43,11 @@ export default async function AccountsLayout({
           Welcome, {displayName}
         </h1>
         <p className="mt-2 text-sm text-rose-800/80">{accountEmail}</p>
+        {isGuestUser ? (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            You are using a guest checkout account. Your order history is linked to the email saved on this profile.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[1fr_280px]">

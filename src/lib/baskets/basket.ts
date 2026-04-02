@@ -3,6 +3,22 @@
 import { createServer } from "../supabase/server";
 import type { BasketItem } from "@/types/basket";
 import { sendOrderPlacedEmails } from "../email/sendOrderEmail";
+import { logServerError, logServerWarning } from "@/lib/logging/server";
+
+type PlacedOrderRow = {
+    id: string
+    order_number: number
+    status: string
+    total: number | string | null
+    created_at: string
+    profiles: { email?: string | null } | { email?: string | null }[] | null
+    order_items: {
+        item_name: string | null
+        quantity: number | string | null
+        unit_price: number | string | null
+        line_total: number | string | null
+    }[]
+}
 
 export async function addToBasket(itemId: string, quantity: number) {
 
@@ -35,7 +51,7 @@ export async function placeOrderLogic(basket_id: string){
     const { error } = await supabase.rpc('place_order', { p_basket_id: basket_id });
 
     if(error){
-        console.error(`Error placing order: ${error.message}`);
+        await logServerError('basket.placeOrderLogic.placeOrder', error, { basketId: basket_id });
         throw new Error(`Error placing order: ${error.message}`);
     }
 
@@ -44,17 +60,19 @@ export async function placeOrderLogic(basket_id: string){
             .from("orders")
             .select("id, order_number, status, total, created_at, profiles(email), order_items(item_name, quantity, unit_price, line_total)")
             .eq("basket_id", basket_id)
-            .single();
+            .single<PlacedOrderRow>();
 
         if(orderFetchError){
-            console.error("Unable to fetch placed order for email:", orderFetchError.message);
+            await logServerError('basket.placeOrderLogic.fetchPlacedOrder', orderFetchError, { basketId: basket_id });
             return true;
         }
 
-        const customerEmail = placedOrder?.profiles?.email;
+        const customerEmail = (Array.isArray(placedOrder?.profiles) 
+            ? placedOrder.profiles[0]?.email 
+            : placedOrder?.profiles?.email);
 
         if(!customerEmail){
-            console.warn("No customer email found for placed order", placedOrder?.id);
+            await logServerWarning('basket.placeOrderLogic.missingCustomerEmail', 'No customer email found for placed order', { orderId: placedOrder?.id, basketId: basket_id });
             return true;
         }
 
@@ -73,22 +91,26 @@ export async function placeOrderLogic(basket_id: string){
             })),
         });
     } catch (emailError){
-        console.error("Order placed but confirmation emails failed:", emailError);
+        await logServerError('basket.placeOrderLogic.sendOrderEmail', emailError, { basketId: basket_id });
     }
 
     return true;
 }
 
-export async function setProfileEmail(id: string, email: string){
+export async function setProfileEmail(email: string){
     const supabase = await createServer();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('profiles').update({email: email}).eq('id', id);
-
-    if(error){
-        console.error(`Error setting email: ${error}`);
+    if(!user){
+        throw new Error("Not authenticated");
     }
 
-    console.log("Setting email for user:", id);
+    const { error } = await supabase.from('profiles').update({email: email}).eq('id', user.id);
+
+    if(error){
+        await logServerError('basket.setProfileEmail', error, { userId: user.id });
+        throw new Error(`Error setting email: ${error.message}`);
+    }
 
     return true;
 }

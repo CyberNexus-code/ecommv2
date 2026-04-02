@@ -3,6 +3,7 @@
 import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus"
+import { logClientError } from "@/lib/logging/client"
 import type { Order } from "@/types/order"
 import { updateStatus, cancelOrder } from "@/app/_actions/dashboardActions"
 
@@ -38,14 +39,9 @@ export default function OrderListContianer({order, now}: {order: Order, now: num
     const ageConfig = ORDER_AGE_CONFIG[ageLevel]
     
     function handleStatusUpdate(id: string, changeStatus? : string){
-        console.log("handle status:", id)
-
         const newStatus = changeStatus ? changeStatus : status.next
-
-        console.log(newStatus)
         if(!newStatus){
-
-            console.error("error setting new status, no next status found")
+            void logClientError('dashboard.orderListContainer.handleStatusUpdate', new Error('No next status found'), { id, currentStatus: order.status })
             return 
         }
 

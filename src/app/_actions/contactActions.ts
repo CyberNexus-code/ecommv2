@@ -1,6 +1,7 @@
 "use server"
 
 import { sendContactEmail } from "@/lib/email/sendContactEmail"
+import { logServerError, logServerWarning } from "@/lib/logging/server";
 import { createServer } from "@/lib/supabase/server";
 
 type ContactBasketItem = {
@@ -13,6 +14,7 @@ type ContactBasketItem = {
         item_images?: {
             image_url?: string;
             is_thumbnail?: boolean;
+            alt_text?: string | null;
         }[];
     };
 }
@@ -83,9 +85,11 @@ function formatBasketHtmlSummary(basket: ContactBasketItem[]): string {
         total += lineTotal;
 
         const images = item.items?.item_images ?? [];
-        const thumb = images.find((i) => i.is_thumbnail)?.image_url ?? images[0]?.image_url;
+        const thumbImage = images.find((i) => i.is_thumbnail) ?? images[0];
+        const thumb = thumbImage?.image_url;
+        const altText = thumbImage?.alt_text?.trim() || name;
         const imageHtml = thumb
-            ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(name)}" style="height:72px;width:72px;object-fit:cover;border-radius:10px;border:1px solid #ffe4e6;" />`
+            ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(altText)}" style="height:72px;width:72px;object-fit:cover;border-radius:10px;border:1px solid #ffe4e6;" />`
             : `<div style="height:72px;width:72px;border-radius:10px;border:1px solid #ffe4e6;background:#fff1f2;color:#be123c;display:flex;align-items:center;justify-content:center;font-size:12px;">No image</div>`;
 
         cards.push(`
@@ -148,7 +152,9 @@ export async function submitContactForm(prevState: ContactFormState, formData: F
                 }
             }
         } catch (basketLookupError){
-            console.warn("Unable to attach basket snapshot to contact email:", basketLookupError);
+            await logServerWarning('contact.submitContactForm.basketLookup', 'Unable to attach basket snapshot to contact email', {
+                error: basketLookupError instanceof Error ? basketLookupError.message : String(basketLookupError),
+            });
         }
 
         await sendContactEmail({name, email, message, basketTextSummary, basketHtmlSummary})
@@ -156,7 +162,7 @@ export async function submitContactForm(prevState: ContactFormState, formData: F
         return { success: true, error: null }
             
     }catch(error){
-        console.error("Error sending email:", error);
+        await logServerError('contact.submitContactForm', error);
         return { success: false, error: "Failed to send message."}
     }
 }

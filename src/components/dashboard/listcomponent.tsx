@@ -1,35 +1,44 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import Image from "next/image"
+import { useState } from "react"
 import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
 import EditProductModal from "./editproductmodal"
 import EditCategoriesModal from "./editcategoriesmodal"
 import AlertModal from "./alertModal";
 import ImageModal from "./imageModal"
+import type { CategoryType } from "@/types/categoryType"
+import type { ItemType, TagType } from "@/types/itemType"
 
-export default function ListComponent({props}: {props: any}){
+type ProductListProps = ItemType & {
+    type: "products"
+    catList: CategoryType[]
+    allTags: TagType[]
+}
+
+type CategoryListProps = CategoryType & {
+    type: "categories"
+}
+
+type ListComponentProps = {
+    props: ProductListProps | CategoryListProps
+}
+
+export default function ListComponent({props}: ListComponentProps){
     const [showModal, setShowModal] = useState(false);
     const [showAlertModal, setShowAlertModal] = useState(false);
     const [showCatModel, setShowCatModal] = useState(false);
     const [showCatAlertModal, setShowCatAlertModal] = useState(false);
-    const [productThumbnail, setProductThumbnail] = useState('')
     const [showImageModule, setShowImageModal] = useState(false)
+
+    const productThumbnail = props.type === "products"
+        ? props.item_images.find((image) => image.is_thumbnail) ?? props.item_images[0] ?? null
+        : null;
 
     if(props.type === "products"){
 
-        useEffect(() => {
-            const thumbnail = props.item_images.find((i: any) => i.is_thumbnail)
-            if(thumbnail){
-                setProductThumbnail(thumbnail.image_url)
-            }
-        },[])
-
       const handleThumbnail = (url: string) => {
-        if(url){
-            setProductThumbnail(url)
-        }else{
-            setProductThumbnail('')
-        }
+        return url;
       }
 
         return (
@@ -37,7 +46,7 @@ export default function ListComponent({props}: {props: any}){
              <div key={props.id} className="flex h-[120px] justify-between gap-2 px-2 my-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100">
                             <div className="flex gap-4 m-2">
                                 <div className="flex w-20 rounded-md cursor-pointer" onClick={() => setShowImageModal(true)}>
-                                    {productThumbnail ?  <img className="object--cover w-full h-full rounded-md" src={productThumbnail}></img> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
+                                    {productThumbnail ?  <div className="relative h-full w-full overflow-hidden rounded-md"><Image className="object-cover" src={productThumbnail.image_url} alt={productThumbnail.alt_text?.trim() || props.name} fill sizes="80px" /></div> : <div className="flex flex-col w-full h-full rounded-md border-2 border-dashed border-gray-400 text-gray-400 justify-center items-center"><PlusCircleIcon className="size-6"/></div>}
                                 </div>
                                 <div>
                                     <h2 className="">{props.name}</h2>
@@ -58,7 +67,7 @@ export default function ListComponent({props}: {props: any}){
         )
     }
 
-    if(props.type = "categories"){
+    if(props.type === "categories"){
         return (
             <>
                 <div className="flex items-center h-[50px] justify-between gap-2 px-2 my-4 bg-white rounded-lg shadow-sm cursor-pointer hover:bg-gray-100">
