@@ -11,6 +11,7 @@ export default function AuthFinalizePage() {
   const searchParams = useSearchParams()
   const redirectedRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
+  const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
   const safeNext = next.startsWith('/') ? next : '/'
 
@@ -18,6 +19,24 @@ export default function AuthFinalizePage() {
     let active = true
 
     async function finalize() {
+      if (code) {
+        const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (!active) return
+
+        if (exchangeError) {
+          setError(exchangeError.message)
+          return
+        }
+
+        if (exchangeData.session?.user && !exchangeData.session.user.is_anonymous) {
+          redirectedRef.current = true
+          router.replace(safeNext)
+          router.refresh()
+          return
+        }
+      }
+
       const { data, error: sessionError } = await supabase.auth.getSession()
 
       if (!active) return
@@ -62,7 +81,7 @@ export default function AuthFinalizePage() {
       window.clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
-  }, [router, safeNext, supabase])
+  }, [code, router, safeNext, supabase])
 
   return (
     <div className="flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10">
