@@ -20,7 +20,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   return (
     <>
-    <div className="h-screen w-full mx-auto md:pt-42">
+    <div className="w-full mx-auto pb-12 md:pt-42">
         {showResetSuccess ? (
           <div className="mx-auto mb-4 max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800 shadow-sm">
             Password updated successfully. You can continue shopping or sign in with your new password.
