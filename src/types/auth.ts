@@ -7,5 +7,6 @@ export type AuthContextType = {
     loading: boolean;
     isAuthenticated: boolean;
     role: AuthRole;
+    displayName: string | null;
     signOut: () => Promise<void>;
 }

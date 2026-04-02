@@ -95,7 +95,6 @@ export default function SignupPage(){
             options: {
                 data: {
                     username,
-                    display_name: username
                 },
                 emailRedirectTo: buildAuthCallbackUrl(window.location.origin, next)
             }
@@ -179,8 +178,8 @@ export default function SignupPage(){
                     </div>
 
                     <div className='flex flex-col items-start'>
-                        <label className="block mb-1 text-sm font-medium">Name</label>
-                        <input type="text" placeholder='e.g: John' name="name" value={username} onChange={e => setUsername(e.target.value)} className='border p-2 w-full rounded-md'/>
+                        <label className="block mb-1 text-sm font-medium">Username</label>
+                        <input type="text" placeholder='e.g: john' name="username" value={username} onChange={e => setUsername(e.target.value)} autoComplete="username" className='border p-2 w-full rounded-md'/>
                     </div>
 
                     <div className='flex flex-col items-start'>

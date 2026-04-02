@@ -13,10 +13,10 @@ type NavProps = {
 };
 
 export default function Nav({ categories }: NavProps) {
-  const { user: currentUser, role, signOut } = useAuth();
+  const { user: currentUser, role, displayName, isAuthenticated, signOut } = useAuth();
 
   const isAnonymousGuest = !!currentUser?.is_anonymous;
-  const isLoggedOut = !currentUser;
+  const isLoggedOut = !isAuthenticated;
 
   function formatName(name: string) {
     return name
@@ -102,7 +102,7 @@ export default function Nav({ categories }: NavProps) {
           ) : (
             <Popover className="relative">
               <PopoverButton className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-rose-700">
-                {isAnonymousGuest ? 'Guest account' : `Hi, ${currentUser.user_metadata?.display_name ?? "there"}`}
+                {isAnonymousGuest ? 'Guest account' : `Hi, ${displayName ?? "there"}`}
                 <UserCircleIcon className="size-5" />
               </PopoverButton>
               <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-44 rounded-xl border border-rose-200 bg-white p-2 shadow-lg">
@@ -174,7 +174,7 @@ export default function Nav({ categories }: NavProps) {
                   ) : (
                     <div className="space-y-1.5">
                       <CloseButton as={Link} href="/account" className="flex w-full items-center gap-2 rounded-xl border border-rose-200 px-3 py-2.5 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                        <UserCircleIcon className="size-5" /> {isAnonymousGuest ? 'Guest account' : `${currentUser.user_metadata?.display_name ?? 'Account'}`}
+                        <UserCircleIcon className="size-5" /> {isAnonymousGuest ? 'Guest account' : `${displayName ?? 'Account'}`}
                       </CloseButton>
                       <CloseButton as={Link} href="/account/orders" className="block w-full rounded-xl border border-rose-200 px-3 py-2.5 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
                         My Orders

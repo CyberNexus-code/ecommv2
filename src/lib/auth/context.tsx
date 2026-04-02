@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<AuthRole>('guest')
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const lastMergedGuestUserId = useRef<string | null>(null)
   const isSigningOut = useRef(false)
@@ -39,24 +40,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!nextUser || nextUser.is_anonymous) {
         setRole('guest')
+        setDisplayName(null)
         return
+      }
+
+      type ProfileSummary = {
+        role: AuthRole | null
+        username: string | null
+        first_name: string | null
+        last_name: string | null
       }
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, username, first_name, last_name')
         .eq('id', nextUser.id)
-        .maybeSingle()
+        .maybeSingle<ProfileSummary>()
 
       if (!active) return
+
+      const fallbackName = nextUser.email?.split('@')[0] ?? 'there'
 
       if (error) {
         void logClientError('auth.resolveRole', error, { userId: nextUser.id, pathname })
         setRole('client')
+        setDisplayName(fallbackName)
         return
       }
 
+      const fullName = [data?.first_name, data?.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim()
+
       setRole(data?.role === 'admin' ? 'admin' : 'client')
+      setDisplayName(fullName || data?.username || fallbackName)
     }
 
     async function mergePendingGuestData(nextUser: User | null) {
@@ -199,34 +217,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearPendingGuestMerge()
     lastMergedGuestUserId.current = null
 
-    const { error: signOutError } = await supabase.auth.signOut()
+    try {
+      const { error: signOutError } = await supabase.auth.signOut()
 
-    if (signOutError) {
-      void logClientError('auth.signOut', signOutError, { pathname })
+      if (signOutError) {
+        void logClientError('auth.signOut', signOutError, { pathname })
+        return
+      }
+
+      setUser(null)
+      setRole('guest')
+      setDisplayName(null)
+
+      if (!isAuthPath(pathname)) {
+        const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
+
+        if (anonymousError) {
+          void logClientError('auth.signOut.restoreGuestSession', anonymousError, { pathname })
+        } else {
+          const guestUser = anonymousData.user ?? anonymousData.session?.user ?? null
+          setUser(guestUser)
+          setRole('guest')
+        }
+      }
+
+      router.replace('/')
+      router.refresh()
+    } catch (error) {
+      void logClientError('auth.signOut.unexpected', error, { pathname })
+    } finally {
       isSigningOut.current = false
       setLoading(false)
-      return
     }
-
-    setUser(null)
-    setRole('guest')
-
-    if (!isAuthPath(pathname)) {
-      const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
-
-      if (anonymousError) {
-        void logClientError('auth.signOut.restoreGuestSession', anonymousError, { pathname })
-      } else {
-        const guestUser = anonymousData.user ?? anonymousData.session?.user ?? null
-        setUser(guestUser)
-        setRole('guest')
-      }
-    }
-
-    isSigningOut.current = false
-    setLoading(false)
-    router.replace('/')
-    router.refresh()
   }
 
   return (
@@ -234,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         role,
+        displayName,
         loading,
         isAuthenticated: !!user && !user.is_anonymous,
         signOut,
