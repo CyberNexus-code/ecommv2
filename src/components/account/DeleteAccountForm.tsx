@@ -8,7 +8,7 @@ export default function DeleteAccountForm() {
       action={deleteOwnAccount}
       onSubmit={(event) => {
         const confirmed = window.confirm(
-          "Delete your account? Your personal profile data will be anonymized and you will be signed out."
+          "Permanently delete your account? This cannot be undone. Your order history will be preserved but all personal data will be removed."
         );
 
         if (!confirmed) {

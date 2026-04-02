@@ -1,6 +1,7 @@
 "use server"
 
 import { createServer } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { setProfileAdress } from "@/lib/profiles/profiles";
@@ -79,13 +80,24 @@ export async function deleteOwnAccount(){
         throw new Error("Not authenticated");
     }
 
-    const { error } = await supabase.rpc("soft_delete_my_account");
+    // 1. Redact PII and close baskets (runs as the authenticated user)
+    const { error: rpcError } = await supabase.rpc("redact_and_orphan_profile");
 
-    if(error){
-        await logServerError('authActions.deleteOwnAccount', error);
+    if(rpcError){
+        await logServerError('authActions.deleteOwnAccount.redact', rpcError);
         throw new Error("Failed to delete account");
     }
 
+    // 2. Hard-delete the auth.users row via admin API
+    const admin = createAdminClient();
+    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+
+    if(deleteError){
+        await logServerError('authActions.deleteOwnAccount.adminDelete', deleteError);
+        throw new Error("Failed to delete account");
+    }
+
+    // 3. Sign out (clears session cookies) and redirect
     await supabase.auth.signOut();
     redirect("/");
 }
