@@ -13,7 +13,7 @@ type NavProps = {
 };
 
 export default function Nav({ categories }: NavProps) {
-  const { user: currentUser, role, displayName, isAuthenticated, signOut } = useAuth();
+  const { user: currentUser, role, displayName, signOut } = useAuth();
 
   const isAnonymousGuest = !!currentUser?.is_anonymous;
   const hasSession = !!currentUser;
