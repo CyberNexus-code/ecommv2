@@ -26,14 +26,16 @@ export default function AppShell({ categories, children }: AppShellProps) {
   const pathname = usePathname()
 
   if (isAuthPath(pathname)) {
-    return <>{children}</>
+    return <div className="no-scrollbar flex-1 overflow-y-auto">{children}</div>
   }
 
   return (
     <AuthProvider>
       <Nav categories={categories} />
       <div className="flex-1 flex fixed inset-0 -z-10 text-black/10 bg-[url('/background-pattern.svg')] bg-repeat opacity-35 overflow-y-auto" />
-      {children}
+      <div className='no-scrollbar flex-1 overflow-y-auto'>
+        {children}
+      </div>
     </AuthProvider>
   )
 }

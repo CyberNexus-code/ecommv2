@@ -127,67 +127,69 @@ export default function Nav({ categories }: NavProps) {
 
         <div className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden">
           <Popover className="relative">
-            <PopoverButton className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white">
+            <PopoverButton className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white transition hover:bg-white/15">
               <Bars3Icon className="size-6" />
             </PopoverButton>
-            <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-[88vw] max-w-sm rounded-xl border border-rose-200 bg-white p-3 shadow-lg">
-              <div className="mb-2 flex items-center justify-between border-b border-rose-100 pb-2">
-                <p className="text-sm font-semibold text-rose-800">Menu</p>
-                <Link href="/basket" className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
+            <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-[min(92vw,22rem)] overflow-hidden rounded-[22px] border border-rose-200 bg-white p-2.5 shadow-[0_24px_60px_-34px_rgba(15,23,42,0.55)] sm:w-[88vw] sm:max-w-sm sm:p-3">
+              <div className="max-h-[calc(100dvh-5.5rem)] overflow-y-auto pr-1">
+                <div className="mb-2 flex items-center justify-between border-b border-rose-100 pb-2">
+                  <p className="text-sm font-semibold text-rose-800">Menu</p>
+                  <CloseButton as={Link} href="/basket" className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 sm:px-3 sm:text-sm">
                   <ShoppingCartIcon className="size-4" /> Basket
-                </Link>
-              </div>
-
-              {currentUser && role === "admin" ? (
-                <CloseButton as={Link} href="/dashboard" className="mb-1 block rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                  Dashboard
-                </CloseButton>
-              ) : null}
-
-              <CloseButton as={Link} href="/products" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
-                All Products
-              </CloseButton>
-              {categories.map((c) => (
-                <CloseButton
-                  as={Link}
-                  key={`mobile-${c.id}`}
-                  href={`/products/${c.name}`}
-                  className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50"
-                >
-                  {formatName(c.name)}
-                </CloseButton>
-              ))}
-
-              <CloseButton as={Link} href="/about" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
-                About
-              </CloseButton>
-              <CloseButton as={Link} href="/contact" className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50">
-                Contact
-              </CloseButton>
-
-              <div className="mt-2 border-t border-rose-100 pt-2">
-                {isLoggedOut ? (
-                  <CloseButton as={Link} href="/login" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                    <UserCircleIcon className="size-5" /> Log in
                   </CloseButton>
-                ) : (
-                  <div className="space-y-1">
-                    <CloseButton as={Link} href="/account" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-800 transition border border-rose-200 hover:bg-rose-50">
-                      <UserCircleIcon className="size-5" /> {isAnonymousGuest ? 'Guest account' : `${currentUser.user_metadata?.display_name ?? 'Account'}`}
+                </div>
+
+                {currentUser && role === "admin" ? (
+                  <CloseButton as={Link} href="/dashboard" className="mb-1 block rounded-xl px-3 py-2.5 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                    Dashboard
+                  </CloseButton>
+                ) : null}
+
+                <CloseButton as={Link} href="/products" className="block rounded-xl px-3 py-2.5 text-sm text-rose-800 transition hover:bg-rose-50">
+                  All Products
+                </CloseButton>
+                {categories.map((c) => (
+                  <CloseButton
+                    as={Link}
+                    key={`mobile-${c.id}`}
+                    href={`/products/${c.name}`}
+                    className="block rounded-xl px-3 py-2.5 text-sm text-rose-800 transition hover:bg-rose-50"
+                  >
+                    {formatName(c.name)}
+                  </CloseButton>
+                ))}
+
+                <CloseButton as={Link} href="/about" className="block rounded-xl px-3 py-2.5 text-sm text-rose-800 transition hover:bg-rose-50">
+                  About
+                </CloseButton>
+                <CloseButton as={Link} href="/contact" className="block rounded-xl px-3 py-2.5 text-sm text-rose-800 transition hover:bg-rose-50">
+                  Contact
+                </CloseButton>
+
+                <div className="mt-2 border-t border-rose-100 pt-2">
+                  {isLoggedOut ? (
+                    <CloseButton as={Link} href="/login" className="inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                      <UserCircleIcon className="size-5" /> Log in
                     </CloseButton>
-                    <CloseButton as={Link} href="/account/orders" className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                      My Orders
-                    </CloseButton>
-                    {isAnonymousGuest ? (
-                      <CloseButton as={Link} href="/login" className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                        Log in
+                  ) : (
+                    <div className="space-y-1.5">
+                      <CloseButton as={Link} href="/account" className="flex w-full items-center gap-2 rounded-xl border border-rose-200 px-3 py-2.5 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                        <UserCircleIcon className="size-5" /> {isAnonymousGuest ? 'Guest account' : `${currentUser.user_metadata?.display_name ?? 'Account'}`}
                       </CloseButton>
-                    ) : null}
-                    <CloseButton as="button" type="button" onClick={handleSignOut} className="block w-full rounded-lg border border-rose-200 px-3 py-2 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
-                      Logout
-                    </CloseButton>
-                  </div>
-                )}
+                      <CloseButton as={Link} href="/account/orders" className="block w-full rounded-xl border border-rose-200 px-3 py-2.5 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                        My Orders
+                      </CloseButton>
+                      {isAnonymousGuest ? (
+                        <CloseButton as={Link} href="/login" className="block w-full rounded-xl border border-rose-200 px-3 py-2.5 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                          Log in
+                        </CloseButton>
+                      ) : null}
+                      <CloseButton as="button" type="button" onClick={handleSignOut} className="block w-full rounded-xl border border-rose-200 px-3 py-2.5 text-left text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                        Logout
+                      </CloseButton>
+                    </div>
+                  )}
+                </div>
               </div>
             </PopoverPanel>
           </Popover>

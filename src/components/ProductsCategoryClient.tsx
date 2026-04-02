@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useDeferredValue, useEffect, useState } from 'react';
+import CatalogFiltersPanel from '@/components/CatalogFiltersPanel';
 import ProductCard from '@/components/ProductCard/ProductCard';
-import TagFilter from '@/components/TagFilter';
 import type { ItemType, TagType } from '@/types/itemType';
 
 type ProductsCategoryClientProps = {
@@ -64,41 +64,51 @@ export default function ProductsCategoryClient({ categoryName, initialItems, ini
 
   return (
     <>
-      <div className='themed-scrollbar relative mx-auto h-[calc(100dvh-120px)] max-w-7xl overflow-y-auto px-4 py-8 pr-2 md:h-[calc(100dvh-140px)] md:px-6'>
-        <div className='relative mb-6'>
+      <div className='relative mx-auto w-full max-w-7xl px-4 py-4 md:px-6 md:py-5'>
+        <div className='relative shrink-0 pb-4'>
           <h1 className='text-2xl font-semibold text-rose-900 md:text-3xl'>
             {displayCategory}
           </h1>
           <p className='text-sm text-rose-700/80 md:text-base'>Browse this category and add your favorites to basket.</p>
         </div>
 
-        <div className='grid gap-6 lg:grid-cols-[280px_1fr]'>
-          <aside className='h-fit rounded-2xl border border-rose-200 bg-white p-4 shadow-sm'>
-            <div className='space-y-4'>
-              <div>
-                <label htmlFor='category-product-search' className='mb-1 block text-sm font-semibold text-rose-900'>Search this category</label>
-                <input
-                  id='category-product-search'
-                  type='search'
-                  value={searchInput}
-                  placeholder='Search by name, theme or description'
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  className='w-full rounded-xl border border-rose-200 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none'
-                />
-              </div>
-              <TagFilter tags={initialTags} selectedTags={selectedTags} />
-            </div>
-          </aside>
+        <CatalogFiltersPanel
+          title='Refine category'
+          searchId='category-product-search'
+          searchLabel='Search this category'
+          placeholder='Search by name, theme or description'
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+          tags={initialTags}
+          selectedTags={selectedTags}
+          mode='mobile'
+        />
 
-          <div>
+        <div className='grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start'>
+          <div className='order-2 hidden lg:order-1 lg:block'>
+            <CatalogFiltersPanel
+              title='Refine category'
+              searchId='category-product-search'
+              searchLabel='Search this category'
+              placeholder='Search by name, theme or description'
+              searchInput={searchInput}
+              onSearchChange={setSearchInput}
+              tags={initialTags}
+              selectedTags={selectedTags}
+              mode='desktop'
+            />
+          </div>
+
+          <div className='order-1 min-w-0 lg:order-2'>
             {filteredItems.length === 0 ? (
               <div className='flex items-center justify-center rounded-2xl border border-rose-200 bg-white py-12 shadow-sm'>
                 <p className='text-gray-600'>No products match your current search or filters.</p>
               </div>
             ) : (
               <>
-                <div className='mb-4 text-sm text-gray-600'>
-                  Showing {filteredItems.length} of {initialItems.length} products
+                <div className='mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-600'>
+                  <span>Showing {filteredItems.length} of {initialItems.length} products</span>
+                  {selectedTags.length > 0 || searchTerm.length > 0 ? <span className='text-xs font-medium uppercase tracking-[0.16em] text-rose-500'>Filtered view</span> : null}
                 </div>
                 <div className='relative grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3'>
                   {filteredItems.map((item) => (

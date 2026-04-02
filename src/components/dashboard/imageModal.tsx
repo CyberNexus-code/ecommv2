@@ -229,14 +229,15 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
 
     return (
         <>
-        <div className="fixed inset-0 z-40 flex bg-black/30 backdrop-blur-xs">
-            <div className="inset-0 z-50 bg-white m-auto rounded-md w-100">
-                <div className="flex flex-col p-5">
-                    <div>
-                        <h1 className="">{product.props.name}</h1>
+        <div className="fixed inset-0 z-40 flex bg-black/30 p-3 backdrop-blur-xs sm:p-5">
+            <div className="z-50 m-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] sm:max-h-[calc(100dvh-2.5rem)]">
+                <div className="flex min-h-0 flex-col p-4 sm:p-5">
+                    <div className="min-w-0 border-b border-rose-100 pb-3">
+                        <h1 className="truncate text-lg font-semibold text-rose-900 sm:text-xl">{product.props.name}</h1>
                     </div>
-                    <div className="flex flex-col justify-center items-center p-5">
-                        <div className="flex flex-col border-2 border-dashed border-gray-400 rounded-lg w-80 h-60 mb-2">
+                    <div className="min-h-0 overflow-y-auto py-4 sm:py-5">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex h-52 w-full max-w-md flex-col overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-stone-50 sm:h-60">
                             {/* This code below is to view the active image in the image viewer */}
                             {activeImage ? (
                                 <>
@@ -244,14 +245,14 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                                         <Image src={activeImage.image_url || activeImage.previewUrl || ''} alt={activeImage.alt_text || product.props.name} fill unoptimized className="object-cover" />
                                     </div>
                                 </>
-                            ) : ( <span className="text-gray-400">Select an image</span>)}
+                            ) : ( <span className="flex h-full items-center justify-center px-4 text-center text-sm text-gray-400">Select an image</span>)}
                         </div>
-                        {activeImage ? ( <div className="flex justify-start w-full text-sm gap-1 text-gray-400">
+                        {activeImage ? ( <div className="flex w-full max-w-md items-center justify-start gap-2 text-sm text-gray-500">
                             <label>Set as Thumbnail:</label>
                             <input type="checkbox" checked={!!activeImage.is_thumbnail} onChange={() => setThumbnail(activeImage)}/>
                         </div>) : null }
                         {activeImage ? (
-                            <div className="mt-3 w-full">
+                            <div className="mt-1 w-full max-w-md">
                                 <label className="mb-1 block text-sm text-gray-600">Image Alt Text</label>
                                 <input
                                     type="text"
@@ -265,22 +266,23 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                                 />
                             </div>
                         ) : null}
-                        <div className="flex flex border-2 border-dashed border-gray-400 rounded-md w-80 h-12">
+                        <div className="flex h-auto min-h-14 w-full max-w-md flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-2">
                             {/* the code below is to show all uploaded images and select an image to view in the image viewer */}
                             {images.length > 0 ? 
-                            (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} key={getImageKey(i)} className="relative m-1 flex w-10 items-center justify-center overflow-hidden rounded-sm border-2 border-dashed border-gray-400 text-gray-400 cursor-pointer">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
+                            (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} key={getImageKey(i)} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
                             : null}
                             <input type="file" accept="image/*" multiple hidden id="image-upload" onChange={handleFileUpload}/>
-                            <button onClick={() => document.getElementById('image-upload')?.click()} className="flex justify-center items-center text-gray-400 border-2 border-dashed border-gray-400 w-10 m-1 rounded-sm cursor-pointer"><PlusCircleIcon className="size-6" /></button>
+                            <button onClick={() => document.getElementById('image-upload')?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer"><PlusCircleIcon className="size-6" /></button>
+                        </div>
                         </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex flex-col gap-3 border-t border-rose-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex justify-start">
-                                <button className='border border-rose-700 text-white bg-rose-600 rounded-md px-2 py-1 hover:bg-rose-900 hover:text-rose-700' onClick={handleDelete}>Delete</button>
+                                <button className='rounded-md border border-rose-700 bg-rose-600 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100' onClick={handleDelete}>Delete</button>
                         </div>
-                        <div className="flex justify-end gap-2">
-                            <button className='border border-rose-700 text-rose-700 rounded-md px-2 py-1 hover:bg-rose-700 hover:text-white' onClick={onClose} disabled={cancelState ? true : false}>Cancel</button>
-                            <button onClick={handleSave} className='border border-rose-700 text-white bg-rose-700 rounded-md px-2 py-1 hover:bg-rose-900 hover:text-rose-700'>{uploading ? "Saving..." : "Save"}</button>
+                        <div className="flex flex-wrap justify-end gap-2">
+                            <button className='rounded-md border border-rose-700 px-3 py-2 text-sm text-rose-700 hover:bg-rose-700 hover:text-white' onClick={onClose} disabled={cancelState ? true : false}>Cancel</button>
+                            <button onClick={handleSave} className='rounded-md border border-rose-700 bg-rose-700 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100'>{uploading ? "Saving..." : "Save"}</button>
                         </div>
                     </div>
                 </div>

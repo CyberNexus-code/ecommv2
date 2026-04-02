@@ -109,6 +109,7 @@ export async function getRelatedItems(item: { id: string; category_id: string | 
             .map((tag) => tag.tags?.slug)
             .filter((slug): slug is string => Boolean(slug))
     );
+    const currentTagCount = currentTagSlugs.size;
 
     const relatedItems = ((items ?? []) as ItemType[])
         .map((candidate) => {
@@ -117,14 +118,25 @@ export async function getRelatedItems(item: { id: string; category_id: string | 
                 .filter((slug): slug is string => Boolean(slug));
 
             const sharedTagCount = candidateTagSlugs.reduce((count, slug) => count + (currentTagSlugs.has(slug) ? 1 : 0), 0);
-            const sameCategoryScore = candidate.category_id && candidate.category_id === item.category_id ? 2 : 0;
+            const sameCategoryScore = candidate.category_id && candidate.category_id === item.category_id ? 4 : 0;
+            const sharedTagScore = sharedTagCount * 3;
+            const coverageScore = currentTagCount > 0 ? (sharedTagCount / currentTagCount) * 2 : 0;
+            const imageScore = Math.min(candidate.item_images.length, 4) * 0.25;
+            const currentPrice = 'price' in item && typeof item.price === 'number' ? item.price : null;
+            const priceDistance = currentPrice === null ? 0 : Math.abs(candidate.price - currentPrice);
+            const priceScore = currentPrice === null
+                ? 0
+                : Math.max(0, 2 - priceDistance / Math.max(currentPrice, 1));
+            const score = sameCategoryScore + sharedTagScore + coverageScore + imageScore + priceScore;
 
             return {
                 candidate,
-                score: sameCategoryScore + sharedTagCount,
+                score,
+                sharedTagCount,
+                sameCategoryScore,
             };
         })
-        .sort((left, right) => right.score - left.score || left.candidate.name.localeCompare(right.candidate.name))
+        .sort((left, right) => right.score - left.score || right.sharedTagCount - left.sharedTagCount || right.sameCategoryScore - left.sameCategoryScore || left.candidate.name.localeCompare(right.candidate.name))
         .slice(0, limit)
         .map((entry) => entry.candidate);
 

@@ -3,7 +3,7 @@ export default async function ProductsLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>){
-    return <div className="p-10">
+    return <div className="flex min-h-0 flex-1 overflow-hidden">
         {children}
     </div>
 }

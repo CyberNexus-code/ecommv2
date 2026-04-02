@@ -79,6 +79,7 @@ NEXT_PUBLIC_SITE_URL=
 npm run dev
 npm run lint
 npm run build
+npm run test:e2e
 npm run db:introspect:dev
 ```
 
@@ -97,6 +98,7 @@ GitHub Actions CI is configured in `.github/workflows/ci.yml`.
 
 - `lint` runs on every push to `main` and every pull request.
 - `build` runs after lint and requires repository secrets for the production-style environment variables used during Next.js build-time data fetching.
+- `e2e` runs Playwright smoke tests after the build job and exercises the storefront in Chromium.
 
 Required GitHub Actions secrets:
 
@@ -112,6 +114,24 @@ CONTACT_EMAIL
 ORDER_ADMIN_EMAIL
 NEXT_PUBLIC_SITE_URL
 ```
+
+## Playwright E2E
+
+Playwright smoke tests live under `tests/e2e/` and run against a production build started with `npm run start:test`.
+
+Local workflow:
+
+```bash
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+The current suite covers:
+
+- storefront shell rendering
+- product listing to product-detail navigation
+- a mobile viewport check that the product-detail page does not overflow horizontally
 
 ## Database Validation
 

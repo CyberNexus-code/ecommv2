@@ -6,9 +6,10 @@ import type { TagType } from '@/types/itemType'
 type TagFilterProps = {
   tags: TagType[]
   selectedTags: string[]
+  compact?: boolean
 }
 
-export default function TagFilter({ tags, selectedTags }: TagFilterProps) {
+export default function TagFilter({ tags, selectedTags, compact = false }: TagFilterProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -41,9 +42,9 @@ export default function TagFilter({ tags, selectedTags }: TagFilterProps) {
   if (tags.length === 0) return null
 
   return (
-    <div className="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
+    <div className={compact ? 'rounded-2xl border border-rose-100 bg-rose-50/45 p-3' : 'rounded-2xl border border-rose-200 bg-white p-4 shadow-sm'}>
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-rose-900">Filter by Tag</h3>
+        <h3 className={compact ? 'text-sm font-semibold text-rose-900' : 'font-semibold text-rose-900'}>Filter by Tag</h3>
         {selectedTags.length > 0 && (
           <button
             onClick={handleClearFilters}
@@ -54,14 +55,14 @@ export default function TagFilter({ tags, selectedTags }: TagFilterProps) {
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={compact ? 'mt-3 flex flex-wrap gap-1.5' : 'mt-3 flex flex-wrap gap-2'}>
         {tags.map((tag) => {
           const isSelected = selectedTags.includes(tag.slug)
           return (
             <button
               key={tag.id}
               onClick={() => handleTagToggle(tag.slug)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              className={`rounded-full font-medium transition ${compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} ${
                 isSelected
                   ? 'bg-rose-700 text-white'
                   : 'border border-gray-300 bg-white text-gray-700 hover:border-rose-400 hover:bg-rose-50'

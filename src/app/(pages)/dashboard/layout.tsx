@@ -15,10 +15,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="relative min-h-[calc(100dvh-96px)] w-full bg-[radial-gradient(circle_at_top_left,rgba(251,207,232,0.35),transparent_26%),linear-gradient(180deg,#fff7f8_0%,#fff 36%,#fff1f2 100%)]">
-      <div className="mx-auto flex w-full max-w-[1500px] gap-4 px-4 py-4 md:px-6 md:py-6">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6 xl:flex-row">
         <DashboardNav />
 
-        <section className="themed-scrollbar relative min-w-0 flex-1 overflow-y-auto rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.35)] backdrop-blur md:p-6">
+        <section className="themed-scrollbar relative min-w-0 flex-1 overflow-y-auto rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.35)] backdrop-blur md:p-6 xl:min-h-0">
           {children}
         </section>
       </div>

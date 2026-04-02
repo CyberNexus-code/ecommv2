@@ -77,7 +77,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col w-full overflow-y-auto`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex h-dvh min-h-screen flex-col w-full overflow-hidden`}
         >
         <ClientLogger />
         <AppShell categories={categories}>{children}</AppShell>
