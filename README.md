@@ -113,6 +113,26 @@ ORDER_ADMIN_EMAIL
 NEXT_PUBLIC_SITE_URL
 ```
 
+## Database Validation
+
+GitHub Actions now validates database changes before the build job runs.
+
+- A local Supabase stack is started in CI.
+- The DB validation path uses `supabase db start`, so it only starts the database container.
+- Migrations are replayed with `supabase db reset --local`.
+- Schema checks run with `supabase db lint --local`.
+- pgTAP smoke tests run from `supabase/tests/`.
+
+Local workflow:
+
+```bash
+npx supabase db start
+npx supabase db reset --local
+npx supabase db lint --local --level warning --fail-on error
+npx supabase test db --local
+npx supabase stop --no-backup
+```
+
 ## Remote Images
 
 Next.js remote image optimization is driven from `NEXT_PUBLIC_SUPABASE_URL` in `next.config.ts`.

@@ -1,0 +1,3 @@
+-- Intentionally empty.
+-- This keeps local `supabase db reset --local` deterministic because
+-- `supabase/config.toml` has database seeding enabled.

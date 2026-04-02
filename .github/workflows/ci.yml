@@ -7,6 +7,35 @@ on:
   pull_request:
 
 jobs:
+  db-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local database
+        run: supabase db start
+
+      - name: Rebuild local database from migrations
+        run: supabase db reset --local
+
+      - name: Lint database schema
+        run: supabase db lint --local --level warning --fail-on error
+
+      - name: Run database smoke tests
+        run: supabase test db --local
+
+      - name: Stop local Supabase services
+        if: always()
+        run: supabase stop --no-backup
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -30,7 +59,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: lint
+    needs:
+      - db-validate
+      - lint
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
