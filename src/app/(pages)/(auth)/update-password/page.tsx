@@ -4,8 +4,8 @@ import Link from "next/link";
 
 export default function UpdatePasswordPage() {
   return (
-    <div className="min-h-screen p-2 md:p-20">
-      <div className="m-auto min-h-80 bg-white p-6 rounded-2xl shadow-sm text-center space-y-4 md:max-w-110">
+    <div className="flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 text-center shadow-sm space-y-4">
         <h1 className="text-2xl text-rose-700 font-bold">Change Password Unavailable</h1>
         <p className="text-sm text-stone-600">
           Password change via reset link is temporarily disabled in the app.

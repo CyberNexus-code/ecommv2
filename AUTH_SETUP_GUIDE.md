@@ -1,6 +1,6 @@
 # Authentication Setup Guide
 
-This guide covers the configuration needed for password reset functionality and OAuth providers (Google & Facebook) in your eCommerce application.
+This guide covers the configuration needed for password reset functionality and the Google OAuth provider in your eCommerce application.
 
 ## Overview
 
@@ -8,11 +8,10 @@ This guide covers the configuration needed for password reset functionality and 
 - Password reset flow (forgot-password page with email sending)
 - Password reset via email link (reset-password page)
 - Google OAuth provider buttons on login/signup pages
-- Facebook OAuth provider buttons on login/signup pages
 - OAuth callback handler (`/auth/callback`)
 
 ⚠️ **Requires Manual Configuration:**
-1. Supabase OAuth provider setup (Google & Facebook)
+1. Supabase OAuth provider setup (Google)
 2. Email authentication configuration
 3. Production environment variables
 
@@ -129,58 +128,7 @@ $env:SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET = "YOUR_GOOGLE_CLIENT_SECRET"
 
 ---
 
-## Part 3: Facebook OAuth Setup
-
-### Step 1: Create Facebook App
-
-1. **Go to Facebook Developers**: https://developers.facebook.com
-2. **Create a new app**:
-   - App Type: "Consumer"
-   - App Name: "Cute & Creative Toppers"
-3. **Add Facebook Login product**:
-   - In the app dashboard, click "Add Product"
-   - Search for "Facebook Login"
-   - Click "Set Up"
-
-### Step 2: Configure Facebook Login
-
-1. **Go to Facebook Login > Settings**:
-   - Valid OAuth Redirect URIs (add both):
-     ```
-     http://localhost:3000/auth/callback
-     https://yoursite.com/auth/callback
-     ```
-   - Save changes
-
-2. **Get your credentials**:
-   - Go to Settings > Basic
-   - Copy your "App ID" and "App Secret"
-
-### Step 3: Add to Supabase
-
-**Local Development** (`supabase/config.toml`):
-```toml
-[auth.external.facebook]
-enabled = true
-client_id = "YOUR_FACEBOOK_APP_ID"
-secret = "env(SUPABASE_AUTH_EXTERNAL_FACEBOOK_SECRET)"
-```
-
-**Environment Variable**:
-```powershell
-# In your terminal, set the secret
-$env:SUPABASE_AUTH_EXTERNAL_FACEBOOK_SECRET = "YOUR_FACEBOOK_APP_SECRET"
-```
-
-**Production Setup** (Supabase Dashboard):
-1. Go to Authentication > Providers > Facebook
-2. Enable Facebook
-3. Paste your App ID and App Secret
-4. Save
-
----
-
-## Part 4: Environment Variables
+## Part 3: Environment Variables
 
 ### Local Development
 
@@ -195,7 +143,6 @@ Set OAuth secrets in your terminal before running the dev server:
 
 ```powershell
 $env:SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET = "your_google_secret"
-$env:SUPABASE_AUTH_EXTERNAL_FACEBOOK_SECRET = "your_facebook_secret"
 ```
 
 ### Production
@@ -211,7 +158,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_production_publishable_key
 
 ---
 
-## Part 5: Testing the Implementation
+## Part 4: Testing the Implementation
 
 ### Test Password Reset Flow
 
@@ -233,15 +180,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_production_publishable_key
 2. **Click "Continue with Google"**
 3. **Sign in with a Google account**
 4. You should be redirected back to the app
-
-### Test Facebook OAuth
-
-1. **Go to login or signup page**
-2. **Click "Continue with Facebook"**
-3. **Sign in with a Facebook account**
-4. You should be redirected back to the app
-
----
 
 ## Supabase Auth Configuration Summary
 
@@ -310,13 +248,11 @@ minimum_password_length = 6
 Before deploying to production:
 
 - [ ] Google OAuth credentials created and added to Supabase
-- [ ] Facebook OAuth credentials created and added to Supabase
 - [ ] Environment variables set in Vercel/hosting platform
 - [ ] Redirect URLs updated to production domain
 - [ ] Email SMTP configured in Supabase (if using custom provider)
 - [ ] Test password reset flow with production email
 - [ ] Test OAuth login with Google
-- [ ] Test OAuth login with Facebook
 - [ ] Verify anonymous sign-ins are desired behavior (currently enabled)
 
 ---

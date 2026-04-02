@@ -2,6 +2,7 @@
 
 import { createServer } from "../supabase/server";
 import type { BasketItem } from "@/types/basket";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import { sendOrderPlacedEmails } from "../email/sendOrderEmail";
 import { logServerError, logServerWarning } from "@/lib/logging/server";
 
@@ -11,7 +12,11 @@ type PlacedOrderRow = {
     status: string
     total: number | string | null
     created_at: string
-    profiles: { email?: string | null } | { email?: string | null }[] | null
+    customer_name: string | null
+    customer_email: string | null
+    delivery_address: string | null
+    delivery_city: string | null
+    delivery_postal_code: number | string | null
     order_items: {
         item_name: string | null
         quantity: number | string | null
@@ -56,9 +61,10 @@ export async function placeOrderLogic(basket_id: string){
     }
 
     try {
+        const businessSettings = await getBusinessSettings();
         const { data: placedOrder, error: orderFetchError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, profiles(email), order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("basket_id", basket_id)
             .single<PlacedOrderRow>();
 
@@ -67,9 +73,7 @@ export async function placeOrderLogic(basket_id: string){
             return true;
         }
 
-        const customerEmail = (Array.isArray(placedOrder?.profiles) 
-            ? placedOrder.profiles[0]?.email 
-            : placedOrder?.profiles?.email);
+        const customerEmail = placedOrder?.customer_email;
 
         if(!customerEmail){
             await logServerWarning('basket.placeOrderLogic.missingCustomerEmail', 'No customer email found for placed order', { orderId: placedOrder?.id, basketId: basket_id });
@@ -83,12 +87,17 @@ export async function placeOrderLogic(basket_id: string){
             total: Number(placedOrder.total ?? 0),
             createdAt: placedOrder.created_at,
             customerEmail,
+            customerName: placedOrder.customer_name ?? customerEmail,
+            deliveryAddress: placedOrder.delivery_address ?? '',
+            deliveryCity: placedOrder.delivery_city ?? '',
+            deliveryPostalCode: String(placedOrder.delivery_postal_code ?? ''),
             items: (placedOrder.order_items ?? []).map((item) => ({
                 item_name: item.item_name,
                 quantity: Number(item.quantity ?? 0),
                 unit_price: Number(item.unit_price ?? 0),
                 line_total: Number(item.line_total ?? 0),
             })),
+            businessSettings,
         });
     } catch (emailError){
         await logServerError('basket.placeOrderLogic.sendOrderEmail', emailError, { basketId: basket_id });

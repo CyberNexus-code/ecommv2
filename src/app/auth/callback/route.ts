@@ -1,21 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { saveGoogleOAuthTokens } from "@/lib/auth/oauthTokens";
 import { createServer } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  let next = searchParams.get("next") ?? "/";
+
+  if (!next.startsWith("/")) {
+    next = "/";
+  }
 
   if (code) {
     const supabase = await createServer();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      const { data } = await supabase.auth.getSession();
+      await saveGoogleOAuthTokens(data.session);
 
-      if (data.session) {
-        return NextResponse.redirect(new URL(next, request.url));
+      if (process.env.NODE_ENV === "development") {
+        return NextResponse.redirect(`${origin}${next}`);
       }
+
+      if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+      }
+
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 

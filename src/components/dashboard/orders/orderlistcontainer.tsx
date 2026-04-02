@@ -59,7 +59,7 @@ export default function OrderListContianer({order, now}: {order: Order, now: num
             <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <h2 className="text-base font-semibold text-rose-900">{`# ${order.order_number}`}</h2>
-                    <p className="truncate text-sm text-stone-600">User: {order.profiles.email}</p>
+                    <p className="truncate text-sm text-stone-600">User: {order.customer_email}</p>
                     <p className="text-sm text-stone-500">{(order.created_at).replace('T',' ').split('.')[0]}</p>
                     <p className="mt-1 font-medium text-rose-700">Total: R {order.total}</p>
                 </div>

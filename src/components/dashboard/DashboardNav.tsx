@@ -5,6 +5,7 @@ import { Bars3Icon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BanknotesIcon,
   CakeIcon,
   ChevronRightIcon,
   PresentationChartBarIcon,
@@ -19,6 +20,7 @@ const navItems = [
   { href: '/dashboard/categories', label: 'Categories', description: 'Storefront organization', icon: TableCellsIcon },
   { href: '/dashboard/tags', label: 'Tags', description: 'Themes and search filters', icon: SwatchIcon },
   { href: '/dashboard/orders', label: 'Orders', description: 'Fulfillment and revenue', icon: TruckIcon },
+  { href: '/dashboard/accounting', label: 'Accounting', description: 'Invoices and exports', icon: BanknotesIcon },
 ]
 
 function isActive(pathname: string, href: string) {

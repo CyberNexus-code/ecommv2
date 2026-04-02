@@ -1,0 +1,38 @@
+'use server'
+
+import { saveBusinessSettings } from '@/lib/businessSettings'
+
+export type BusinessSettingsActionState = {
+  success: boolean
+  message: string | null
+}
+
+export async function updateBusinessSettingsAction(
+  _prevState: BusinessSettingsActionState,
+  formData: FormData,
+): Promise<BusinessSettingsActionState> {
+  try {
+    await saveBusinessSettings({
+      business_name: String(formData.get('business_name') ?? ''),
+      business_email: String(formData.get('business_email') ?? ''),
+      business_phone: String(formData.get('business_phone') ?? ''),
+      bank_account_name: String(formData.get('bank_account_name') ?? ''),
+      bank_name: String(formData.get('bank_name') ?? ''),
+      account_number: String(formData.get('account_number') ?? ''),
+      branch_code: String(formData.get('branch_code') ?? ''),
+      account_type: String(formData.get('account_type') ?? ''),
+      payment_reference_prefix: String(formData.get('payment_reference_prefix') ?? ''),
+      invoice_footer_note: String(formData.get('invoice_footer_note') ?? ''),
+    })
+
+    return {
+      success: true,
+      message: 'Banking and invoice settings saved.',
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Unable to save business settings.',
+    }
+  }
+}

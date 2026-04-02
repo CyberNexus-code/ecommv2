@@ -78,22 +78,32 @@ export default function Login(){
         }
     }
 
-    const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-        setOAuthLoading(provider);
+    const handleOAuthLogin = async () => {
+        setOAuthLoading('google');
         setError(null);
 
         try {
             const { data: current } = await supabase.auth.getSession();
-            if(current.session?.user?.is_anonymous){
-                rememberPendingGuestMerge(current.session.user.id);
+            if(current.session?.user){
+                if(current.session.user.is_anonymous){
+                    rememberPendingGuestMerge(current.session.user.id);
+                }
+
+                const { error: signOutError } = await supabase.auth.signOut();
+
+                if(signOutError){
+                    setError(signOutError.message);
+                    return;
+                }
             }
 
             const { error: oauthError } = await supabase.auth.signInWithOAuth({
-                provider,
+                provider: 'google',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
                     queryParams: {
-                        prompt: 'login',
+                        access_type: 'offline',
+                        prompt: 'select_account consent',
                     },
                 },
             });
@@ -102,16 +112,16 @@ export default function Login(){
                 setError(oauthError.message);
             }
         } catch {
-            setError(`Unable to sign in with ${provider}. Please try again.`);
+            setError('Unable to sign in with Google. Please try again.');
         } finally {
             setOAuthLoading(null);
         }
     }
 
     return (
-         <div className='h-screen p-2 md:p-20'>
-            <form onSubmit={handleLogin} className='h-2/3 min-h-100 bg-white p-6 rounded-2xl shadow-sm text-center space-y-4 m-auto md:max-w-100 md:max-h-120'>
-            <div className='flex flex-col h-full justify-between'>
+            <div className='flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10'>
+                <form onSubmit={handleLogin} className='w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-sm space-y-4'>
+                <div className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-10'>
                     <h1 className='text-2xl text-rose-700 font-bold'>Login</h1>
                     {showResetSuccess ? (
@@ -123,7 +133,7 @@ export default function Login(){
                     <div className='flex flex-col gap-2'>
                         <button
                             type="button"
-                            onClick={() => handleOAuthLogin('google')}
+                            onClick={handleOAuthLogin}
                             disabled={oauthLoading !== null}
                             className='border border-gray-300 text-gray-700 px-4 py-2 w-full rounded-md hover:bg-gray-50 disabled:bg-gray-100 flex items-center justify-center gap-2'
                         >
@@ -134,17 +144,6 @@ export default function Login(){
                                 <path fill='currentColor' d='M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z'/>
                             </svg>
                             {oauthLoading === 'google' ? 'Signing in...' : 'Continue with Google'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleOAuthLogin('facebook')}
-                            disabled={oauthLoading !== null}
-                            className='border border-gray-300 bg-blue-600 text-white px-4 py-2 w-full rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center gap-2'
-                        >
-                            <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
-                                <path d='M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z'/>
-                            </svg>
-                            {oauthLoading === 'facebook' ? 'Signing in...' : 'Continue with Facebook'}
                         </button>
                     </div>
 

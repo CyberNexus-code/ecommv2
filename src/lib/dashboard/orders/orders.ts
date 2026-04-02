@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import { createServer } from "../../supabase/server";
 import { sendOrderStatusUpdateEmail } from "@/lib/email/sendOrderEmail";
 import { logServerError } from "@/lib/logging/server";
@@ -9,8 +10,13 @@ type OrderEmailRow = {
     status: string
     total: number | string | null
     created_at: string
-    profiles: { email?: string | null } | { email?: string | null }[] | null
+    customer_name: string | null
+    customer_email: string | null
+    delivery_address: string | null
+    delivery_city: string | null
+    delivery_postal_code: number | string | null
     order_items: {
+        id?: string | null
         item_name: string | null
         quantity: number | string | null
         unit_price: number | string | null
@@ -30,7 +36,7 @@ export async function getOrders(){
         const {data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
 
         if(profile?.role === "admin"){
-           const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, order_items(*), profiles(email)')
+              const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, order_items(*)')
 
            if(errorBaskets){
             await logServerError('dashboard.getOrders.fetchOrders', errorBaskets, { userId: user.id })
@@ -49,10 +55,11 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
     
     try{
         const supabase = await createServer();
+        const businessSettings = await getBusinessSettings();
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, profiles(email), order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -73,9 +80,7 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
         }
 
         try{
-            const customerEmail = (Array.isArray(currentOrder?.profiles) 
-                ? currentOrder.profiles[0]?.email 
-                : currentOrder?.profiles?.email);
+            const customerEmail = currentOrder?.customer_email;
             if(customerEmail){
                 await sendOrderStatusUpdateEmail({
                     previousStatus,
@@ -85,12 +90,17 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
                     total: Number(currentOrder.total ?? 0),
                     createdAt: currentOrder.created_at,
                     customerEmail,
+                    customerName: currentOrder.customer_name ?? customerEmail,
+                    deliveryAddress: currentOrder.delivery_address ?? '',
+                    deliveryCity: currentOrder.delivery_city ?? '',
+                    deliveryPostalCode: String(currentOrder.delivery_postal_code ?? ''),
                     items: (currentOrder.order_items ?? []).map((item) => ({
                         item_name: item.item_name,
                         quantity: Number(item.quantity ?? 0),
                         unit_price: Number(item.unit_price ?? 0),
                         line_total: Number(item.line_total ?? 0),
                     })),
+                    businessSettings,
                 });
             }
         }catch(emailError){
@@ -109,10 +119,11 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
 export async function cancelOrder(orderID: string, cancelledBy: string){
     try{
         const supabase = await createServer();
+        const businessSettings = await getBusinessSettings();
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, profiles(email), order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -129,9 +140,7 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
         }
 
         try{
-            const customerEmail = (Array.isArray(currentOrder?.profiles) 
-                ? currentOrder.profiles[0]?.email 
-                : currentOrder?.profiles?.email);
+            const customerEmail = currentOrder?.customer_email;
             if(customerEmail){
                 await sendOrderStatusUpdateEmail({
                     previousStatus,
@@ -141,12 +150,17 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
                     total: Number(currentOrder.total ?? 0),
                     createdAt: currentOrder.created_at,
                     customerEmail,
+                    customerName: currentOrder.customer_name ?? customerEmail,
+                    deliveryAddress: currentOrder.delivery_address ?? '',
+                    deliveryCity: currentOrder.delivery_city ?? '',
+                    deliveryPostalCode: String(currentOrder.delivery_postal_code ?? ''),
                     items: (currentOrder.order_items ?? []).map((item) => ({
                         item_name: item.item_name,
                         quantity: Number(item.quantity ?? 0),
                         unit_price: Number(item.unit_price ?? 0),
                         line_total: Number(item.line_total ?? 0),
                     })),
+                    businessSettings,
                 });
             }
         }catch(emailError){

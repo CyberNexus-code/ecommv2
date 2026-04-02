@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { saveGoogleOAuthTokens } from "@/lib/auth/oauthTokens";
 import { createServer } from "@/lib/supabase/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
@@ -7,7 +8,12 @@ export async function GET(request: NextRequest) {
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const code = requestUrl.searchParams.get("code");
   const type = requestUrl.searchParams.get("type") as EmailOtpType | null;
-  const next = requestUrl.searchParams.get("next") ?? "/";
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  let next = requestUrl.searchParams.get("next") ?? "/";
+
+  if (!next.startsWith("/")) {
+    next = "/";
+  }
 
   const supabase = await createServer();
 
@@ -32,13 +38,23 @@ export async function GET(request: NextRequest) {
 
   // Flow B: code (PKCE/code flow)
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       return NextResponse.redirect(new URL("/login?reset=invalid", requestUrl.origin));
     }
 
-    return NextResponse.redirect(new URL(next, requestUrl.origin));
+    await saveGoogleOAuthTokens(data.session);
+
+    if (process.env.NODE_ENV === "development") {
+      return NextResponse.redirect(`${requestUrl.origin}${next}`);
+    }
+
+    if (forwardedHost) {
+      return NextResponse.redirect(`https://${forwardedHost}${next}`);
+    }
+
+    return NextResponse.redirect(`${requestUrl.origin}${next}`);
   }
 
   // Flow C: links that carry tokens in URL hash are not visible to server routes.

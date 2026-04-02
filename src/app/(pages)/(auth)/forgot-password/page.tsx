@@ -35,8 +35,8 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen p-2 md:p-20">
-        <div className="m-auto min-h-80 bg-white p-6 rounded-2xl shadow-sm text-center space-y-4 md:max-w-110">
+      <div className="flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10">
+        <div className="w-full max-w-lg rounded-2xl bg-white p-6 text-center shadow-sm space-y-4">
           <h1 className="text-2xl text-rose-700 font-bold">Check Your Email</h1>
           <p className="text-sm text-stone-600">
             We&apos;ve sent a password reset link to <strong>{email}</strong>
@@ -53,8 +53,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 md:p-20">
-      <form onSubmit={handleSubmit} className="m-auto min-h-80 bg-white p-6 rounded-2xl shadow-sm text-center space-y-4 md:max-w-110">
+    <div className="flex min-h-dvh items-start justify-center overflow-y-auto p-3 md:px-6 md:py-10">
+      <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-2xl bg-white p-6 text-center shadow-sm space-y-4">
         <h1 className="text-2xl text-rose-700 font-bold">Forgot Password</h1>
         <p className="text-sm text-stone-600">
           Enter the email associated with your account to receive a password reset link.

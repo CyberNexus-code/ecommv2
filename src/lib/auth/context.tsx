@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AuthRole>('guest')
   const [loading, setLoading] = useState(true)
   const lastMergedGuestUserId = useRef<string | null>(null)
+  const isSigningOut = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -108,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let nextUser = data.session?.user ?? null
 
-      if (!nextUser && !isAuthPath(pathname)) {
+      if (!nextUser && !isAuthPath(pathname) && !isSigningOut.current) {
         const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
 
         if (!active) return
@@ -136,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await resolveRole(nextUser)
       await mergePendingGuestData(nextUser)
 
-      if (!nextUser && !isAuthPath(pathname)) {
+      if (!nextUser && !isAuthPath(pathname) && !isSigningOut.current) {
         const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
 
         if (!active) return
@@ -165,9 +166,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setLoading(true)
-    await supabase.auth.signOut()
+    isSigningOut.current = true
+    clearPendingGuestMerge()
+    lastMergedGuestUserId.current = null
+
+    const { error: signOutError } = await supabase.auth.signOut()
+
+    if (signOutError) {
+      void logClientError('auth.signOut', signOutError, { pathname })
+      isSigningOut.current = false
+      setLoading(false)
+      return
+    }
+
     setUser(null)
     setRole('guest')
+
+    if (!isAuthPath(pathname)) {
+      const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously()
+
+      if (anonymousError) {
+        void logClientError('auth.signOut.restoreGuestSession', anonymousError, { pathname })
+      } else {
+        const guestUser = anonymousData.user ?? anonymousData.session?.user ?? null
+        setUser(guestUser)
+        setRole('guest')
+      }
+    }
+
+    isSigningOut.current = false
+    setLoading(false)
     router.replace('/')
     router.refresh()
   }

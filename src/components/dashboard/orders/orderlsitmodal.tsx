@@ -1,11 +1,12 @@
 "use client"
 
+import Link from "next/link"
 import ButtonRose from "@/components/ui/button"
 
 type OrderModalItem = {
     id: string;
     quantity: number;
-    item_name?: string;
+    item_name?: string | null;
     name?: string;
 };
 
@@ -43,9 +44,12 @@ export default function OrderListModal({order, onClose, update, cancel} :
                     </div>
                 </div>
                 <div className="flex flex-col gap-2 border-t p-5">
-                    <div className="flex justify-between">
+                    <div className="flex flex-wrap justify-between gap-2">
                         <ButtonRose onClick={onClose}>Cancel</ButtonRose>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
+                            <Link href={`/dashboard/accounting/invoices/${order.id}`} className="inline-flex items-center justify-center rounded-md border border-rose-200 px-4 py-2 text-sm font-medium text-rose-800 transition hover:bg-rose-50">
+                              Open Invoice
+                            </Link>
                             <ButtonRose onClick={() => cancel(order.id, "admin")}>Cancel Order</ButtonRose>
                             <ButtonRose onClick={() => update(order.id)}>Update status</ButtonRose>
                         </div>
