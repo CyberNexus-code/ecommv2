@@ -2,6 +2,7 @@ import { createServer } from "../supabase/server";
 import type { CategoryType } from "@/types/categoryType";
 import type { ItemTag, ItemType } from "@/types/itemType";
 import { logServerError } from "@/lib/logging/server";
+import { normalizeCategoryName } from "@/lib/items/categories";
 
 const itemSelect = '*, categories (name), item_images (id, item_id, image_url, storage_path, sort_order, is_thumbnail, alt_text), items_tags (item_id, tag_id, tags (id, name, slug, description))'
 
@@ -22,11 +23,18 @@ export async function getAllItems(){
 export async function getCategory(category: string): Promise<Partial<CategoryType> | null> {
 
     const supabase = await createServer();
+    const normalizedCategory = normalizeCategoryName(category);
     
-    const { data, error } = await supabase.from('categories').select('id, name').eq('name', category).limit(1);
+    const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .ilike('name', normalizedCategory)
+        .limit(1);
 
     if(error){
-        await logServerError('items.getCategory', error, { category });
+        await logServerError('items.getCategory', error, { category, normalizedCategory });
         return null
     }
 

@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useDeferredValue, useEffect, useState } from 'react';
 import CatalogFiltersPanel from '@/components/CatalogFiltersPanel';
 import ProductCard from '@/components/ProductCard/ProductCard';
+import { formatCategoryDisplayName } from '@/lib/items/categories';
 import type { ItemType, TagType } from '@/types/itemType';
 
 type ProductsCategoryClientProps = {
@@ -43,7 +44,7 @@ export default function ProductsCategoryClient({ categoryName, initialItems, ini
   }, [currentQuery, pathname, router, searchInput, searchParams]);
 
   const selectedTags = searchParams.getAll('tags');
-  const displayCategory = categoryName.replace('-', ' ');
+  const displayCategory = formatCategoryDisplayName(categoryName);
   const filteredItems = initialItems.filter((item) => {
     const itemTagSlugs = (item.items_tags || [])
       .map((tag) => tag.tags?.slug)

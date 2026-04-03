@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserCircleIcon, Bars3Icon, ShoppingCartIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { Popover, PopoverButton, PopoverPanel, CloseButton } from "@headlessui/react";
+import { getCategoryPath } from "@/lib/items/categories";
 import type { CategoryType } from "@/types/categoryType";
 import logo2 from "../../../public/logo2.png";
 import { useAuth } from "@/lib/auth/context";
@@ -69,7 +70,7 @@ export default function Nav({ categories }: NavProps) {
                 <CloseButton
                   as={Link}
                   key={c.id}
-                  href={`/products/${c.name}`}
+                  href={getCategoryPath(c.name)}
                   className="block rounded-lg px-3 py-2 text-sm text-rose-800 transition hover:bg-rose-50"
                 >
                   {formatName(c.name)}
@@ -153,7 +154,7 @@ export default function Nav({ categories }: NavProps) {
                   <CloseButton
                     as={Link}
                     key={`mobile-${c.id}`}
-                    href={`/products/${c.name}`}
+                    href={getCategoryPath(c.name)}
                     className="block rounded-xl px-3 py-2.5 text-sm text-rose-800 transition hover:bg-rose-50"
                   >
                     {formatName(c.name)}
