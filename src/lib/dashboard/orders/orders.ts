@@ -17,6 +17,7 @@ type OrderEmailRow = {
     delivery_address: string | null
     delivery_city: string | null
     delivery_postal_code: number | string | null
+    waybill_number: string | null
     order_items: {
         id?: string | null
         item_name: string | null
@@ -24,6 +25,11 @@ type OrderEmailRow = {
         unit_price: number | string | null
         line_total: number | string | null
     }[]
+}
+
+function normalizeWaybillNumber(value?: string | null) {
+    const normalized = value?.trim() ?? ''
+    return normalized.length > 0 ? normalized : null
 }
 
 export async function getOrders(){
@@ -53,15 +59,16 @@ export async function getOrders(){
 }
 
 
-export async function updateOrderStatus(orderID: string, newStatus: string){
+export async function updateOrderStatus(orderID: string, newStatus: string, waybillNumber?: string | null){
     
     try{
         const supabase = await createServer();
         const businessSettings = await getBusinessSettings();
+        const normalizedWaybillNumber = normalizeWaybillNumber(waybillNumber)
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, waybill_number, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -75,7 +82,17 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
             return {success: "success"};
         }
 
-        const { error } = await supabase.from('orders').update({status: newStatus}).eq('id', orderID);
+        if(newStatus === "order_shipped" && !normalizedWaybillNumber){
+            throw new Error('Waybill number is required when marking an order as shipped')
+        }
+
+        const updatePayload: { status: string; waybill_number?: string | null } = { status: newStatus }
+
+        if (newStatus === "order_shipped") {
+            updatePayload.waybill_number = normalizedWaybillNumber
+        }
+
+        const { error } = await supabase.from('orders').update(updatePayload).eq('id', orderID);
 
         if(error){
             throw new Error(error.message)
@@ -98,6 +115,7 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
                     deliveryAddress: currentOrder.delivery_address ?? '',
                     deliveryCity: currentOrder.delivery_city ?? '',
                     deliveryPostalCode: String(currentOrder.delivery_postal_code ?? ''),
+                    waybillNumber: newStatus === "order_shipped" ? normalizedWaybillNumber : currentOrder.waybill_number,
                     items: (currentOrder.order_items ?? []).map((item) => ({
                         item_name: item.item_name,
                         quantity: Number(item.quantity ?? 0),
@@ -108,14 +126,15 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
                 });
             }
         }catch(emailError){
-            await logServerError('dashboard.updateOrderStatus.sendOrderStatusUpdateEmail', emailError, { orderID, newStatus });
+            await logServerError('dashboard.updateOrderStatus.sendOrderStatusUpdateEmail', emailError, { orderID, newStatus, waybillNumber: normalizedWaybillNumber });
         }
 
         revalidatePath("/dashboard/orders")
         return {success: "success"}
 
     }catch(error){
-        await logServerError('dashboard.updateOrderStatus', error, { orderID, newStatus })
+        await logServerError('dashboard.updateOrderStatus', error, { orderID, newStatus, waybillNumber })
+        throw error
     }
 }
 
@@ -127,7 +146,7 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, waybill_number, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -160,6 +179,7 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
                     deliveryAddress: currentOrder.delivery_address ?? '',
                     deliveryCity: currentOrder.delivery_city ?? '',
                     deliveryPostalCode: String(currentOrder.delivery_postal_code ?? ''),
+                    waybillNumber: currentOrder.waybill_number,
                     items: (currentOrder.order_items ?? []).map((item) => ({
                         item_name: item.item_name,
                         quantity: Number(item.quantity ?? 0),

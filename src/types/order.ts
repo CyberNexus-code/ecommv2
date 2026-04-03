@@ -26,5 +26,6 @@ export type Order = {
   subtotal: number,
   total: number,
   updated_at: string,
+  waybill_number: string | null,
   user_id: string
 }

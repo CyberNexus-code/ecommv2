@@ -46,14 +46,14 @@ export default function OrderListContianer({order, now, referencePrefix}: {order
     const ageLevel = getOrderAgeLevel(orderAge);
     const ageConfig = ORDER_AGE_CONFIG[ageLevel]
     
-    function handleStatusUpdate(id: string, changeStatus? : string){
+    async function handleStatusUpdate(id: string, changeStatus? : string, waybillNumber?: string){
         const newStatus = changeStatus ? changeStatus : status.next
         if(!newStatus){
             void logClientError('dashboard.orderListContainer.handleStatusUpdate', new Error('No next status found'), { id, currentStatus: order.status })
             return 
         }
 
-        updateStatus(id, newStatus);
+        await updateStatus(id, newStatus, waybillNumber);
     }
 
     function handleOrderCancel(id: string, by: string){

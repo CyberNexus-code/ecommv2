@@ -86,7 +86,7 @@ export async function sendOrderStatusUpdateEmail(
   const subject = `Order Update ${getInvoiceReference(payload)}: ${statusLabel(payload.status)}`;
   const intro = `Your order status changed from "${statusLabel(
     payload.previousStatus
-  )}" to "${statusLabel(payload.status)}".`;
+  )}" to "${statusLabel(payload.status)}".${payload.waybillNumber ? ` Your waybill number is ${payload.waybillNumber}.` : ''}`;
 
   await transporter.sendMail({
     from: `"Cute & Creative Orders" <${smtpUser}>`,

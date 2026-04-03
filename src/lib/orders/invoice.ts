@@ -23,6 +23,7 @@ export type InvoicePayload = {
   deliveryAddress: string
   deliveryCity: string
   deliveryPostalCode: string
+  waybillNumber?: string | null
   items: InvoiceItem[]
   businessSettings: BusinessSettings
 }
@@ -129,6 +130,7 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
           <div>
             <p style="margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#e11d48;font-weight:700;">Order Status</p>
             <p style="margin:6px 0 0;color:#57534e;">${escapeHtml(payload.status.replaceAll('_', ' '))}</p>
+            ${payload.waybillNumber ? `<p style="margin:8px 0 0;color:#57534e;"><strong>Waybill:</strong> ${escapeHtml(payload.waybillNumber)}</p>` : ''}
             <p style="margin:8px 0 0;color:#57534e;">${escapeHtml(settings.invoice_footer_note || '')}</p>
           </div>
           <div style="min-width:260px;padding:16px;border-radius:16px;background:#881337;color:#ffffff;text-align:right;">
@@ -162,6 +164,7 @@ export function buildInvoiceText(payload: InvoicePayload): string {
     `Customer: ${payload.customerName || payload.customerEmail}`,
     `Email: ${payload.customerEmail}`,
     `Delivery: ${[payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', ')}`,
+    ...(payload.waybillNumber ? [`Waybill: ${payload.waybillNumber}`] : []),
     '',
     'Items:',
     ...payload.items.map((item) => `${item.item_name ?? 'Item'} | Qty ${item.quantity} | Unit ${formatCurrency(item.unit_price)} | Line ${formatCurrency(item.line_total)}`),
@@ -196,6 +199,7 @@ export function buildAdminReceiptHtml(payload: InvoicePayload): string {
         <p style="margin:0 0 8px;"><strong>Customer:</strong> ${escapeHtml(payload.customerName || payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Email:</strong> ${escapeHtml(payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery:</strong> ${escapeHtml([payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', '))}</p>
+        ${payload.waybillNumber ? `<p style="margin:0 0 8px;"><strong>Waybill:</strong> ${escapeHtml(payload.waybillNumber)}</p>` : ''}
         <p style="margin:0 0 8px;"><strong>Items subtotal:</strong> ${formatCurrency(payload.subtotal)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery fee:</strong> ${formatCurrency(payload.deliveryFee)}</p>
         <p style="margin:0 0 16px;"><strong>Total:</strong> ${formatCurrency(payload.total)}</p>
@@ -223,6 +227,7 @@ export function buildAdminReceiptText(payload: InvoicePayload): string {
     `Customer: ${payload.customerName || payload.customerEmail}`,
     `Email: ${payload.customerEmail}`,
     `Delivery: ${[payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', ')}`,
+    ...(payload.waybillNumber ? [`Waybill: ${payload.waybillNumber}`] : []),
     `Items subtotal: ${formatCurrency(payload.subtotal)}`,
     `Delivery fee: ${formatCurrency(payload.deliveryFee)}`,
     `Total: ${formatCurrency(payload.total)}`,
