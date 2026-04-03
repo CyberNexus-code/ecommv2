@@ -22,7 +22,7 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Invoice Settings</p>
         <h2 className="mt-1 text-xl font-semibold text-rose-900">Business and Banking Details</h2>
-        <p className="mt-1 text-sm text-stone-600">These details are used in customer invoices and accounting exports.</p>
+        <p className="mt-1 text-sm text-stone-600">These details are used in customer invoices, delivery totals, and accounting exports.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -37,6 +37,17 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
         <label className="space-y-1 text-sm font-medium text-stone-700">
           <span>Business Phone</span>
           <input name="business_phone" defaultValue={settings.business_phone} className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm" />
+        </label>
+        <label className="space-y-1 text-sm font-medium text-stone-700">
+          <span>Standard Delivery Rate</span>
+          <input
+            name="standard_delivery_rate"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={settings.standard_delivery_rate}
+            className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm"
+          />
         </label>
         <label className="space-y-1 text-sm font-medium text-stone-700">
           <span>Payment Reference Prefix</span>
@@ -70,7 +81,7 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className={`text-sm ${state.success ? 'text-emerald-700' : 'text-rose-700'}`}>
-          {state.message ?? 'Save changes to update invoice banking details.'}
+          {state.message ?? 'Save changes to update delivery, invoice, and banking details.'}
         </p>
         <ButtonRose type="submit" variant="primary" loading={pending}>Save Banking Details</ButtonRose>
       </div>

@@ -8,6 +8,8 @@ type OrderEmailRow = {
     id: string
     order_number: number
     status: string
+    subtotal: number | string | null
+    delivery_fee: number | string | null
     total: number | string | null
     created_at: string
     customer_name: string | null
@@ -59,7 +61,7 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -87,6 +89,8 @@ export async function updateOrderStatus(orderID: string, newStatus: string){
                     orderId: currentOrder.id,
                     orderNumber: currentOrder.order_number,
                     status: newStatus,
+                    subtotal: Number(currentOrder.subtotal ?? 0),
+                    deliveryFee: Number(currentOrder.delivery_fee ?? 0),
                     total: Number(currentOrder.total ?? 0),
                     createdAt: currentOrder.created_at,
                     customerEmail,
@@ -123,7 +127,7 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
 
         const { data: currentOrder, error: currentOrderError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("id", orderID)
             .single<OrderEmailRow>();
 
@@ -147,6 +151,8 @@ export async function cancelOrder(orderID: string, cancelledBy: string){
                     orderId: currentOrder.id,
                     orderNumber: currentOrder.order_number,
                     status: "cancelled",
+                    subtotal: Number(currentOrder.subtotal ?? 0),
+                    deliveryFee: Number(currentOrder.delivery_fee ?? 0),
                     total: Number(currentOrder.total ?? 0),
                     createdAt: currentOrder.created_at,
                     customerEmail,

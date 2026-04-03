@@ -7,6 +7,7 @@ export type Order = {
   created_at: string,
   delivery_address: string | null,
   delivery_city: string | null,
+  delivery_fee: number,
   delivery_postal_code: number | null,
   id: string,
   is_deleted: boolean,
@@ -22,6 +23,7 @@ export type Order = {
   }[],
   order_number: number,
   status: OrderStatus,
+  subtotal: number,
   total: number,
   updated_at: string,
   user_id: string

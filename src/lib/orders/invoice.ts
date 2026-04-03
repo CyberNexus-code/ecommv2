@@ -14,6 +14,8 @@ export type InvoicePayload = {
   orderId: string
   orderNumber: number
   status: string
+  subtotal: number
+  deliveryFee: number
   total: number
   createdAt: string
   customerEmail: string
@@ -50,6 +52,10 @@ export function formatInvoiceDate(value: string): string {
 
 export function getInvoiceReference(payload: InvoicePayload): string {
   return getInvoiceReferenceFromOrderNumber(payload.orderNumber, payload.businessSettings.payment_reference_prefix)
+}
+
+export function calculateItemsSubtotal(items: InvoiceItem[]): number {
+  return Number(items.reduce((sum, item) => sum + item.line_total, 0).toFixed(2))
 }
 
 function buildItemsRows(payload: InvoicePayload) {
@@ -125,8 +131,10 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
             <p style="margin:6px 0 0;color:#57534e;">${escapeHtml(payload.status.replaceAll('_', ' '))}</p>
             <p style="margin:8px 0 0;color:#57534e;">${escapeHtml(settings.invoice_footer_note || '')}</p>
           </div>
-          <div style="min-width:220px;padding:16px;border-radius:16px;background:#881337;color:#ffffff;text-align:right;">
-            <p style="margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#fecdd3;">Amount Due</p>
+          <div style="min-width:260px;padding:16px;border-radius:16px;background:#881337;color:#ffffff;text-align:right;">
+            <p style="margin:0;color:#fecdd3;">Items subtotal: ${formatCurrency(payload.subtotal)}</p>
+            <p style="margin:6px 0 0;color:#fecdd3;">Delivery: ${formatCurrency(payload.deliveryFee)}</p>
+            <p style="margin:8px 0 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#fecdd3;">Amount Due</p>
             <p style="margin:6px 0 0;font-size:28px;font-weight:800;">${formatCurrency(payload.total)}</p>
           </div>
         </div>
@@ -158,6 +166,8 @@ export function buildInvoiceText(payload: InvoicePayload): string {
     'Items:',
     ...payload.items.map((item) => `${item.item_name ?? 'Item'} | Qty ${item.quantity} | Unit ${formatCurrency(item.unit_price)} | Line ${formatCurrency(item.line_total)}`),
     '',
+    `Items subtotal: ${formatCurrency(payload.subtotal)}`,
+    `Delivery: ${formatCurrency(payload.deliveryFee)}`,
     `Amount due: ${formatCurrency(payload.total)}`,
     `Bank: ${settings.bank_name || 'Not set'}`,
     `Account name: ${settings.bank_account_name || settings.business_name}`,
@@ -186,6 +196,8 @@ export function buildAdminReceiptHtml(payload: InvoicePayload): string {
         <p style="margin:0 0 8px;"><strong>Customer:</strong> ${escapeHtml(payload.customerName || payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Email:</strong> ${escapeHtml(payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery:</strong> ${escapeHtml([payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', '))}</p>
+        <p style="margin:0 0 8px;"><strong>Items subtotal:</strong> ${formatCurrency(payload.subtotal)}</p>
+        <p style="margin:0 0 8px;"><strong>Delivery fee:</strong> ${formatCurrency(payload.deliveryFee)}</p>
         <p style="margin:0 0 16px;"><strong>Total:</strong> ${formatCurrency(payload.total)}</p>
         <table style="width:100%;border-collapse:collapse;border:1px solid #ffe4e6;border-radius:8px;overflow:hidden;">
           <thead style="background:#fff1f2;color:#9f1239;">
@@ -211,6 +223,8 @@ export function buildAdminReceiptText(payload: InvoicePayload): string {
     `Customer: ${payload.customerName || payload.customerEmail}`,
     `Email: ${payload.customerEmail}`,
     `Delivery: ${[payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', ')}`,
+    `Items subtotal: ${formatCurrency(payload.subtotal)}`,
+    `Delivery fee: ${formatCurrency(payload.deliveryFee)}`,
     `Total: ${formatCurrency(payload.total)}`,
     '',
     ...payload.items.map((item) => `${item.item_name ?? 'Item'} | Qty ${item.quantity} | Line ${formatCurrency(item.line_total)}`),

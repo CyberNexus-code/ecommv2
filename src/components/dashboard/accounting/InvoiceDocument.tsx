@@ -81,6 +81,8 @@ export default function InvoiceDocument({ invoice }: { invoice: InvoicePayload }
           <p>{invoice.businessSettings.invoice_footer_note}</p>
         </div>
         <div className="rounded-2xl bg-rose-900 px-5 py-4 text-right text-white">
+          <p className="text-sm text-rose-100">Items subtotal: {formatCurrency(invoice.subtotal)}</p>
+          <p className="mt-1 text-sm text-rose-100">Delivery: {formatCurrency(invoice.deliveryFee)}</p>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-100">Amount Due</p>
           <p className="mt-1 text-3xl font-semibold">{formatCurrency(invoice.total)}</p>
         </div>

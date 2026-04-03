@@ -13,6 +13,8 @@ export type MyOrder = {
   id: string;
   order_number: number;
   status: string;
+  subtotal: number;
+  delivery_fee: number;
   total: number;
   created_at: string;
   order_items: MyOrderItem[];
@@ -22,6 +24,8 @@ type MyOrderRow = {
   id: string;
   order_number: number | string;
   status: string;
+  subtotal: number | string | null;
+  delivery_fee: number | string | null;
   total: number | string | null;
   created_at: string;
   order_items: {
@@ -41,7 +45,7 @@ export async function getMyOrders(): Promise<MyOrder[]> {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, order_number, status, total, created_at, order_items(id, item_name, quantity, unit_price, line_total)")
+    .select("id, order_number, status, subtotal, delivery_fee, total, created_at, order_items(id, item_name, quantity, unit_price, line_total)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -54,6 +58,8 @@ export async function getMyOrders(): Promise<MyOrder[]> {
     id: order.id,
     order_number: Number(order.order_number),
     status: order.status,
+    subtotal: Number(order.subtotal ?? 0),
+    delivery_fee: Number(order.delivery_fee ?? 0),
     total: Number(order.total ?? 0),
     created_at: order.created_at,
     order_items: (order.order_items ?? []).map((item) => ({

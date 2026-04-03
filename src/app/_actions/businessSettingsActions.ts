@@ -12,10 +12,13 @@ export async function updateBusinessSettingsAction(
   formData: FormData,
 ): Promise<BusinessSettingsActionState> {
   try {
+    const standardDeliveryRateValue = Number(formData.get('standard_delivery_rate') ?? '0')
+
     await saveBusinessSettings({
       business_name: String(formData.get('business_name') ?? ''),
       business_email: String(formData.get('business_email') ?? ''),
       business_phone: String(formData.get('business_phone') ?? ''),
+      standard_delivery_rate: Number.isFinite(standardDeliveryRateValue) ? standardDeliveryRateValue : 0,
       bank_account_name: String(formData.get('bank_account_name') ?? ''),
       bank_name: String(formData.get('bank_name') ?? ''),
       account_number: String(formData.get('account_number') ?? ''),
@@ -27,7 +30,7 @@ export async function updateBusinessSettingsAction(
 
     return {
       success: true,
-      message: 'Banking and invoice settings saved.',
+      message: 'Banking, delivery, and invoice settings saved.',
     }
   } catch (error) {
     return {

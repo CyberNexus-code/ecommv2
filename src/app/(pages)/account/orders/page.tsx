@@ -93,9 +93,13 @@ export default async function AccountOrdersPage() {
                 </div>
 
                 <div className="mt-4 flex justify-end border-t border-rose-100 pt-3">
-                  <p className="text-base font-semibold text-rose-800">
-                    Total: R {Number(order.total).toFixed(2)}
-                  </p>
+                  <div className="text-right text-sm text-stone-600">
+                    <p>Items subtotal: R {Number(order.subtotal).toFixed(2)}</p>
+                    <p>Delivery: R {Number(order.delivery_fee).toFixed(2)}</p>
+                    <p className="text-base font-semibold text-rose-800">
+                      Total: R {Number(order.total).toFixed(2)}
+                    </p>
+                  </div>
                 </div>
               </article>
             );

@@ -15,6 +15,7 @@ export default async function AccountingPage() {
   ])
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
+  const totalDeliveryRevenue = orders.reduce((sum, order) => sum + order.deliveryFee, 0)
   const pendingCount = orders.filter((order) => order.status === 'order_placed_pending_payment' || order.status === 'suspended_pending_payment').length
   const outstandingTotal = orders
     .filter((order) => order.status === 'order_placed_pending_payment' || order.status === 'suspended_pending_payment')
@@ -58,15 +59,15 @@ export default async function AccountingPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-semibold text-rose-900">Export Ready</h2>
-          <p className="mt-1 text-sm text-stone-600">Use the invoice register for summary handoff to your accountant and the line-item export for detailed bookkeeping support. Both exports use invoice references instead of internal order IDs.</p>
+          <h2 className="text-xl font-semibold text-rose-900">Delivery Settings</h2>
+          <p className="mt-1 text-sm text-stone-600">New orders snapshot the standard delivery rate active at checkout.</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/dashboard/accounting/export" className="inline-flex rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
-              Export Invoice Register
-            </Link>
-            <Link href="/dashboard/accounting/export/line-items" className="inline-flex rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
-              Export Line Items
-            </Link>
+            <p className="inline-flex rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">
+              Standard delivery: {formatCurrency(settings.standard_delivery_rate)}
+            </p>
+            <p className="inline-flex rounded-full bg-stone-100 px-4 py-2 text-sm font-medium text-stone-700">
+              Delivery billed: {formatCurrency(totalDeliveryRevenue)}
+            </p>
           </div>
         </section>
 
@@ -78,6 +79,19 @@ export default async function AccountingPage() {
           </p>
         </section>
       </div>
+
+      <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-semibold text-rose-900">Export Ready</h2>
+        <p className="mt-1 text-sm text-stone-600">Use the invoice register for summary handoff to your accountant and the line-item export for detailed bookkeeping support. Exports now include delivery-fee values alongside invoice totals.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/dashboard/accounting/export" className="inline-flex rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
+            Export Invoice Register
+          </Link>
+          <Link href="/dashboard/accounting/export/line-items" className="inline-flex rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
+            Export Line Items
+          </Link>
+        </div>
+      </section>
 
       <BankingDetailsForm settings={settings} />
 
@@ -96,6 +110,7 @@ export default async function AccountingPage() {
                 <th className="px-3 py-2 font-semibold">Invoice</th>
                 <th className="px-3 py-2 font-semibold">Customer</th>
                 <th className="px-3 py-2 font-semibold">Status</th>
+                <th className="px-3 py-2 font-semibold">Delivery</th>
                 <th className="px-3 py-2 font-semibold">Total</th>
                 <th className="px-3 py-2 font-semibold">Issued</th>
                 <th className="px-3 py-2 font-semibold">Actions</th>
@@ -114,6 +129,7 @@ export default async function AccountingPage() {
                         <p className="text-xs text-stone-500">{customerDisplay.secondary}</p>
                       </td>
                       <td className="px-3 py-3 text-stone-700">{order.status.replaceAll('_', ' ')}</td>
+                      <td className="px-3 py-3 text-stone-700">{formatCurrency(order.deliveryFee)}</td>
                       <td className="px-3 py-3 text-stone-700">{formatCurrency(order.total)}</td>
                       <td className="px-3 py-3 text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-ZA')}</td>
                       <td className="px-3 py-3">

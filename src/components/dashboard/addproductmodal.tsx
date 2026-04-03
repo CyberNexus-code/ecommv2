@@ -11,6 +11,9 @@ type AddProductModalProps = {
     catList: {
         catList: CategoryType[]
     }
+    buttonLabel?: string
+    containerClassName?: string
+    buttonClassName?: string
 }
 
 const initialValues: ProductFormValues = {
@@ -22,7 +25,12 @@ const initialValues: ProductFormValues = {
     meta_description: '',
 }
 
-export default function AddProductModal({catList}: AddProductModalProps){
+export default function AddProductModal({
+    catList,
+    buttonLabel,
+    containerClassName,
+    buttonClassName,
+}: AddProductModalProps){
     const [showAddModal, setShowAddModal] = useState(false);
     const [values, setValues] = useState<ProductFormValues>({
         ...initialValues,
@@ -45,8 +53,17 @@ export default function AddProductModal({catList}: AddProductModalProps){
 
     return (
         <>
-            <div className="flex w-full justify-end">
-                <button onClick={() => setShowAddModal(true)} className="border border-rose-700 p-1 mt-2 rounded-md bg-rose-700 text-white hover:bg-white hover:text-rose-700"><PlusIcon className="size-6"/></button>
+            <div className={containerClassName ?? "flex w-full justify-end"}>
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className={buttonClassName ?? "mt-2 rounded-md border border-rose-700 bg-rose-700 p-1 text-white hover:bg-white hover:text-rose-700"}
+                    aria-label={buttonLabel ?? "Add product"}
+                >
+                    <span className="flex items-center gap-2">
+                        <PlusIcon className="size-6"/>
+                        {buttonLabel ? <span>{buttonLabel}</span> : null}
+                    </span>
+                </button>
             </div>
 
             {showAddModal && 

@@ -10,30 +10,42 @@ export default async function ProductsDashboard(){
     const {categories} = await getAllCategories();
   const {tags} = await getAllTags();
 
-    if(items && items.length > 0){
-        return (
-            <div className="space-y-4">
-               <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Catalog</p>
-                    <h1 className="text-2xl font-semibold text-rose-900">Products</h1>
-                    <p className="text-sm text-stone-600">Manage product details, categories and media.</p>
-                  </div>
-                  <div className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
-                    {items.length} items
-                  </div>
-               </div>
+    return (
+        <div className="space-y-4">
+           <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Catalog</p>
+                <h1 className="text-2xl font-semibold text-rose-900">Products</h1>
+                <p className="text-sm text-stone-600">Manage product details, categories and media.</p>
+              </div>
+              <div className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
+                {items?.length ?? 0} items
+              </div>
+           </div>
+
+           {items && items.length > 0 ? (
+            <>
                <div className="rounded-2xl border border-rose-200 bg-white p-3 shadow-sm md:p-4">
-               {items?.map((item: ItemType) => (
+               {items.map((item: ItemType) => (
                 <ListComponent key={item.id} props={{type: "products", ...item, catList:categories, allTags: tags}} />
                 ))}
                </div>
                <AddProductModal catList={{catList: categories}}/>
+            </>
+           ) : (
+            <div className="rounded-2xl border border-dashed border-rose-300 bg-white p-8 shadow-sm">
+              <div className="mx-auto flex max-w-md flex-col items-center text-center">
+                <h2 className="text-xl font-semibold text-rose-900">No products yet</h2>
+                <p className="mt-2 text-sm text-stone-600">Add your first product to start building the catalog shown on your storefront.</p>
+                <AddProductModal
+                    catList={{catList: categories}}
+                    buttonLabel="Add product"
+                    containerClassName="mt-6 flex justify-center"
+                    buttonClassName="inline-flex items-center rounded-md border border-rose-700 bg-rose-700 px-4 py-2 text-sm font-medium text-white hover:bg-white hover:text-rose-700"
+                />
+              </div>
             </div>
-        );
-    }else{
-        return <div className="flex h-full items-center justify-center rounded-2xl border border-rose-200 bg-white p-8 shadow-sm">
-            <h1 className="text-lg font-semibold text-rose-800">No items found...</h1>
-            </div>
-    }
+           )}
+        </div>
+    );
 }

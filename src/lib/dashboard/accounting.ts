@@ -8,6 +8,8 @@ type AccountingOrderRow = {
   id: string
   order_number: number | string
   status: string
+  subtotal: number | string | null
+  delivery_fee: number | string | null
   total: number | string | null
   created_at: string
   customer_name: string | null
@@ -50,6 +52,8 @@ function mapOrder(row: AccountingOrderRow): AccountingOrder {
     orderId: row.id,
     orderNumber: Number(row.order_number),
     status: row.status,
+    subtotal: Number(row.subtotal ?? 0),
+    deliveryFee: Number(row.delivery_fee ?? 0),
     total: Number(row.total ?? 0),
     createdAt: row.created_at,
     customerEmail,
@@ -71,7 +75,7 @@ export async function getAccountingOrders(): Promise<AccountingOrder[]> {
     const supabase = await requireAdminSupabase()
     const { data, error } = await supabase
       .from('orders')
-      .select('id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(id, item_name, quantity, unit_price, line_total)')
+      .select('id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(id, item_name, quantity, unit_price, line_total)')
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
 
@@ -93,7 +97,7 @@ export async function getAccountingOrderById(orderId: string): Promise<Accountin
 
     const { data, error } = await supabase
       .from('orders')
-      .select('id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(id, item_name, quantity, unit_price, line_total)')
+      .select('id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(id, item_name, quantity, unit_price, line_total)')
       .or(lookup.orderNumber !== null ? `order_number.eq.${lookup.orderNumber}${lookup.isUuid ? `,id.eq.${orderId}` : ''}` : `id.eq.${orderId}`)
       .maybeSingle<AccountingOrderRow>()
 
@@ -118,6 +122,8 @@ export function buildAccountingCsv(orders: AccountingOrder[], settings: Business
     'customer_name',
     'customer_email',
     'item_count',
+    'items_subtotal_zar',
+    'delivery_fee_zar',
     'order_total_zar',
     'delivery_address',
     'delivery_city',
@@ -135,6 +141,8 @@ export function buildAccountingCsv(orders: AccountingOrder[], settings: Business
     order.customerName,
     order.customerEmail,
     String(order.items.length),
+    order.subtotal.toFixed(2),
+    order.deliveryFee.toFixed(2),
     order.total.toFixed(2),
     order.deliveryAddress,
     order.deliveryCity,
@@ -155,6 +163,7 @@ export function buildAccountingLineItemsCsv(orders: AccountingOrder[], settings:
     'customer_email',
     'delivery_city',
     'delivery_postal_code',
+    'delivery_fee_zar',
     'item_description',
     'quantity',
     'unit_price_zar',
@@ -174,6 +183,7 @@ export function buildAccountingLineItemsCsv(orders: AccountingOrder[], settings:
       order.customerEmail,
       order.deliveryCity,
       order.deliveryPostalCode,
+      order.deliveryFee.toFixed(2),
       item.item_name ?? 'Item',
       String(item.quantity),
       item.unit_price.toFixed(2),

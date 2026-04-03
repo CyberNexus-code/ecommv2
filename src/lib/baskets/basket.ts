@@ -10,6 +10,8 @@ type PlacedOrderRow = {
     id: string
     order_number: number
     status: string
+    subtotal: number | string | null
+    delivery_fee: number | string | null
     total: number | string | null
     created_at: string
     customer_name: string | null
@@ -64,7 +66,7 @@ export async function placeOrderLogic(basket_id: string){
         const businessSettings = await getBusinessSettings();
         const { data: placedOrder, error: orderFetchError } = await supabase
             .from("orders")
-            .select("id, order_number, status, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
             .eq("basket_id", basket_id)
             .single<PlacedOrderRow>();
 
@@ -84,6 +86,8 @@ export async function placeOrderLogic(basket_id: string){
             orderId: placedOrder.id,
             orderNumber: placedOrder.order_number,
             status: placedOrder.status,
+            subtotal: Number(placedOrder.subtotal ?? 0),
+            deliveryFee: Number(placedOrder.delivery_fee ?? 0),
             total: Number(placedOrder.total ?? 0),
             createdAt: placedOrder.created_at,
             customerEmail,

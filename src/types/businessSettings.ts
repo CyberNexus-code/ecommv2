@@ -3,6 +3,7 @@ export type BusinessSettings = {
   business_name: string
   business_email: string
   business_phone: string
+  standard_delivery_rate: number
   bank_account_name: string
   bank_name: string
   account_number: string
@@ -17,6 +18,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   business_name: 'Cute & Creative Toppers',
   business_email: '',
   business_phone: '',
+  standard_delivery_rate: 0,
   bank_account_name: '',
   bank_name: '',
   account_number: '',

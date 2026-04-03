@@ -19,6 +19,8 @@ type OrderRow = {
   id: string
   order_number: number
   status: string
+  subtotal: number
+  delivery_fee: number
   total: number
   created_at: string
   customer_name: string | null
@@ -152,6 +154,7 @@ async function main() {
     business_name: 'Cute & Creative Toppers',
     business_email: 'accounts@cutecreative.test',
     business_phone: '0310000000',
+    standard_delivery_rate: 50,
     bank_account_name: 'Cute Creative Toppers',
     bank_name: 'FNB',
     account_number: '12345678901',
@@ -164,6 +167,7 @@ async function main() {
       business_name: 'Cute & Creative Toppers',
       business_email: 'accounts@cutecreative.test',
       business_phone: '0310000000',
+      standard_delivery_rate: 50,
       bank_account_name: 'Cute Creative Toppers',
       bank_name: 'FNB',
       account_number: '12345678901',
@@ -224,7 +228,7 @@ async function main() {
 
   await rpc('place_order', token, { p_basket_id: basketId })
 
-  const orders = await restSelect<OrderRow[]>(`orders?basket_id=eq.${basketId}&select=id,order_number,status,total,created_at,customer_name,customer_email,delivery_address,delivery_city,delivery_postal_code,order_items(item_name,quantity,unit_price,line_total)`) 
+  const orders = await restSelect<OrderRow[]>(`orders?basket_id=eq.${basketId}&select=id,order_number,status,subtotal,delivery_fee,total,created_at,customer_name,customer_email,delivery_address,delivery_city,delivery_postal_code,order_items(item_name,quantity,unit_price,line_total)`) 
   const order = orders[0]
   assert.ok(order, 'Expected an order row after placing the order')
 
@@ -232,6 +236,8 @@ async function main() {
     orderId: order.id,
     orderNumber: Number(order.order_number),
     status: order.status,
+    subtotal: Number(order.subtotal ?? 0),
+    deliveryFee: Number(order.delivery_fee ?? 0),
     total: Number(order.total ?? 0),
     createdAt: order.created_at,
     customerEmail: order.customer_email ?? email,

@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(11);
 
 create or replace function pg_temp.create_user(
   p_id uuid,
@@ -98,6 +98,11 @@ values (
   100
 );
 
+insert into public.business_settings (id, business_name, payment_reference_prefix, invoice_footer_note, standard_delivery_rate)
+values (1, 'Cute & Creative Toppers', 'INV', 'Use your invoice number as payment reference.', 50.00)
+on conflict (id) do update
+set standard_delivery_rate = excluded.standard_delivery_rate;
+
 insert into public.baskets (id, user_id, status)
 values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', '11111111-1111-4111-8111-111111111111', 'open'),
@@ -134,6 +139,24 @@ select is(
   (select count(*)::integer from public.order_items where order_id = (select id from public.orders where basket_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1')),
   1,
   'place_order copies basket items into order_items'
+);
+
+select is(
+  (select subtotal from public.orders where basket_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'),
+  25.00::numeric,
+  'place_order stores item subtotal on the order'
+);
+
+select is(
+  (select delivery_fee from public.orders where basket_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'),
+  50.00::numeric,
+  'place_order snapshots the standard delivery rate on the order'
+);
+
+select is(
+  (select total from public.orders where basket_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'),
+  75.00::numeric,
+  'place_order total includes subtotal plus delivery fee'
 );
 
 select is(

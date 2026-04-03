@@ -8,11 +8,12 @@ import GuestCheckoutEmailForm from "@/components/basket/GuestCheckoutEmailForm";
 import PlaceOrderForm from "@/components/basket/PlaceOrderForm";
 import ButtonRose from "@/components/ui/button";
 import { hasRegisteredAccountEmail } from "@/lib/auth/accountLookup";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import { createServer } from "@/lib/supabase/server";
 
 export default async function BasketPage() {
 
-  const basket = await getBasket()
+  const [basket, settings] = await Promise.all([getBasket(), getBusinessSettings()])
   const supabase = await createServer();
   const {data: {user}} = await supabase.auth.getUser();
   const {data: profile} = await supabase.from('profiles').select('id, email, delivery_address, postal_code, city').eq('id', user?.id).single();
@@ -28,7 +29,9 @@ export default async function BasketPage() {
     return calc
   });
 
-  const total = subTotals?.reduce((a, b) => a + b, 0)
+  const itemsSubtotal = subTotals?.reduce((a, b) => a + b, 0) ?? 0
+  const deliveryTotal = basket && basket.length > 0 ? settings.standard_delivery_rate : 0
+  const total = itemsSubtotal + deliveryTotal
 
   return (
     <div className="relative mx-auto w-full max-w-7xl p-5 md:px-6">
@@ -71,9 +74,17 @@ export default async function BasketPage() {
                   <p>Items:</p>
                   <p>{basket.length}</p>
               </div>
+                <div className="flex justify-between p-1 text-sm text-stone-600">
+                  <p>Items subtotal:</p>
+                  <p>R {itemsSubtotal.toFixed(2)}</p>
+                </div>
+                <div className="flex justify-between p-1 text-sm text-stone-600">
+                  <p>Standard delivery:</p>
+                  <p>R {deliveryTotal.toFixed(2)}</p>
+                </div>
               <div className="flex justify-between p-1 text-base font-semibold text-rose-800">
                   <p>Total:</p>
-                  <p>R {total?.toFixed(2)}</p>
+                  <p>R {total.toFixed(2)}</p>
               </div>
               <div className="my-4 h-px bg-rose-100" />
               {user?.is_anonymous && profile?.id && (profile?.email === null || guestShouldSignIn) ? (

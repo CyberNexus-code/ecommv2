@@ -9,6 +9,10 @@ import { getInvoiceReferenceFromOrderNumber } from "@/lib/orders/reference"
 import type { Order } from "@/types/order"
 import { updateStatus, cancelOrder } from "@/app/_actions/dashboardActions"
 
+function formatCurrency(value: number): string {
+    return `R ${value.toFixed(2)}`
+}
+
 export default function OrderListContianer({order, now, referencePrefix}: {order: Order, now: number, referencePrefix: string}){
 
     const [showModal, setShowModal] = useState(false);
@@ -65,7 +69,8 @@ export default function OrderListContianer({order, now, referencePrefix}: {order
                     <h2 className="text-base font-semibold text-rose-900">{invoiceReference}</h2>
                     <p className="truncate text-sm text-stone-600">User: {customerDisplay.primary}</p>
                     <p className="text-sm text-stone-500">{(order.created_at).replace('T',' ').split('.')[0]}</p>
-                    <p className="mt-1 font-medium text-rose-700">Total: R {order.total}</p>
+                    <p className="mt-1 text-sm text-stone-600">Delivery: {formatCurrency(order.delivery_fee)}</p>
+                    <p className="font-medium text-rose-700">Total: {formatCurrency(order.total)}</p>
                 </div>
                 <div className="flex shrink-0 flex-row items-center gap-2 sm:flex-col sm:items-end">
                     <div className={`text-xs ${status.bg} ${status.tc} rounded-full px-2 py-1`}>
