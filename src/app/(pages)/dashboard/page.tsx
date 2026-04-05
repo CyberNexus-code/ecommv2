@@ -1,4 +1,5 @@
 import AdminOverviewCharts from "@/components/dashboard/AdminOverviewCharts";
+import { formatSastDateTime } from "@/lib/dateTime";
 import { getAccountDeletionAlertSummary } from "@/lib/dashboard/accountDeletionAlerts";
 import { getDashboardMetrics } from "@/lib/dashboard/metrics";
 
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
             {deletionAlerts.recentAlerts.length > 0 ? deletionAlerts.recentAlerts.map((alert) => (
               <article key={alert.id} className="rounded-2xl border border-amber-100 bg-white/90 p-4">
                 <p className="text-sm font-medium text-amber-900">{alert.activeOrderCount} active order{alert.activeOrderCount === 1 ? '' : 's'} at deletion</p>
-                <p className="mt-1 text-xs text-stone-500">{new Date(alert.createdAt).toLocaleString('en-ZA')}</p>
+                <p className="mt-1 text-xs text-stone-500">{formatSastDateTime(alert.createdAt)}</p>
                 <p className="mt-3 text-sm text-stone-700">{alert.message}</p>
                 <p className="mt-3 text-xs text-stone-500">User: {alert.deletedUserId ?? 'unknown'}</p>
                 <div className="mt-3 flex flex-wrap gap-2">

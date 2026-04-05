@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { BusinessSettings } from '@/types/businessSettings'
+import { formatSastDateTime } from '@/lib/dateTime'
 import { getInvoiceReferenceFromOrderNumber } from '@/lib/orders/reference'
 
 export type InvoiceItem = {
@@ -42,13 +43,7 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatInvoiceDate(value: string): string {
-  return new Date(value).toLocaleString('en-ZA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatSastDateTime(value)
 }
 
 export function getInvoiceReference(payload: InvoicePayload): string {

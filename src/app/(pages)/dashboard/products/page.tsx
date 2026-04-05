@@ -1,5 +1,6 @@
 import { getAllCategories, getAllItems } from "@/lib/items/get";
 import { getAllTags } from "@/lib/items/tags";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import ListComponent from "@/components/dashboard/listcomponent";
 import AddProductModal from "@/components/dashboard/addproductmodal";
 import type { ItemType } from "@/types/itemType";
@@ -8,7 +9,10 @@ export default async function ProductsDashboard(){
 
     const {items} = await getAllItems({ includeInactive: true });
     const {categories} = await getAllCategories();
-  const {tags} = await getAllTags();
+    const [{tags}, settings] = await Promise.all([
+      getAllTags(),
+      getBusinessSettings(),
+    ])
 
     return (
         <div className="space-y-4">
@@ -29,7 +33,7 @@ export default async function ProductsDashboard(){
             <>
                <div className="rounded-2xl border border-rose-200 bg-white p-3 shadow-sm md:p-4">
                {items.map((item: ItemType) => (
-                <ListComponent key={item.id} props={{type: "products", ...item, catList:categories, allTags: tags}} />
+                <ListComponent key={item.id} props={{type: "products", ...item, catList:categories, allTags: tags, priceReviewWindowDays: settings.product_price_review_window_days}} />
                 ))}
                </div>
               <AddProductModal catList={{catList: categories}} allTags={tags}/>

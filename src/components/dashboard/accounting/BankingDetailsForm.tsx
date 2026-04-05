@@ -50,6 +50,17 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
           />
         </label>
         <label className="space-y-1 text-sm font-medium text-stone-700">
+          <span>Product Price Review Window (days)</span>
+          <input
+            name="product_price_review_window_days"
+            type="number"
+            min="1"
+            step="1"
+            defaultValue={settings.product_price_review_window_days}
+            className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="space-y-1 text-sm font-medium text-stone-700">
           <span>Payment Reference Prefix</span>
           <input name="payment_reference_prefix" defaultValue={settings.payment_reference_prefix} className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm" />
         </label>
@@ -81,7 +92,7 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className={`text-sm ${state.success ? 'text-emerald-700' : 'text-rose-700'}`}>
-          {state.message ?? 'Save changes to update delivery, invoice, and banking details.'}
+          {state.message ?? 'Save changes to update delivery, invoice, banking, and product review details.'}
         </p>
         <ButtonRose type="submit" variant="primary" loading={pending}>Save Banking Details</ButtonRose>
       </div>

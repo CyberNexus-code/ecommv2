@@ -4,6 +4,7 @@ import Link from 'next/link'
 import BankingDetailsForm from '@/components/dashboard/accounting/BankingDetailsForm'
 import { getBusinessSettings } from '@/lib/businessSettings'
 import { getCustomerDisplay } from '@/lib/customers/display'
+import { formatSastDateTime } from '@/lib/dateTime'
 import { getAccountingOrders } from '@/lib/dashboard/accounting'
 import { formatCurrency } from '@/lib/orders/invoice'
 import { getInvoiceReferenceFromOrderNumber } from '@/lib/orders/reference'
@@ -81,6 +82,16 @@ export default async function AccountingPage() {
       </div>
 
       <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-semibold text-rose-900">Product Review Cycle</h2>
+        <p className="mt-1 text-sm text-stone-600">Dashboard product reminders use this review window to decide when pricing needs attention again.</p>
+        <div className="mt-4">
+          <p className="inline-flex rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">
+            Review pricing every {settings.product_price_review_window_days} day{settings.product_price_review_window_days === 1 ? '' : 's'}
+          </p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold text-rose-900">Export Ready</h2>
         <p className="mt-1 text-sm text-stone-600">Use the invoice register for summary handoff to your accountant and the line-item export for detailed bookkeeping support. Exports now include delivery-fee values alongside invoice totals.</p>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -131,7 +142,7 @@ export default async function AccountingPage() {
                       <td className="px-3 py-3 text-stone-700">{order.status.replaceAll('_', ' ')}</td>
                       <td className="px-3 py-3 text-stone-700">{formatCurrency(order.deliveryFee)}</td>
                       <td className="px-3 py-3 text-stone-700">{formatCurrency(order.total)}</td>
-                      <td className="px-3 py-3 text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-ZA')}</td>
+                      <td className="px-3 py-3 text-stone-700">{formatSastDateTime(order.createdAt)}</td>
                       <td className="px-3 py-3">
                         <Link href={`/dashboard/accounting/invoices/${getInvoiceReferenceFromOrderNumber(order.orderNumber, settings.payment_reference_prefix)}`} className="inline-flex rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
                           Open Invoice

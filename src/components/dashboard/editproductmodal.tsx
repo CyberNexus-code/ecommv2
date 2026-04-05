@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import { updateProduct } from '@/app/_actions/productActions';
+import { setProductActive, updateProduct } from '@/app/_actions/productActions';
 import TagManager from './TagManager';
 import DashboardViewportPortal from './DashboardViewportPortal';
 import ProductFormFields from './ProductFormFields';
@@ -14,6 +14,7 @@ type EditableProduct = ItemType & {
 }
 
 export default function EditProductModal({product, onClose}: {product: EditableProduct, onClose: ()=>void}) {
+    const [isActive, setIsActive] = useState(product.is_active)
     const [values, setValues] = useState<ProductFormValues>({
         name: product.name,
         price: product.price,
@@ -30,6 +31,9 @@ export default function EditProductModal({product, onClose}: {product: EditableP
     async function handleSave() {
        try {
         await updateProduct(product.id, values);
+        if (isActive !== product.is_active) {
+            await setProductActive(product.id, isActive)
+        }
         onClose();
        }catch{
         return;
@@ -49,6 +53,23 @@ export default function EditProductModal({product, onClose}: {product: EditableP
                         </div>
                         <div>
                             <ProductFormFields values={values} categories={product.catList} updateValue={updateValue}>
+                                <div className='mb-4 rounded-xl border border-rose-100 bg-rose-50/50 p-3'>
+                                    <div className='flex items-center justify-between gap-3'>
+                                        <div>
+                                            <p className='text-sm font-semibold text-rose-900'>Storefront visibility</p>
+                                            <p className='text-xs text-stone-500'>Toggle whether this product appears on the storefront.</p>
+                                        </div>
+                                        <label className='inline-flex items-center gap-2 text-sm text-rose-900'>
+                                            <input
+                                                type='checkbox'
+                                                checked={isActive}
+                                                onChange={(event) => setIsActive(event.target.checked)}
+                                                className='h-4 w-4 rounded border-rose-300 text-rose-700 focus:ring-rose-400'
+                                            />
+                                            {isActive ? 'Live' : 'Hidden'}
+                                        </label>
+                                    </div>
+                                </div>
                                 <div className='mb-10 pb-4 border-t pt-4'>
                                     <TagManager
                                         item={product}

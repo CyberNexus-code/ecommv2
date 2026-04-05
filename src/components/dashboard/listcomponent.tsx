@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
 import EditProductModal from "./editproductmodal"
 import EditCategoriesModal from "./editcategoriesmodal"
@@ -15,6 +16,7 @@ type ProductListProps = ItemType & {
     type: "products"
     catList: CategoryType[]
     allTags: TagType[]
+    priceReviewWindowDays: number
 }
 
 type CategoryListProps = CategoryType & {
@@ -26,11 +28,13 @@ type ListComponentProps = {
 }
 
 export default function ListComponent({props}: ListComponentProps){
+    const router = useRouter()
     const [showModal, setShowModal] = useState(false);
     const [showAlertModal, setShowAlertModal] = useState(false);
     const [showCatModel, setShowCatModal] = useState(false);
     const [showCatAlertModal, setShowCatAlertModal] = useState(false);
     const [showImageModule, setShowImageModal] = useState(false)
+    const [markingPriceReviewed, setMarkingPriceReviewed] = useState(false)
 
     const productThumbnail = props.type === "products"
         ? props.item_images.find((image) => image.is_thumbnail) ?? props.item_images[0] ?? null
@@ -39,7 +43,7 @@ export default function ListComponent({props}: ListComponentProps){
         function getPricingReviewState(product: ProductListProps) {
                 const reviewedAt = new Date(product.price_reviewed_at)
                 const nextReview = new Date(reviewedAt)
-                nextReview.setDate(nextReview.getDate() + 90)
+            nextReview.setDate(nextReview.getDate() + product.priceReviewWindowDays)
                 const now = new Date()
                 const daysUntilReview = Math.ceil((nextReview.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
@@ -60,7 +64,13 @@ export default function ListComponent({props}: ListComponentProps){
       }
 
             async function handleMarkPricingReviewed() {
-                await markProductPricingReviewed(props.id)
+                setMarkingPriceReviewed(true)
+                try {
+                    await markProductPricingReviewed(props.id)
+                    router.refresh()
+                } finally {
+                    setMarkingPriceReviewed(false)
+                }
             }
 
         return (
@@ -77,13 +87,13 @@ export default function ListComponent({props}: ListComponentProps){
                                     </div>
                                     <div className="mt-1 text-sm text-stone-600">Price: R{props.price}</div>
                                     <div className="text-sm text-stone-600 break-words">Category: {props.categories?.name}</div>
-                                    <div className={`mt-1 text-xs ${pricingReview.isOverdue ? 'text-amber-700' : 'text-stone-500'}`}>{pricingReview.message}</div>
+                                    {pricingReview.isOverdue ? <div className="mt-1 text-xs text-amber-700">{pricingReview.message}</div> : null}
                                 </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                <button onClick={handleMarkPricingReviewed} className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm text-amber-800 hover:bg-amber-100">Mark price reviewed</button>
+                                {pricingReview.isOverdue ? <button onClick={handleMarkPricingReviewed} disabled={markingPriceReviewed} className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60">{markingPriceReviewed ? 'Saving...' : 'Mark price reviewed'}</button> : null}
                                 <button onClick={() => setShowModal(true)} className="rounded-md border border-rose-700 bg-white px-3 py-1.5 text-sm text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white">Edit</button>
-                                <button onClick={() => setShowAlertModal(true)} className="rounded-md border border-rose-700 px-3 py-1.5 text-sm text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white">{props.is_active ? 'Hide' : 'Show'}</button>
+                                <button onClick={() => setShowAlertModal(true)} className="rounded-md border border-rose-700 p-1.5 text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white"><TrashIcon className="size-5 sm:size-6"/></button>
                             </div>    
                         </div>
 

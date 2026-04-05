@@ -4,6 +4,7 @@ import { useState } from "react"
 import OrderListModal from "./orderlsitmodal"
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus"
 import { getCustomerDisplay } from "@/lib/customers/display"
+import { formatSastDateTime } from "@/lib/dateTime"
 import { logClientError } from "@/lib/logging/client"
 import { getInvoiceReferenceFromOrderNumber } from "@/lib/orders/reference"
 import type { Order } from "@/types/order"
@@ -68,7 +69,7 @@ export default function OrderListContianer({order, now, referencePrefix}: {order
                 <div className="min-w-0">
                     <h2 className="text-base font-semibold text-rose-900">{invoiceReference}</h2>
                     <p className="truncate text-sm text-stone-600">User: {customerDisplay.primary}</p>
-                    <p className="text-sm text-stone-500">{(order.created_at).replace('T',' ').split('.')[0]}</p>
+                    <p className="text-sm text-stone-500">{formatSastDateTime(order.created_at)}</p>
                     <p className="mt-1 text-sm text-stone-600">Delivery: {formatCurrency(order.delivery_fee)}</p>
                     <p className="font-medium text-rose-700">Total: {formatCurrency(order.total)}</p>
                 </div>

@@ -43,10 +43,10 @@ export async function removeProduct(id: string){
 
     const supabase = await createServer()
 
-    const { data, error } = await supabase.from('items').update({'is_active': false}).eq('id', id)
+    const { data, error } = await supabase.from('items').update({'is_active': false, 'is_deleted': true}).eq('id', id)
 
     if(error){
-        throw new Error(`There was an error hiding the product: ${error.message}`)
+        throw new Error(`There was an error deleting the product: ${error.message}`)
     }
 
     revalidatePath("/dashboard/products");

@@ -3,6 +3,7 @@ import { getMyOrders } from "@/lib/orders/getMyOrders";
 import { ORDER_STATUS_CONFIG } from "@/lib/dashboard/orders/orderStatus";
 import { getUserWithProfile } from "@/lib/profiles/profiles";
 import { getBusinessSettings } from "@/lib/businessSettings";
+import { formatSastDateTime } from "@/lib/dateTime";
 import { getInvoiceReferenceFromOrderNumber } from "@/lib/orders/reference";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function AccountOrdersPage() {
                       {getInvoiceReferenceFromOrderNumber(order.order_number, settings.payment_reference_prefix)}
                     </p>
                     <p className="text-sm text-stone-600">
-                      {order.created_at.replace("T", " ").split(".")[0]}
+                      {formatSastDateTime(order.created_at)}
                     </p>
                   </div>
                   <div className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBg} ${statusTc}`}>
