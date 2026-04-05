@@ -149,7 +149,7 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
                     alt={primaryImage.alt_text?.trim() || item.meta_title?.trim() || item.name}
                     fill
                     sizes='(max-width: 1024px) 100vw, 55vw'
-                    className='object-cover'
+                    className='object-contain bg-white'
                     priority
                   />
                   <span className='absolute bottom-3 right-3 rounded-full bg-black/65 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:bottom-4 sm:right-4 sm:px-4 sm:py-2 sm:text-xs'>

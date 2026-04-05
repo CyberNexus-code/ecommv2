@@ -51,7 +51,7 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
                             src={thumbnail.image_url}
                             alt={thumbnail.alt_text?.trim() || item.meta_title?.trim() || item.name}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-contain bg-white transition-transform duration-500 group-hover:scale-105"
                             sizes={compact ? "(max-width: 768px) 50vw, 18vw" : "(max-width: 768px) 100vw, 25vw"}
                         />
                     ) : (
