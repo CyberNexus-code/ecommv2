@@ -1,6 +1,7 @@
 'use server'
 
 import { createServer } from "@/lib/supabase/server";
+import { logServerError } from "@/lib/logging/server";
 import { revalidatePath } from "next/cache";
 import type { ItemImage, ItemType, ProductFormValues } from "@/types/itemType";
 
@@ -17,22 +18,42 @@ export async function updateProduct(id: string, values: ProductFormValues, optio
         .eq('id', id)
         .single()
 
-    if (currentProductResult.error) throw currentProductResult.error;
+    if (currentProductResult.error) {
+        await logServerError('productActions.updateProduct.current', currentProductResult.error, { id })
+        throw new Error(`There was an error loading the product before update: ${currentProductResult.error.message}`)
+    }
 
     const priceChanged = Number(currentProductResult.data.price) !== Number(values.price)
 
-    const { data, error } = await supabase.from('items').update({
+    const updatePayload: {
+        name: string
+        price: number
+        category_id: string | null
+        description: string
+        meta_title: string | null
+        meta_description: string | null
+        price_reviewed_at: string | undefined
+        is_active?: boolean
+    } = {
         name: values.name,
         price: values.price,
         category_id: values.category_id,
         description: values.description,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
-        is_active: options?.isActive,
         price_reviewed_at: priceChanged ? new Date().toISOString() : undefined,
-    }).eq('id', id).select();
+    }
 
-    if(error) throw error;
+    if (typeof options?.isActive === 'boolean') {
+        updatePayload.is_active = options.isActive
+    }
+
+    const { data, error } = await supabase.from('items').update(updatePayload).eq('id', id).select();
+
+    if(error) {
+        await logServerError('productActions.updateProduct.persist', error, { id, isActive: options?.isActive })
+        throw new Error(`There was an error updating the product: ${error.message}`)
+    }
 
     revalidatePath("/dashboard/products");
     revalidatePath("/products");
