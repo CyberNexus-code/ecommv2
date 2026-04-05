@@ -8,7 +8,7 @@ type PersistedProductImage = Omit<Pick<ItemImage, "id" | "image_url" | "storage_
     id?: string
 };
 
-export async function updateProduct(id: string, values: ProductFormValues){
+export async function updateProduct(id: string, values: ProductFormValues, options?: { isActive?: boolean }){
     const supabase = await createServer();
 
     const currentProductResult = await supabase
@@ -28,6 +28,7 @@ export async function updateProduct(id: string, values: ProductFormValues){
         description: values.description,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
+        is_active: options?.isActive,
         price_reviewed_at: priceChanged ? new Date().toISOString() : undefined,
     }).eq('id', id).select();
 

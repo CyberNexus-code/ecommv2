@@ -1,7 +1,8 @@
 'use client'
 
 import {useState} from 'react'
-import { setProductActive, updateProduct } from '@/app/_actions/productActions';
+import { useRouter } from 'next/navigation'
+import { updateProduct } from '@/app/_actions/productActions';
 import TagManager from './TagManager';
 import DashboardViewportPortal from './DashboardViewportPortal';
 import ProductFormFields from './ProductFormFields';
@@ -14,7 +15,9 @@ type EditableProduct = ItemType & {
 }
 
 export default function EditProductModal({product, onClose}: {product: EditableProduct, onClose: ()=>void}) {
+    const router = useRouter()
     const [isActive, setIsActive] = useState(product.is_active)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const [values, setValues] = useState<ProductFormValues>({
         name: product.name,
         price: product.price,
@@ -29,15 +32,15 @@ export default function EditProductModal({product, onClose}: {product: EditableP
     }
 
     async function handleSave() {
-       try {
-        await updateProduct(product.id, values);
-        if (isActive !== product.is_active) {
-            await setProductActive(product.id, isActive)
+        setSaveError(null)
+
+        try {
+            await updateProduct(product.id, values, { isActive });
+            router.refresh()
+            onClose();
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : 'Failed to save product changes')
         }
-        onClose();
-       }catch{
-        return;
-       }
     }
 
     const handleTagsUpdated = () => {
@@ -78,6 +81,7 @@ export default function EditProductModal({product, onClose}: {product: EditableP
                                     />
                                 </div>
                             </ProductFormFields>
+                            {saveError ? <p className='-mt-6 mb-6 text-sm text-red-600'>{saveError}</p> : null}
                         </div>
                         <div className='flex justify-between'>
                             <button onClick={onClose} className="bg-white border-rose-700 border-1 text-rose-700 rounded-md px-3 py-1 cursor-pointer hover:bg-rose-700 hover:text-white">Close</button>
