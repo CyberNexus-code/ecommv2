@@ -1,6 +1,28 @@
+const SUPPORTED_IMAGE_MIME_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+])
+
+const SUPPORTED_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif'])
+
+export function isSupportedImageFile(file: File): boolean {
+    if (file.type && SUPPORTED_IMAGE_MIME_TYPES.has(file.type.toLowerCase())) {
+        return true
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+    return SUPPORTED_IMAGE_EXTENSIONS.has(extension)
+}
+
 export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72} = {}): Promise<File> {
-    if(!file.type.startsWith("image/")){
+    if(!file.type.startsWith("image/") && !isSupportedImageFile(file)){
         throw new Error("Not an image");
+    }
+
+    if (!isSupportedImageFile(file)) {
+        throw new Error(`Unsupported image format: ${file.name}. Please use JPG, PNG, WEBP, or GIF.`)
     }
 
     if(file.size > 10 * 1024 * 1024){

@@ -18,7 +18,7 @@ type DashboardItemRow = {
   category_id: string | null
   is_active: boolean
   is_deleted: boolean
-  categories: { name: string }[] | null
+  categories: { name: string } | null
   items_tags?: { tag_id: string }[] | null
 }
 
@@ -112,7 +112,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   const categoryMap = new Map<string, number>()
   activeItems.forEach((item) => {
-    const label = item.categories?.[0]?.name ?? 'uncategorized'
+    const label = item.categories?.name ?? 'uncategorized'
     categoryMap.set(label, (categoryMap.get(label) ?? 0) + 1)
   })
 

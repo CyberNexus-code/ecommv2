@@ -31,6 +31,7 @@ export type ItemType = {
     quantity: number
     is_active: boolean
     is_deleted: boolean
+    price_reviewed_at: string
     created_at: string
     updated_at: string
     item_images: ItemImage[]

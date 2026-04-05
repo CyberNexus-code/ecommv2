@@ -11,6 +11,16 @@ type PersistedProductImage = Omit<Pick<ItemImage, "id" | "image_url" | "storage_
 export async function updateProduct(id: string, values: ProductFormValues){
     const supabase = await createServer();
 
+    const currentProductResult = await supabase
+        .from('items')
+        .select('price')
+        .eq('id', id)
+        .single()
+
+    if (currentProductResult.error) throw currentProductResult.error;
+
+    const priceChanged = Number(currentProductResult.data.price) !== Number(values.price)
+
     const { data, error } = await supabase.from('items').update({
         name: values.name,
         price: values.price,
@@ -18,6 +28,7 @@ export async function updateProduct(id: string, values: ProductFormValues){
         description: values.description,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
+        price_reviewed_at: priceChanged ? new Date().toISOString() : undefined,
     }).eq('id', id).select();
 
     if(error) throw error;
@@ -32,10 +43,10 @@ export async function removeProduct(id: string){
 
     const supabase = await createServer()
 
-    const { data, error } = await supabase.from('items').update({'is_active': false, 'is_deleted': true}).eq('id', id)
+    const { data, error } = await supabase.from('items').update({'is_active': false}).eq('id', id)
 
     if(error){
-        throw new Error(`There was an error deleting the product: ${error.message}`)
+        throw new Error(`There was an error hiding the product: ${error.message}`)
     }
 
     revalidatePath("/dashboard/products");
@@ -43,6 +54,43 @@ export async function removeProduct(id: string){
 
     return data;
 
+}
+
+export async function setProductActive(id: string, isActive: boolean){
+    const supabase = await createServer()
+
+    const { data, error } = await supabase
+        .from('items')
+        .update({ is_active: isActive })
+        .eq('id', id)
+        .select()
+
+    if (error) {
+        throw new Error(`There was an error updating product visibility: ${error.message}`)
+    }
+
+    revalidatePath('/dashboard/products')
+    revalidatePath('/products')
+
+    return data
+}
+
+export async function markProductPricingReviewed(id: string) {
+    const supabase = await createServer()
+
+    const { data, error } = await supabase
+        .from('items')
+        .update({ price_reviewed_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+
+    if (error) {
+        throw new Error(`There was an error updating the price review date: ${error.message}`)
+    }
+
+    revalidatePath('/dashboard/products')
+
+    return data
 }
 
 export async function addProduct(values: ProductFormValues){

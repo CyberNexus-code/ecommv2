@@ -5,7 +5,7 @@ import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import { useState, useEffect, useRef } from "react"
 import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/productActions";
 import { createClient } from "@/lib/supabase/client";
-import { convertToWebP } from "@/lib/items/imageHandler";
+import { convertToWebP, isSupportedImageFile } from "@/lib/items/imageHandler";
 import DashboardViewportPortal from "./DashboardViewportPortal";
 import { Spinner } from "@/components/ui/spinner";
 import type { ItemType } from "@/types/itemType";
@@ -63,11 +63,13 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     },[product.props.id, product.props.meta_title, product.props.name])
 
     useEffect(() => {
+        const previewUrls = previewUrlsRef.current
+
         return () => {
-            previewUrlsRef.current.forEach((previewUrl) => {
+            previewUrls.forEach((previewUrl) => {
                 URL.revokeObjectURL(previewUrl)
             })
-            previewUrlsRef.current.clear()
+            previewUrls.clear()
         }
     }, [])
 
@@ -78,8 +80,22 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
         setProcessingFiles(true)
         setProcessingStatus('Preparing selected images...')
 
-        const files = Array.from(e.target.files);
+        const selectedFiles = Array.from(e.target.files);
+        const unsupportedFiles = selectedFiles.filter((file) => !isSupportedImageFile(file))
+        const files = selectedFiles.filter((file) => isSupportedImageFile(file));
         const startingIndex = images.length
+
+        if (unsupportedFiles.length > 0) {
+            const unsupportedNames = unsupportedFiles.map((file) => file.name).join(', ')
+            setErrorMessage(`Unsupported image format: ${unsupportedNames}. Please use JPG, PNG, WEBP, or GIF.`)
+        }
+
+        if (files.length === 0) {
+            setProcessingFiles(false)
+            setProcessingStatus(null)
+            e.target.value = ''
+            return
+        }
 
         try {
             const newImages: EditableImage[] = []
@@ -316,7 +332,7 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                             {images.length > 0 ? 
                             (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} disabled={processingFiles || uploading} key={getImageKey(i)} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-70">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
                             : null}
-                            <input ref={fileInputRef} type="file" accept="image/*" multiple hidden id="image-upload" onChange={handleFileUpload}/>
+                            <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" multiple hidden id="image-upload" onChange={handleFileUpload}/>
                             <button type="button" disabled={processingFiles || uploading} onClick={() => fileInputRef.current?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"><PlusCircleIcon className="size-6" /></button>
                         </div>
                         <p className="w-full max-w-md text-xs text-stone-500">You can select multiple images at once. Images are converted to WebP in the browser before upload to reduce transfer size.</p>

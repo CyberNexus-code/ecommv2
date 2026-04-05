@@ -7,6 +7,7 @@ import EditProductModal from "./editproductmodal"
 import EditCategoriesModal from "./editcategoriesmodal"
 import AlertModal from "./alertModal";
 import ImageModal from "./imageModal"
+import { markProductPricingReviewed } from '@/app/_actions/productActions'
 import type { CategoryType } from "@/types/categoryType"
 import type { ItemType, TagType } from "@/types/itemType"
 
@@ -35,11 +36,32 @@ export default function ListComponent({props}: ListComponentProps){
         ? props.item_images.find((image) => image.is_thumbnail) ?? props.item_images[0] ?? null
         : null;
 
+        function getPricingReviewState(product: ProductListProps) {
+                const reviewedAt = new Date(product.price_reviewed_at)
+                const nextReview = new Date(reviewedAt)
+                nextReview.setDate(nextReview.getDate() + 90)
+                const now = new Date()
+                const daysUntilReview = Math.ceil((nextReview.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+                return {
+                        isOverdue: daysUntilReview <= 0,
+                        message: daysUntilReview <= 0
+                                ? `Price review overdue by ${Math.abs(daysUntilReview)} day${Math.abs(daysUntilReview) === 1 ? '' : 's'}`
+                                : `Review pricing in ${daysUntilReview} day${daysUntilReview === 1 ? '' : 's'}`,
+                }
+        }
+
     if(props.type === "products"){
+
+            const pricingReview = getPricingReviewState(props)
 
       const handleThumbnail = (url: string) => {
         return url;
       }
+
+            async function handleMarkPricingReviewed() {
+                await markProductPricingReviewed(props.id)
+            }
 
         return (
             <>
@@ -49,14 +71,19 @@ export default function ListComponent({props}: ListComponentProps){
                                     {productThumbnail ?  <div className="relative h-full w-full overflow-hidden rounded-md"><Image className="object-cover" src={productThumbnail.image_url} alt={productThumbnail.alt_text?.trim() || props.name} fill sizes="80px" /></div> : <div className="flex h-full w-full flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-400 text-gray-400"><PlusCircleIcon className="size-6"/></div>}
                                 </div>
                                 <div className="min-w-0">
-                                    <h2 className="break-words text-sm font-semibold text-stone-900 sm:text-base">{props.name}</h2>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h2 className="break-words text-sm font-semibold text-stone-900 sm:text-base">{props.name}</h2>
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${props.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-700'}`}>{props.is_active ? 'Live' : 'Hidden'}</span>
+                                    </div>
                                     <div className="mt-1 text-sm text-stone-600">Price: R{props.price}</div>
                                     <div className="text-sm text-stone-600 break-words">Category: {props.categories?.name}</div>
+                                    <div className={`mt-1 text-xs ${pricingReview.isOverdue ? 'text-amber-700' : 'text-stone-500'}`}>{pricingReview.message}</div>
                                 </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                <button onClick={handleMarkPricingReviewed} className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm text-amber-800 hover:bg-amber-100">Mark price reviewed</button>
                                 <button onClick={() => setShowModal(true)} className="rounded-md border border-rose-700 bg-white px-3 py-1.5 text-sm text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white">Edit</button>
-                                <button onClick={() => setShowAlertModal(true)} className="rounded-md border border-rose-700 p-1.5 text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white"><TrashIcon className="size-5 sm:size-6"/></button>
+                                <button onClick={() => setShowAlertModal(true)} className="rounded-md border border-rose-700 px-3 py-1.5 text-sm text-rose-700 cursor-pointer hover:bg-rose-700 hover:text-white">{props.is_active ? 'Hide' : 'Show'}</button>
                             </div>    
                         </div>
 

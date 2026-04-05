@@ -6,7 +6,7 @@ import type { ItemType } from "@/types/itemType";
 
 export default async function ProductsDashboard(){
 
-    const {items} = await getAllItems();
+    const {items} = await getAllItems({ includeInactive: true });
     const {categories} = await getAllCategories();
   const {tags} = await getAllTags();
 
@@ -18,8 +18,10 @@ export default async function ProductsDashboard(){
                 <h1 className="text-2xl font-semibold text-rose-900">Products</h1>
                 <p className="text-sm text-stone-600">Manage product details, categories and media.</p>
               </div>
-              <div className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
-                {items?.length ?? 0} items
+              <div className="flex flex-wrap gap-2 text-sm font-medium">
+                <div className="rounded-full bg-rose-50 px-3 py-1 text-rose-700">{items?.length ?? 0} items</div>
+                <div className="rounded-full bg-stone-100 px-3 py-1 text-stone-700">{items?.filter((item) => item.is_active).length ?? 0} live</div>
+                <div className="rounded-full bg-amber-50 px-3 py-1 text-amber-800">Price reviews tracked per item</div>
               </div>
            </div>
 
