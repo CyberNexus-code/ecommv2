@@ -1,6 +1,10 @@
-export async function convertToWebP(file: File, {maxSize = 1600, quality = 0.8} = {}): Promise<File> {
+export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72} = {}): Promise<File> {
     if(!file.type.startsWith("image/")){
         throw new Error("Not an image");
+    }
+
+    if(file.size > 10 * 1024 * 1024){
+        throw new Error("Image too large (max 10MB)");
     }
 
     const imageBitmap = await createImageBitmap(file);
@@ -25,16 +29,14 @@ export async function convertToWebP(file: File, {maxSize = 1600, quality = 0.8} 
     ctx.imageSmoothingQuality = "high";
 
     ctx.drawImage(imageBitmap, 0, 0, width, height);
+    imageBitmap.close();
 
     const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => (b ? resolve(b): reject("WebP conversion failed")), "image/webp", quality);
     });
 
-    const webpFileName = file.name.replace(/\.[^/.]+$/, "webp");
-
-    if(file.size > 10 * 1024 * 1024){
-        throw new Error("Image too large (max 10MB)");
-    }
+    const baseName = file.name.replace(/\.[^/.]+$/, "");
+    const webpFileName = `${baseName}.webp`;
 
     return new File([blob], webpFileName, { type: "image/webp"})
 }

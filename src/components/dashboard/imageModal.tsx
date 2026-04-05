@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { PlusCircleIcon } from "@heroicons/react/24/outline"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/productActions";
 import { createClient } from "@/lib/supabase/client";
 import { convertToWebP } from "@/lib/items/imageHandler";
@@ -36,6 +36,9 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     const [uploading, setUploading] = useState(false);
     const [activeImage, setActiveImage] =useState<EditableImage | null>(null)
     const [cancelState, setCancelState] = useState(false)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [processingFiles, setProcessingFiles] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
 
     useEffect(() => {
         async function getImages(){
@@ -69,35 +72,55 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if(!e.target.files) return
 
+        setErrorMessage(null)
+        setProcessingFiles(true)
+
         const files = Array.from(e.target.files);
 
-        const newImages = await Promise.all(
-            files.map(async (file, index) => {
-                const webpfile = await convertToWebP(file);
+        try {
+            const newImages = await Promise.all(
+                files.map(async (file, index) => {
+                    const webpfile = await convertToWebP(file);
 
-                return {
-                    tempId: crypto.randomUUID(),
-                    file: webpfile,
-                    previewUrl: URL.createObjectURL(webpfile),
-                    is_thumbnail: images.length === 0 && index === 0,
-                    sort_order: images.length + index,
-                    alt_text: product.props.meta_title ?? product.props.name,
-                }
+                    return {
+                        tempId: crypto.randomUUID(),
+                        file: webpfile,
+                        previewUrl: URL.createObjectURL(webpfile),
+                        is_thumbnail: images.length === 0 && index === 0,
+                        sort_order: images.length + index,
+                        alt_text: product.props.meta_title ?? product.props.name,
+                    }
+                })
+            )
+
+            setImages(prev => {
+                const updated = [...prev, ...newImages]
+                if(!activeImage) setActiveImage(updated[0])
+                return updated
             })
-        )
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Unable to prepare selected images for upload.')
+        } finally {
+            setProcessingFiles(false)
+            e.target.value = ''
+        }
+    }
 
-        // const newImages = files.map((file, index) => ({
-        //     tempId: crypto.randomUUID(),
-        //     file,
-        //     previewUrl: URL.createObjectURL(file),
-        //     is_thumbnail: images.length === 0 && index === 0
-        // }))
+    async function uploadWithRetry(filePath: string, file: File) {
+        const supabase = await createClient();
+        let lastError: Error | null = null
 
-        setImages(prev => {
-            const updated = [...prev, ...newImages]
-            if(!activeImage) setActiveImage(updated[0])
-            return updated
-        })
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+            const { error } = await supabase.storage.from('product-images').upload(filePath, file)
+
+            if (!error) {
+                return supabase.storage.from('product-images').getPublicUrl(filePath)
+            }
+
+            lastError = error
+        }
+
+        throw lastError ?? new Error('Image upload failed')
     }
 
     const getImageKey = (img: EditableImage) => img.id ?? img.tempId ?? img.image_url ?? crypto.randomUUID();
@@ -134,8 +157,7 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     const handleSave = async () => {
         try{
             setUploading(true)
-
-            const supabase = await createClient();
+            setErrorMessage(null)
 
             const uploadedImages: EditableImage[] = []
 
@@ -148,15 +170,8 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
 
                 if(!img.file) continue;
 
-                const filePath = `products/${product.props.id}/${crypto.randomUUID()}`;
-
-                const { error: uploadError } =  await supabase.storage.from('product-images').upload(filePath, img.file)
-
-                if(uploadError){
-                    throw uploadError
-                };
-
-                const { data } = await supabase.storage.from('product-images').getPublicUrl(filePath)
+                const filePath = `products/${product.props.id}/${crypto.randomUUID()}.webp`;
+                const { data } = await uploadWithRetry(filePath, img.file)
 
                 uploadedImages.push({
                     ...img,
@@ -195,6 +210,8 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
             }
             onClose()
 
+        }catch(error){
+            setErrorMessage(error instanceof Error ? error.message : 'Unable to save product images right now.')
         }finally{
             setUploading(false)
         }
@@ -267,14 +284,16 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                                 />
                             </div>
                         ) : null}
+                        {errorMessage ? <p className="w-full max-w-md text-sm text-rose-700">{errorMessage}</p> : null}
                         <div className="flex h-auto min-h-14 w-full max-w-md flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-2">
                             {/* the code below is to show all uploaded images and select an image to view in the image viewer */}
                             {images.length > 0 ? 
                             (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} key={getImageKey(i)} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
                             : null}
-                            <input type="file" accept="image/*" multiple hidden id="image-upload" onChange={handleFileUpload}/>
-                            <button onClick={() => document.getElementById('image-upload')?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer"><PlusCircleIcon className="size-6" /></button>
+                            <input ref={fileInputRef} type="file" accept="image/*" multiple hidden id="image-upload" onChange={handleFileUpload}/>
+                            <button type="button" onClick={() => fileInputRef.current?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer"><PlusCircleIcon className="size-6" /></button>
                         </div>
+                        <p className="w-full max-w-md text-xs text-stone-500">You can select multiple images at once. Images are converted to WebP in the browser before upload to reduce transfer size.</p>
                         </div>
                     </div>
                     <div className="flex flex-col gap-3 border-t border-rose-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -283,7 +302,7 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                         </div>
                         <div className="flex flex-wrap justify-end gap-2">
                             <button className='rounded-md border border-rose-700 px-3 py-2 text-sm text-rose-700 hover:bg-rose-700 hover:text-white' onClick={onClose} disabled={cancelState ? true : false}>Cancel</button>
-                            <button onClick={handleSave} className='rounded-md border border-rose-700 bg-rose-700 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100'>{uploading ? "Saving..." : "Save"}</button>
+                            <button onClick={handleSave} disabled={uploading || processingFiles} className='rounded-md border border-rose-700 bg-rose-700 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-70'>{processingFiles ? "Preparing..." : uploading ? "Saving..." : "Save"}</button>
                         </div>
                     </div>
                 </div>
