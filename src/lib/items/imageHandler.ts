@@ -9,34 +9,37 @@ export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72}
 
     const imageBitmap = await createImageBitmap(file);
 
-    const scale = Math.min(
-        maxSize / imageBitmap.width,
-        maxSize / imageBitmap.height,
-        1
-    )
+    try {
+        const scale = Math.min(
+            maxSize / imageBitmap.width,
+            maxSize / imageBitmap.height,
+            1
+        )
 
-    const width = Math.round(imageBitmap.width * scale);
-    const height = Math.round(imageBitmap.height * scale);
+        const width = Math.round(imageBitmap.width * scale);
+        const height = Math.round(imageBitmap.height * scale);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
 
-    const ctx = canvas.getContext("2d");
-    if( !ctx ) throw new Error("canvas not supported");
+        const ctx = canvas.getContext("2d");
+        if( !ctx ) throw new Error("canvas not supported");
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
 
-    ctx.drawImage(imageBitmap, 0, 0, width, height);
-    imageBitmap.close();
+        ctx.drawImage(imageBitmap, 0, 0, width, height);
 
-    const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => (b ? resolve(b): reject("WebP conversion failed")), "image/webp", quality);
-    });
+        const blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((b) => (b ? resolve(b): reject("WebP conversion failed")), "image/webp", quality);
+        });
 
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    const webpFileName = `${baseName}.webp`;
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        const webpFileName = `${baseName}.webp`;
 
-    return new File([blob], webpFileName, { type: "image/webp"})
+        return new File([blob], webpFileName, { type: "image/webp"})
+    } finally {
+        imageBitmap.close();
+    }
 }

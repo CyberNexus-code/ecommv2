@@ -78,20 +78,21 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
         const files = Array.from(e.target.files);
 
         try {
-            const newImages = await Promise.all(
-                files.map(async (file, index) => {
-                    const webpfile = await convertToWebP(file);
+            const newImages: EditableImage[] = []
 
-                    return {
-                        tempId: crypto.randomUUID(),
-                        file: webpfile,
-                        previewUrl: URL.createObjectURL(webpfile),
-                        is_thumbnail: images.length === 0 && index === 0,
-                        sort_order: images.length + index,
-                        alt_text: product.props.meta_title ?? product.props.name,
-                    }
+            for (let index = 0; index < files.length; index += 1) {
+                const file = files[index]
+                const webpfile = await convertToWebP(file)
+
+                newImages.push({
+                    tempId: crypto.randomUUID(),
+                    file: webpfile,
+                    previewUrl: URL.createObjectURL(webpfile),
+                    is_thumbnail: images.length === 0 && index === 0,
+                    sort_order: images.length + index,
+                    alt_text: product.props.meta_title ?? product.props.name,
                 })
-            )
+            }
 
             setImages(prev => {
                 const updated = [...prev, ...newImages]
