@@ -30,7 +30,7 @@ export default async function ProductsDashboard(){
                 <ListComponent key={item.id} props={{type: "products", ...item, catList:categories, allTags: tags}} />
                 ))}
                </div>
-               <AddProductModal catList={{catList: categories}}/>
+              <AddProductModal catList={{catList: categories}} allTags={tags}/>
             </>
            ) : (
             <div className="rounded-2xl border border-dashed border-rose-300 bg-white p-8 shadow-sm">
@@ -39,6 +39,7 @@ export default async function ProductsDashboard(){
                 <p className="mt-2 text-sm text-stone-600">Add your first product to start building the catalog shown on your storefront.</p>
                 <AddProductModal
                     catList={{catList: categories}}
+                  allTags={tags}
                     buttonLabel="Add product"
                     containerClassName="mt-6 flex justify-center"
                     buttonClassName="inline-flex items-center rounded-md border border-rose-700 bg-rose-700 px-4 py-2 text-sm font-medium text-white hover:bg-white hover:text-rose-700"

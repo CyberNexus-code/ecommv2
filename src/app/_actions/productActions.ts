@@ -2,7 +2,7 @@
 
 import { createServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { ItemImage, ProductFormValues } from "@/types/itemType";
+import type { ItemImage, ItemType, ProductFormValues } from "@/types/itemType";
 
 type PersistedProductImage = Omit<Pick<ItemImage, "id" | "image_url" | "storage_path" | "is_thumbnail" | "alt_text" | "sort_order">, "id"> & {
     id?: string
@@ -55,7 +55,7 @@ export async function addProduct(values: ProductFormValues){
         price: values.price,
         meta_title: values.meta_title || null,
         meta_description: values.meta_description || null,
-    }).select();
+    }).select('*, categories (name), item_images (id, item_id, image_url, storage_path, sort_order, is_thumbnail, alt_text), items_tags (item_id, tag_id, tags (id, name, slug, description))').single();
 
     if(error){
         throw new Error(`Error inserting product into items table: ${error.message}`);
@@ -64,7 +64,7 @@ export async function addProduct(values: ProductFormValues){
     revalidatePath("/dashboard/products");
     revalidatePath("/products");
     
-    return data
+    return data as ItemType
 }
 
 export async function fetchImages(id: string){
