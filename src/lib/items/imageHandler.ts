@@ -7,17 +7,24 @@ export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72}
         throw new Error("Image too large (max 10MB)");
     }
 
-    const imageBitmap = await createImageBitmap(file);
+    const objectUrl = URL.createObjectURL(file)
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image()
+
+        img.onload = () => resolve(img)
+        img.onerror = () => reject(new Error("Image could not be loaded"))
+        img.src = objectUrl
+    })
 
     try {
         const scale = Math.min(
-            maxSize / imageBitmap.width,
-            maxSize / imageBitmap.height,
+            maxSize / image.width,
+            maxSize / image.height,
             1
         )
 
-        const width = Math.round(imageBitmap.width * scale);
-        const height = Math.round(imageBitmap.height * scale);
+        const width = Math.round(image.width * scale);
+        const height = Math.round(image.height * scale);
 
         const canvas = document.createElement("canvas");
         canvas.width = width;
@@ -29,7 +36,7 @@ export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72}
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
 
-        ctx.drawImage(imageBitmap, 0, 0, width, height);
+        ctx.drawImage(image, 0, 0, width, height);
 
         const blob = await new Promise<Blob>((resolve, reject) => {
             canvas.toBlob((b) => (b ? resolve(b): reject("WebP conversion failed")), "image/webp", quality);
@@ -40,6 +47,6 @@ export async function convertToWebP(file: File, {maxSize = 1400, quality = 0.72}
 
         return new File([blob], webpFileName, { type: "image/webp"})
     } finally {
-        imageBitmap.close();
+        URL.revokeObjectURL(objectUrl)
     }
 }

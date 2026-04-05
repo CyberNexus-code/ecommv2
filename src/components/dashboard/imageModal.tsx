@@ -7,6 +7,7 @@ import { fetchImages, saveProductImages, deleteImage } from "@/app/_actions/prod
 import { createClient } from "@/lib/supabase/client";
 import { convertToWebP } from "@/lib/items/imageHandler";
 import DashboardViewportPortal from "./DashboardViewportPortal";
+import { Spinner } from "@/components/ui/spinner";
 import type { ItemType } from "@/types/itemType";
 
 type EditableImage = {
@@ -38,7 +39,9 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     const [cancelState, setCancelState] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [processingFiles, setProcessingFiles] = useState(false)
+    const [processingStatus, setProcessingStatus] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
+    const previewUrlsRef = useRef<Set<string>>(new Set())
 
     useEffect(() => {
         async function getImages(){
@@ -60,49 +63,55 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     },[product.props.id, product.props.meta_title, product.props.name])
 
     useEffect(() => {
-          return () => {
-            images.forEach(img => {
-                if( img.previewUrl) {
-                    URL.revokeObjectURL(img.previewUrl)
-                }
+        return () => {
+            previewUrlsRef.current.forEach((previewUrl) => {
+                URL.revokeObjectURL(previewUrl)
             })
+            previewUrlsRef.current.clear()
         }
-    }, [images])
+    }, [])
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if(!e.target.files) return
 
         setErrorMessage(null)
         setProcessingFiles(true)
+        setProcessingStatus('Preparing selected images...')
 
         const files = Array.from(e.target.files);
+        const startingIndex = images.length
 
         try {
             const newImages: EditableImage[] = []
 
             for (let index = 0; index < files.length; index += 1) {
                 const file = files[index]
+                setProcessingStatus(`Preparing image ${index + 1} of ${files.length}`)
                 const webpfile = await convertToWebP(file)
+                const previewUrl = URL.createObjectURL(webpfile)
+                previewUrlsRef.current.add(previewUrl)
 
                 newImages.push({
                     tempId: crypto.randomUUID(),
                     file: webpfile,
-                    previewUrl: URL.createObjectURL(webpfile),
-                    is_thumbnail: images.length === 0 && index === 0,
-                    sort_order: images.length + index,
+                    previewUrl,
+                    is_thumbnail: startingIndex === 0 && index === 0,
+                    sort_order: startingIndex + index,
                     alt_text: product.props.meta_title ?? product.props.name,
                 })
             }
 
             setImages(prev => {
                 const updated = [...prev, ...newImages]
-                if(!activeImage) setActiveImage(updated[0])
                 return updated
             })
+            setActiveImage((current) => current ?? newImages[0] ?? null)
         } catch (error) {
+            setProcessingStatus(null)
             setErrorMessage(error instanceof Error ? error.message : 'Unable to prepare selected images for upload.')
         } finally {
             setProcessingFiles(false)
+            setProcessingStatus(null)
             e.target.value = ''
         }
     }
@@ -159,6 +168,7 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
         try{
             setUploading(true)
             setErrorMessage(null)
+            setProcessingStatus('Uploading prepared images...')
 
             const uploadedImages: EditableImage[] = []
 
@@ -215,6 +225,7 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
             setErrorMessage(error instanceof Error ? error.message : 'Unable to save product images right now.')
         }finally{
             setUploading(false)
+            setProcessingStatus(null)
         }
     }
 
@@ -223,6 +234,11 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
 
         if(activeImage.id && activeImage.storage_path){
             await deleteImage(activeImage.storage_path);
+        }
+
+        if (activeImage.previewUrl) {
+            URL.revokeObjectURL(activeImage.previewUrl)
+            previewUrlsRef.current.delete(activeImage.previewUrl)
         }
 
         setImages(prev => {
@@ -249,7 +265,16 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
     return (
         <DashboardViewportPortal>
         <div className="fixed inset-0 z-[80] flex bg-black/30 p-3 backdrop-blur-xs sm:p-5">
-            <div className="z-50 m-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] sm:max-h-[calc(100dvh-2.5rem)]">
+            <div className="relative z-50 m-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] sm:max-h-[calc(100dvh-2.5rem)]">
+                {processingFiles || uploading ? (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-[2px]">
+                        <div className="flex items-center gap-3 rounded-full bg-white px-4 py-3 shadow-sm ring-1 ring-rose-100">
+                            <Spinner size="md" />
+                            <span className="text-sm font-medium text-rose-900">{processingStatus ?? (uploading ? 'Uploading images...' : 'Preparing images...')}</span>
+                        </div>
+                        <p className="text-xs text-stone-500">Please wait until preparation is complete before saving.</p>
+                    </div>
+                ) : null}
                 <div className="flex min-h-0 flex-col p-4 sm:p-5">
                     <div className="min-w-0 border-b border-rose-100 pb-3">
                         <h1 className="truncate text-lg font-semibold text-rose-900 sm:text-xl">{product.props.name}</h1>
@@ -289,20 +314,20 @@ export default function ImageModal({product, onClose, setThumbId}: ImageModalPro
                         <div className="flex h-auto min-h-14 w-full max-w-md flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-2">
                             {/* the code below is to show all uploaded images and select an image to view in the image viewer */}
                             {images.length > 0 ? 
-                            (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} key={getImageKey(i)} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
+                            (images?.map((i) => (<button type="button" onClick={() => setActiveImage(i)} disabled={processingFiles || uploading} key={getImageKey(i)} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-70">{i.image_url || i.previewUrl ? <Image src={i.image_url || i.previewUrl || ''} alt={i.alt_text || product.props.name} fill unoptimized className="object-cover" /> : null}</button>))) 
                             : null}
                             <input ref={fileInputRef} type="file" accept="image/*" multiple hidden id="image-upload" onChange={handleFileUpload}/>
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer"><PlusCircleIcon className="size-6" /></button>
+                            <button type="button" disabled={processingFiles || uploading} onClick={() => fileInputRef.current?.click()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"><PlusCircleIcon className="size-6" /></button>
                         </div>
                         <p className="w-full max-w-md text-xs text-stone-500">You can select multiple images at once. Images are converted to WebP in the browser before upload to reduce transfer size.</p>
                         </div>
                     </div>
                     <div className="flex flex-col gap-3 border-t border-rose-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex justify-start">
-                                <button className='rounded-md border border-rose-700 bg-rose-600 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100' onClick={handleDelete}>Delete</button>
+                                <button className='rounded-md border border-rose-700 bg-rose-600 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-70' onClick={handleDelete} disabled={processingFiles || uploading}>Delete</button>
                         </div>
                         <div className="flex flex-wrap justify-end gap-2">
-                            <button className='rounded-md border border-rose-700 px-3 py-2 text-sm text-rose-700 hover:bg-rose-700 hover:text-white' onClick={onClose} disabled={cancelState ? true : false}>Cancel</button>
+                            <button className='rounded-md border border-rose-700 px-3 py-2 text-sm text-rose-700 hover:bg-rose-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-70' onClick={onClose} disabled={cancelState ? true : false || processingFiles || uploading}>Cancel</button>
                             <button onClick={handleSave} disabled={uploading || processingFiles} className='rounded-md border border-rose-700 bg-rose-700 px-3 py-2 text-sm text-white hover:bg-rose-900 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-70'>{processingFiles ? "Preparing..." : uploading ? "Saving..." : "Save"}</button>
                         </div>
                     </div>
