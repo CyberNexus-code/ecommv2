@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { addToBasket } from '@/lib/baskets/basket'
 import ProductCard from '@/components/ProductCard/ProductCard'
@@ -16,6 +16,7 @@ type ProductDetailsClientProps = {
 }
 
 export default function ProductDetailsClient({ item, relatedItems }: ProductDetailsClientProps) {
+  const pathname = usePathname()
   const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
@@ -61,8 +62,15 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
   const categoryPath = item.categories?.name ? getCategoryPath(item.categories.name) : '/products'
 
   function handleBackNavigation() {
-    if (typeof window !== 'undefined' && document.referrer.startsWith(window.location.origin)) {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back()
+
+      window.setTimeout(() => {
+        if (window.location.pathname === pathname) {
+          router.push(categoryPath)
+        }
+      }, 150)
+
       return
     }
 
