@@ -78,25 +78,6 @@ export async function removeProduct(id: string){
 
 }
 
-export async function setProductActive(id: string, isActive: boolean){
-    const supabase = await createServer()
-
-    const { data, error } = await supabase
-        .from('items')
-        .update({ is_active: isActive })
-        .eq('id', id)
-        .select()
-
-    if (error) {
-        throw new Error(`There was an error updating product visibility: ${error.message}`)
-    }
-
-    revalidatePath('/dashboard/products')
-    revalidatePath('/products')
-
-    return data
-}
-
 export async function markProductPricingReviewed(id: string) {
     const supabase = await createServer()
 

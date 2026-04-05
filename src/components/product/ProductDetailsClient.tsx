@@ -2,9 +2,11 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { addToBasket } from '@/lib/baskets/basket'
 import ProductCard from '@/components/ProductCard/ProductCard'
+import { getCategoryPath } from '@/lib/items/categories'
 import { getProductPath } from '@/lib/items/routes'
 import type { ItemType } from '@/types/itemType'
 
@@ -14,6 +16,7 @@ type ProductDetailsClientProps = {
 }
 
 export default function ProductDetailsClient({ item, relatedItems }: ProductDetailsClientProps) {
+  const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
   const [isCoarsePointer, setIsCoarsePointer] = useState(false)
@@ -55,6 +58,16 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
   }
 
   const categoryName = item.categories?.name?.replace(/-/g, ' ') ?? 'Collection'
+  const categoryPath = item.categories?.name ? getCategoryPath(item.categories.name) : '/products'
+
+  function handleBackNavigation() {
+    if (typeof window !== 'undefined' && document.referrer.startsWith(window.location.origin)) {
+      router.back()
+      return
+    }
+
+    router.push(categoryPath)
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -127,10 +140,21 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
 
   return (
     <div className='relative mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4 py-6 md:px-6 md:py-8'>
+      <button
+        type='button'
+        onClick={handleBackNavigation}
+        className='mb-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-800 transition hover:border-rose-300 hover:text-rose-950'
+      >
+        <span aria-hidden='true'>&larr;</span>
+        Back to browsing
+      </button>
+
       <div className='mb-6 flex flex-wrap items-center gap-2 text-sm text-rose-700/80'>
         <Link href='/products' className='transition hover:text-rose-900'>Products</Link>
         <span>/</span>
-        <span>{categoryName}</span>
+        <Link href={categoryPath} className='transition hover:text-rose-900'>{categoryName}</Link>
+        <span>/</span>
+        <span className='text-rose-950'>{item.name}</span>
       </div>
 
       <section className='w-full min-w-0 rounded-[2rem] border border-rose-100 bg-white p-3 shadow-[0_10px_30px_-22px_rgba(190,24,93,0.55)] sm:p-4 md:p-5'>
