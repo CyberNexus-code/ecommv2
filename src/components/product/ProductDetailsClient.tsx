@@ -264,7 +264,7 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
 
               <div className='rounded-2xl border border-rose-100 bg-white p-4 text-sm text-stone-700'>
                 <p className='font-semibold text-rose-900'>Product details</p>
-                <p className='mt-2'>Each topper is made to order. Use the gallery to review the available product images before adding it to your basket.</p>
+                <p className='mt-2'>Each product is made to order. Use the gallery to review the available product images before adding it to your basket.</p>
               </div>
             </div>
 
