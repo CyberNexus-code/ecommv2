@@ -27,5 +27,9 @@ export type Order = {
   total: number,
   updated_at: string,
   waybill_number: string | null,
-  user_id: string
+  user_id: string,
+  recipient_name: string,
+  recipient_age: number,
+  recipient_date: string,
+  comments?: string | null
 }

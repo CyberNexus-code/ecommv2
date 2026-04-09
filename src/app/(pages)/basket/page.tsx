@@ -113,7 +113,7 @@ export default async function BasketPage() {
                     <ButtonRose type="submit" variant="secondary1">Set Address</ButtonRose>
                   </form>
               )}
-              <p className="mt-4 text-xs text-stone-500">All orders are made to order and can take up to two weeks to be completed.</p>
+              <p className="mt-4 text-xs text-stone-500">All products are made to order and require a minimum of 14 days for fulfillment.</p>
             </aside>
           </div>
         ) : <div className="flex justify-center items-center h-200">

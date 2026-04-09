@@ -50,6 +50,9 @@ export default function TermsOfServicePage() {
           handmade and customised, minor variations in colour, finish, scale, or final appearance may occur.
         </p>
         <p>
+          <strong>All products are made to order and require a minimum of 14 days for fulfillment.</strong> If you need an order sooner, please contact us before placing your order to discuss possible arrangements.
+        </p>
+        <p>
           Submission of an order request or checkout does not guarantee acceptance. We may decline or cancel an order if
           information is incomplete, stock or production limitations arise, pricing is clearly incorrect, or fraud or
           misuse is suspected.
@@ -77,7 +80,7 @@ export default function TermsOfServicePage() {
 
       <Section title="Delivery and Collection">
         <p>
-          Delivery estimates are provided in good faith but are not guaranteed unless explicitly agreed otherwise. Delays
+          <strong>Standard fulfillment time for all orders is a minimum of 14 days from the date of order confirmation.</strong> Delivery estimates are provided in good faith but are not guaranteed unless explicitly agreed otherwise. Delays
           caused by couriers, customer-supplied errors, force majeure events, or circumstances beyond reasonable control
           may affect fulfilment timelines.
         </p>

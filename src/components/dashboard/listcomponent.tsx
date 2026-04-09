@@ -4,10 +4,12 @@ import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
-import EditProductModal from "./editproductmodal"
-import EditCategoriesModal from "./editcategoriesmodal"
-import AlertModal from "./alertModal";
-import ImageModal from "./imageModal"
+import dynamic from "next/dynamic"
+import { Suspense } from "react"
+const EditProductModal = dynamic(() => import("./editproductmodal"), { suspense: true })
+const EditCategoriesModal = dynamic(() => import("./editcategoriesmodal"), { suspense: true })
+const AlertModal = dynamic(() => import("./alertModal"), { suspense: true })
+const ImageModal = dynamic(() => import("./imageModal"), { suspense: true })
 import { markProductPricingReviewed } from '@/app/_actions/productActions'
 import type { CategoryType } from "@/types/categoryType"
 import type { ItemType, TagType } from "@/types/itemType"
@@ -97,9 +99,21 @@ export default function ListComponent({props}: ListComponentProps){
                             </div>    
                         </div>
 
-                {showModal && <EditProductModal product={props} onClose={() => setShowModal(false)} />}
-                {showAlertModal && <AlertModal props={props} onClose={() => setShowAlertModal(false)}/>}
-                {showImageModule && <ImageModal product={{props}} onClose={() => setShowImageModal(false)} setThumbId={handleThumbnail}/>}
+                                {showModal && (
+                                    <Suspense fallback={<div className="flex items-center justify-center p-8"><span>Loading...</span></div>}>
+                                        <EditProductModal product={props} onClose={() => setShowModal(false)} />
+                                    </Suspense>
+                                )}
+                                {showAlertModal && (
+                                    <Suspense fallback={<div className="flex items-center justify-center p-8"><span>Loading...</span></div>}>
+                                        <AlertModal props={props} onClose={() => setShowAlertModal(false)}/>
+                                    </Suspense>
+                                )}
+                                {showImageModule && (
+                                    <Suspense fallback={<div className="flex items-center justify-center p-8"><span>Loading...</span></div>}>
+                                        <ImageModal product={{props}} onClose={() => setShowImageModal(false)} setThumbId={handleThumbnail}/>
+                                    </Suspense>
+                                )}
             </>
         )
     }
@@ -117,8 +131,16 @@ export default function ListComponent({props}: ListComponentProps){
                     </div>
                 </div>
 
-                {showCatModel && <EditCategoriesModal category={props} onClose={() => setShowCatModal(false)} />}
-                {showCatAlertModal && <AlertModal props={props} onClose={() => setShowCatAlertModal(false)}/>}
+                                {showCatModel && (
+                                    <Suspense fallback={<div className="flex items-center justify-center p-8"><span>Loading...</span></div>}>
+                                        <EditCategoriesModal category={props} onClose={() => setShowCatModal(false)} />
+                                    </Suspense>
+                                )}
+                                {showCatAlertModal && (
+                                    <Suspense fallback={<div className="flex items-center justify-center p-8"><span>Loading...</span></div>}>
+                                        <AlertModal props={props} onClose={() => setShowCatAlertModal(false)}/>
+                                    </Suspense>
+                                )}
             </>
         )
     }

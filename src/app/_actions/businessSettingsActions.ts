@@ -21,6 +21,7 @@ export async function updateBusinessSettingsAction(
       business_phone: String(formData.get('business_phone') ?? ''),
       standard_delivery_rate: Number.isFinite(standardDeliveryRateValue) ? standardDeliveryRateValue : 0,
       product_price_review_window_days: Number.isFinite(productPriceReviewWindowValue) ? productPriceReviewWindowValue : 90,
+      order_min_days_notice: Number.isFinite(Number(formData.get('order_min_days_notice'))) ? Number(formData.get('order_min_days_notice')) : 14,
       bank_account_name: String(formData.get('bank_account_name') ?? ''),
       bank_name: String(formData.get('bank_name') ?? ''),
       account_number: String(formData.get('account_number') ?? ''),

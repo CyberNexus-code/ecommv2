@@ -1,0 +1,1 @@
+-- Removed: This migration caused NOT NULL errors on existing data. Use the next migration instead.

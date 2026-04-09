@@ -26,7 +26,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
   const supabase = await createServer()
   const { data, error } = await supabase
     .from('business_settings')
-    .select('id, business_name, business_email, business_phone, standard_delivery_rate, product_price_review_window_days, bank_account_name, bank_name, account_number, branch_code, account_type, payment_reference_prefix, invoice_footer_note')
+    .select('id, business_name, business_email, business_phone, standard_delivery_rate, product_price_review_window_days, order_min_days_notice, bank_account_name, bank_name, account_number, branch_code, account_type, payment_reference_prefix, invoice_footer_note')
     .eq('id', 1)
     .maybeSingle<BusinessSettingsRow>()
 
@@ -63,6 +63,7 @@ export async function saveBusinessSettings(input: Partial<BusinessSettings>) {
     business_phone: input.business_phone?.trim() || null,
     standard_delivery_rate: normalizeCurrencyValue(input.standard_delivery_rate, DEFAULT_BUSINESS_SETTINGS.standard_delivery_rate),
     product_price_review_window_days: normalizeIntegerValue(input.product_price_review_window_days, DEFAULT_BUSINESS_SETTINGS.product_price_review_window_days),
+    order_min_days_notice: normalizeIntegerValue(input.order_min_days_notice, DEFAULT_BUSINESS_SETTINGS.order_min_days_notice),
     bank_account_name: input.bank_account_name?.trim() || null,
     bank_name: input.bank_name?.trim() || null,
     account_number: input.account_number?.trim() || null,

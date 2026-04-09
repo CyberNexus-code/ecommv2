@@ -61,6 +61,17 @@ export default function BankingDetailsForm({ settings }: BankingDetailsFormProps
           />
         </label>
         <label className="space-y-1 text-sm font-medium text-stone-700">
+          <span>Order Minimum Days Notice</span>
+          <input
+            name="order_min_days_notice"
+            type="number"
+            min="1"
+            step="1"
+            defaultValue={settings.order_min_days_notice}
+            className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="space-y-1 text-sm font-medium text-stone-700">
           <span>Payment Reference Prefix</span>
           <input name="payment_reference_prefix" defaultValue={settings.payment_reference_prefix} className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm" />
         </label>

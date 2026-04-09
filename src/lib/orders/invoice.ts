@@ -27,6 +27,10 @@ export type InvoicePayload = {
   waybillNumber?: string | null
   items: InvoiceItem[]
   businessSettings: BusinessSettings
+  recipientName?: string
+  recipientAge?: number
+  recipientDate?: string
+  comments?: string | null
 }
 
 function escapeHtml(input: string): string {
@@ -109,7 +113,16 @@ export function buildInvoiceHtml(payload: InvoicePayload): string {
           </div>
         </div>
 
-        <table style="width:100%;margin-top:20px;border-collapse:collapse;border:1px solid #ffe4e6;border-radius:14px;overflow:hidden;">
+
+        <div style="margin-top:20px;margin-bottom:16px;padding:16px;border:1px solid #ffe4e6;border-radius:14px;background:#fffafb;">
+          <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#e11d48;">Order Details</p>
+          <p style="margin:0 0 4px;color:#57534e;"><strong>Recipient Name:</strong> ${escapeHtml(payload.recipientName || '')}</p>
+          <p style="margin:0 0 4px;color:#57534e;"><strong>Recipient Age:</strong> ${payload.recipientAge !== undefined ? escapeHtml(String(payload.recipientAge)) : ''}</p>
+          <p style="margin:0 0 4px;color:#57534e;"><strong>Date:</strong> ${escapeHtml(payload.recipientDate || '')}</p>
+          ${payload.comments ? `<p style="margin:0 0 4px;color:#57534e;"><strong>Comments:</strong> ${escapeHtml(payload.comments)}</p>` : ''}
+        </div>
+
+        <table style="width:100%;margin-top:0;border-collapse:collapse;border:1px solid #ffe4e6;border-radius:14px;overflow:hidden;">
           <thead style="background:#fff1f2;color:#9f1239;">
             <tr>
               <th style="padding:10px 12px;text-align:left;">Item</th>
@@ -195,6 +208,12 @@ export function buildAdminReceiptHtml(payload: InvoicePayload): string {
         <p style="margin:0 0 8px;"><strong>Email:</strong> ${escapeHtml(payload.customerEmail)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery:</strong> ${escapeHtml([payload.deliveryAddress, payload.deliveryCity, payload.deliveryPostalCode].filter(Boolean).join(', '))}</p>
         ${payload.waybillNumber ? `<p style="margin:0 0 8px;"><strong>Waybill:</strong> ${escapeHtml(payload.waybillNumber)}</p>` : ''}
+        <div style="margin:12px 0 16px 0;padding:12px 10px;background:#fff1f2;border-radius:8px;">
+          <p style="margin:0 0 4px;color:#be123c;"><strong>Recipient Name:</strong> ${escapeHtml(payload.recipientName || '')}</p>
+          <p style="margin:0 0 4px;color:#be123c;"><strong>Recipient Age:</strong> ${payload.recipientAge !== undefined ? escapeHtml(String(payload.recipientAge)) : ''}</p>
+          <p style="margin:0 0 4px;color:#be123c;"><strong>Recipient Date:</strong> ${escapeHtml(payload.recipientDate || '')}</p>
+          <p style="margin:0 0 4px;color:#be123c;"><strong>Comments:</strong> ${escapeHtml(payload.comments || '')}</p>
+        </div>
         <p style="margin:0 0 8px;"><strong>Items subtotal:</strong> ${formatCurrency(payload.subtotal)}</p>
         <p style="margin:0 0 8px;"><strong>Delivery fee:</strong> ${formatCurrency(payload.deliveryFee)}</p>
         <p style="margin:0 0 16px;"><strong>Total:</strong> ${formatCurrency(payload.total)}</p>

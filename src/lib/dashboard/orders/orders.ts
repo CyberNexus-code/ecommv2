@@ -44,13 +44,20 @@ export async function getOrders(){
         const {data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
 
         if(profile?.role === "admin"){
-              const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, order_items(*)')
-
-           if(errorBaskets){
-            await logServerError('dashboard.getOrders.fetchOrders', errorBaskets, { userId: user.id })
-            return
-           }
-           return orders
+            const {data: orders, error: errorBaskets} = await supabase.from('orders').select('*, order_items(*)')
+            if(errorBaskets){
+                await logServerError('dashboard.getOrders.fetchOrders', errorBaskets, { userId: user.id })
+                return
+            }
+            return orders
+        } else {
+            // Only return orders for the current user
+            const {data: orders, error: errorUserOrders} = await supabase.from('orders').select('*, order_items(*)').eq('user_id', user.id)
+            if(errorUserOrders){
+                await logServerError('dashboard.getOrders.fetchUserOrders', errorUserOrders, { userId: user.id })
+                return
+            }
+            return orders
         }
 
     }catch(error){

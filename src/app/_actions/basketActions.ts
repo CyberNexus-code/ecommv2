@@ -3,6 +3,7 @@
 import { createServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { placeOrderLogic, setProfileEmail } from "@/lib/baskets/basket";
+import { getBusinessSettings } from "@/lib/businessSettings";
 import { hasRegisteredAccountEmail, normalizeEmail } from "@/lib/auth/accountLookup";
 import { logServerError } from "@/lib/logging/server";
 
@@ -41,6 +42,10 @@ export async function removeBasketItem(basket_id: string, id: string){
 export async function  placeOrder(formData: FormData) {
     const basket_id = formData.get('basket_id') as string
     const checkoutConfirmation = formData.get('checkout_confirmation') as string
+    const recipient_name = formData.get('recipient_name') as string
+    const recipient_age = formData.get('recipient_age') as string
+    const recipient_date = formData.get('recipient_date') as string
+    const comments = formData.get('comments') as string | null
 
     if(!basket_id){
         await logServerError('basketActions.placeOrder.missingBasketId', new Error('No basket id received from form submission'));
@@ -52,10 +57,37 @@ export async function  placeOrder(formData: FormData) {
         throw new Error("Please confirm the terms and that your delivery address is accurate before placing the order.");
     }
 
-    await placeOrderLogic(basket_id);
+    if(!recipient_name || recipient_name.length < 2) {
+        throw new Error("Recipient name is required and must be at least 2 characters.");
+    }
+    if(!recipient_age || isNaN(Number(recipient_age)) || Number(recipient_age) < 0) {
+        throw new Error("Recipient age is required and must be a valid number.");
+    }
+    if(!recipient_date) {
+        throw new Error("Date is required.");
+    }
+
+    // Enforce admin-configurable minimum days for handmade items
+    const settings = await getBusinessSettings();
+    const minDays = settings.order_min_days_notice ?? 14;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const selectedDate = new Date(recipient_date);
+    selectedDate.setHours(0,0,0,0);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysDiff = Math.round((selectedDate.getTime() - today.getTime()) / msPerDay);
+    if (daysDiff < minDays) {
+        throw new Error(`Because these items are handmade, it will take a minimum of ${minDays} days to fulfill the order. Please select a date at least ${minDays} days from today.`);
+    }
+
+    await placeOrderLogic(basket_id, {
+        recipient_name,
+        recipient_age: Number(recipient_age),
+        recipient_date,
+        comments: comments || null,
+    });
 
     revalidatePath("/basket")
-
 }
 
 export type GuestCheckoutEmailState = {

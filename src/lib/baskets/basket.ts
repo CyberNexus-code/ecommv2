@@ -52,9 +52,18 @@ export async function getBasket() {
     return (data ?? []) as BasketItem[];
 }
 
-export async function placeOrderLogic(basket_id: string){
+export async function placeOrderLogic(
+    basket_id: string,
+    options?: {
+        recipient_name?: string,
+        recipient_age?: number,
+        recipient_date?: string,
+        comments?: string | null,
+    }
+){
     const supabase = await createServer();
 
+    // Insert order with extra fields
     const { error } = await supabase.rpc('place_order', { p_basket_id: basket_id });
 
     if(error){
@@ -62,13 +71,27 @@ export async function placeOrderLogic(basket_id: string){
         throw new Error(`Error placing order: ${error.message}`);
     }
 
+    // Update the order with the new fields
+    if (options) {
+        const updateFields: Record<string, any> = {};
+        if (options.recipient_name) updateFields.recipient_name = options.recipient_name;
+        if (options.recipient_age !== undefined) updateFields.recipient_age = options.recipient_age;
+        if (options.recipient_date) updateFields.recipient_date = options.recipient_date;
+        if (options.comments !== undefined) updateFields.comments = options.comments;
+
+        await supabase
+            .from('orders')
+            .update(updateFields)
+            .eq('basket_id', basket_id);
+    }
+
     try {
         const businessSettings = await getBusinessSettings();
         const { data: placedOrder, error: orderFetchError } = await supabase
             .from("orders")
-            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, order_items(item_name, quantity, unit_price, line_total)")
+            .select("id, order_number, status, subtotal, delivery_fee, total, created_at, customer_name, customer_email, delivery_address, delivery_city, delivery_postal_code, recipient_name, recipient_age, recipient_date, comments, order_items(item_name, quantity, unit_price, line_total)")
             .eq("basket_id", basket_id)
-            .single<PlacedOrderRow>();
+            .single<PlacedOrderRow & { recipient_name?: string, recipient_age?: number, recipient_date?: string, comments?: string }>();
 
         if(orderFetchError){
             await logServerError('basket.placeOrderLogic.fetchPlacedOrder', orderFetchError, { basketId: basket_id });
@@ -95,6 +118,10 @@ export async function placeOrderLogic(basket_id: string){
             deliveryAddress: placedOrder.delivery_address ?? '',
             deliveryCity: placedOrder.delivery_city ?? '',
             deliveryPostalCode: String(placedOrder.delivery_postal_code ?? ''),
+            recipientName: placedOrder.recipient_name,
+            recipientAge: placedOrder.recipient_age,
+            recipientDate: placedOrder.recipient_date,
+            comments: placedOrder.comments,
             items: (placedOrder.order_items ?? []).map((item) => ({
                 item_name: item.item_name,
                 quantity: Number(item.quantity ?? 0),

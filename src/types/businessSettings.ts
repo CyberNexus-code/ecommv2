@@ -5,6 +5,7 @@ export type BusinessSettings = {
   business_phone: string
   standard_delivery_rate: number
   product_price_review_window_days: number
+  order_min_days_notice: number
   bank_account_name: string
   bank_name: string
   account_number: string
@@ -21,6 +22,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   business_phone: '',
   standard_delivery_rate: 0,
   product_price_review_window_days: 90,
+  order_min_days_notice: 14,
   bank_account_name: '',
   bank_name: '',
   account_number: '',

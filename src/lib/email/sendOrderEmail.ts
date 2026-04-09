@@ -55,8 +55,22 @@ export async function sendOrderPlacedEmails(payload: OrderEmailPayload) {
   const invoiceLogo = await getInvoiceLogoAttachment();
 
   const invoiceReference = getInvoiceReference(payload);
-  const adminSubject = `New Order Receipt #${payload.orderNumber}`;
+  // Add URGENT flag if recipientDate is less than 21 days from today
+  let urgentFlag = '';
+  if (payload.recipientDate) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const recipientDate = new Date(payload.recipientDate);
+    recipientDate.setHours(0,0,0,0);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysDiff = Math.round((recipientDate.getTime() - today.getTime()) / msPerDay);
+    if (daysDiff < 21) {
+      urgentFlag = 'URGENT: ';
+    }
+  }
+  const adminSubject = `${urgentFlag}New Order Receipt #${payload.orderNumber}`;
   const clientSubject = `Invoice ${invoiceReference}`;
+
 
   await Promise.all([
     transporter.sendMail({
