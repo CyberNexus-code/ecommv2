@@ -7,5 +7,5 @@ import { getOrders } from "@/lib/dashboard/orders/orders";
 
 export default async function clientOrders() {
   const [orders, settings] = await Promise.all([getOrders(), getBusinessSettings()]);
-  return <OrdersClient orders={orders} referencePrefix={settings.payment_reference_prefix} />;
+  return <OrdersClient orders={orders ?? []} referencePrefix={settings.payment_reference_prefix} />;
 }
