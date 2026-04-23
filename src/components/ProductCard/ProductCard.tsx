@@ -73,7 +73,7 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
                 <div className={`flex flex-1 flex-col justify-between ${compact ? 'p-3' : 'p-4'}`}>
                     <div className="space-y-2.5">
                         <div className="flex items-start justify-between gap-3">
-                            <p className={`font-semibold uppercase tracking-[0.16em] text-rose-500 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+                            <p className={`font-semibold uppercase tracking-[0.16em] text-rose-600 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             {item.categories?.name?.replace("-", " ") ?? "Collection"}
                             </p>
                             <span className={`shrink-0 font-bold text-rose-700 ${compact ? 'text-base' : 'text-lg'}`}>R{item.price.toFixed(2)}</span>

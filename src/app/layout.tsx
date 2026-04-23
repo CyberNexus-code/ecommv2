@@ -4,11 +4,10 @@ import "./globals.css";
 import AppShell from "@/components/AppShell";
 import ClientLogger from "@/components/observability/ClientLogger";
 import { getAllCategories } from "@/lib/items/get";
+import { siteDescription, siteName, siteUrl, toAbsoluteUrl } from "@/lib/site";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const siteName = "Cute & Creative Toppers";
 const defaultTitle = "Handmade cake toppers and party decorations";
-const defaultDescription = "Shop handmade cake toppers, party boxes, and custom celebration decor with nationwide delivery from Amanzimtoti.";
+const defaultDescription = siteDescription;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +64,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  category: 'ecommerce',
 };
 
 export default async function RootLayout({
@@ -73,12 +73,41 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const { categories } = await getAllCategories();
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        name: siteName,
+        url: siteUrl,
+        logo: toAbsoluteUrl('/logo.png'),
+        sameAs: [siteUrl],
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            url: toAbsoluteUrl('/contact'),
+            areaServed: 'ZA',
+            availableLanguage: ['en'],
+          },
+        ],
+      },
+      {
+        '@type': 'WebSite',
+        name: siteName,
+        url: siteUrl,
+        description: siteDescription,
+        inLanguage: 'en-ZA',
+      },
+    ],
+  }
 
   return (
-    <html lang="en">
+    <html lang="en-ZA">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex h-dvh min-h-screen flex-col w-full overflow-hidden`}
         >
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <ClientLogger />
         <AppShell categories={categories}>{children}</AppShell>
       </body>

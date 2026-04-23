@@ -1,11 +1,10 @@
 import { getProductPath } from '@/lib/items/routes'
+import { siteUrl } from '@/lib/site'
 import type { ItemType } from '@/types/itemType'
 
 type ProductStructuredDataProps = {
   item: ItemType
 }
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export default function ProductStructuredData({ item }: ProductStructuredDataProps) {
   const categoryName = item.categories?.name ?? 'Collection'

@@ -4,6 +4,9 @@ import ContactForm from "@/components/contactForm/ContactForm"
 export const metadata: Metadata = {
   title: "Contact",
   description: "Contact Cute & Creative Toppers for custom cake topper requests, party decor questions, and order support.",
+  alternates: {
+    canonical: '/contact',
+  },
 }
 
 export default function ContactPage() {

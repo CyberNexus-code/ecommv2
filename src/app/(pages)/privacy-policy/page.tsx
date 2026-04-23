@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
     'Read the basic privacy terms for how Cute & Creative Toppers uses, stores, and protects the limited customer information needed to run the shop.',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

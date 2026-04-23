@@ -1,5 +1,6 @@
 'use server'
 
+import type { Metadata } from 'next'
 import { getBasket } from "@/lib/baskets/basket";
 import { setItemQuantity, removeBasketItem } from "@/app/_actions/basketActions";
 import { setAddress } from "@/app/_actions/authActions";
@@ -10,6 +11,15 @@ import ButtonRose from "@/components/ui/button";
 import { hasRegisteredAccountEmail } from "@/lib/auth/accountLookup";
 import { getBusinessSettings } from "@/lib/businessSettings";
 import { createServer } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: 'Basket',
+  description: 'Review selected items and complete checkout details.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function BasketPage() {
 

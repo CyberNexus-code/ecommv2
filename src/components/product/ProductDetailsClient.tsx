@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { addToBasket } from '@/lib/baskets/basket'
 import ProductCard from '@/components/ProductCard/ProductCard'
 import { getCategoryPath } from '@/lib/items/categories'
@@ -18,10 +18,16 @@ type ProductDetailsClientProps = {
 export default function ProductDetailsClient({ item, relatedItems }: ProductDetailsClientProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const enlargeLabelId = useId()
+  const enlargeNameId = useId()
+  const description = item.description?.trim() || item.meta_description?.trim() || 'This handmade product is made to order.'
+  const descriptionRef = useRef<HTMLDivElement | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
   const [isCoarsePointer, setIsCoarsePointer] = useState(false)
   const [showAllTags, setShowAllTags] = useState(false)
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [descriptionCanExpand, setDescriptionCanExpand] = useState(false)
   const sortedImages = useMemo(
     () => [...item.item_images].sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0)),
     [item.item_images],
@@ -124,6 +130,33 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
     return () => window.removeEventListener('keydown', handleKeydown)
   }, [currentImageIndex, lightboxOpen, sortedImages])
 
+  useEffect(() => {
+    const element = descriptionRef.current
+
+    if (!element) {
+      return
+    }
+
+    function syncDescriptionOverflow() {
+      const currentElement = descriptionRef.current
+
+      if (!currentElement) {
+        return
+      }
+
+      setDescriptionCanExpand(currentElement.scrollHeight > currentElement.clientHeight + 1)
+    }
+
+    syncDescriptionOverflow()
+    window.addEventListener('resize', syncDescriptionOverflow)
+
+    return () => window.removeEventListener('resize', syncDescriptionOverflow)
+  }, [description, isDescriptionExpanded])
+
+  useEffect(() => {
+    setIsDescriptionExpanded(false)
+  }, [description])
+
   function selectImage(imageUrl: string) {
     setSelectedImageUrl(imageUrl)
   }
@@ -167,12 +200,12 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
 
       <section className='w-full min-w-0 rounded-[2rem] border border-rose-100 bg-white p-3 shadow-[0_10px_30px_-22px_rgba(190,24,93,0.55)] sm:p-4 md:p-5'>
         <div className='grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:items-start'>
-          <div className='min-w-0 space-y-4'>
+          <div className='min-w-0 space-y-4 lg:flex lg:h-full lg:flex-col lg:justify-center lg:space-y-6 lg:py-4'>
             <button
               type='button'
               onClick={() => primaryImage && setLightboxOpen(true)}
               className='relative block aspect-square w-full overflow-hidden rounded-[1.5rem] bg-rose-50 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-4 sm:aspect-[4/3]'
-              aria-label={primaryImage ? `Open a larger view of ${item.name}` : undefined}
+              aria-labelledby={primaryImage ? `${enlargeLabelId} ${enlargeNameId}` : undefined}
             >
               {primaryImage ? (
                 <>
@@ -184,9 +217,10 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
                     className='object-contain bg-white'
                     priority
                   />
-                  <span className='absolute bottom-3 right-3 rounded-full bg-black/65 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:bottom-4 sm:right-4 sm:px-4 sm:py-2 sm:text-xs'>
+                  <span id={enlargeLabelId} className='absolute bottom-3 right-3 rounded-full bg-black/65 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:bottom-4 sm:right-4 sm:px-4 sm:py-2 sm:text-xs'>
                     {isCoarsePointer ? 'Tap to enlarge' : 'Click to enlarge'}
                   </span>
+                  <span id={enlargeNameId} className='sr-only'>{item.name}</span>
                 </>
               ) : (
                 <div className='flex h-full items-center justify-center text-sm text-rose-400'>No image available</div>
@@ -194,7 +228,7 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
             </button>
 
             {sortedImages.length > 1 ? (
-              <div className='grid grid-flow-col auto-cols-[4.75rem] gap-3 overflow-x-auto pb-1 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-5 sm:overflow-visible sm:pb-0'>
+              <div className='grid grid-flow-col auto-cols-[4.75rem] gap-3.5 overflow-x-auto pt-1 pb-1 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-5 sm:gap-4 sm:overflow-visible sm:pb-0'>
                 {sortedImages.map((image, index) => {
                   const isActive = image.image_url === primaryImage?.image_url
 
@@ -234,9 +268,23 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
               <div className='space-y-3'>
                 <h1 className='text-2xl font-semibold tracking-tight text-rose-950 sm:text-3xl md:text-4xl'>{item.name}</h1>
                 <p className='text-2xl font-bold text-rose-700 sm:text-3xl'>R{item.price.toFixed(2)}</p>
-                <p className='max-w-2xl text-sm leading-6 text-stone-700 sm:text-base sm:leading-7'>
-                  {item.description?.trim() || item.meta_description?.trim() || 'This handmade product is made to order.'}
-                </p>
+                <div className='max-w-2xl'>
+                  <div
+                    ref={descriptionRef}
+                    className={`overflow-hidden text-sm leading-6 text-stone-700 transition-[max-height] duration-300 ease-out sm:text-base sm:leading-7 ${isDescriptionExpanded ? 'max-h-48 overflow-y-auto pr-2 sm:max-h-52' : 'max-h-28 sm:max-h-32'}`}
+                  >
+                    <p>{description}</p>
+                  </div>
+                  {descriptionCanExpand ? (
+                    <button
+                      type='button'
+                      onClick={() => setIsDescriptionExpanded((current) => !current)}
+                      className='mt-2 text-sm font-medium text-rose-700 underline-offset-4 transition hover:text-rose-900 hover:underline'
+                    >
+                      {isDescriptionExpanded ? 'Show less' : '...More'}
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               {tagNames.length > 0 ? (

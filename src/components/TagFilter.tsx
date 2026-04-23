@@ -44,7 +44,7 @@ export default function TagFilter({ tags, selectedTags, compact = false }: TagFi
   return (
     <div className={compact ? 'rounded-2xl border border-rose-100 bg-rose-50/45 p-3' : 'rounded-2xl border border-rose-200 bg-white p-4 shadow-sm'}>
       <div className="flex items-center justify-between">
-        <h3 className={compact ? 'text-sm font-semibold text-rose-900' : 'font-semibold text-rose-900'}>Filter by Tag</h3>
+        <h2 className={compact ? 'text-sm font-semibold text-rose-900' : 'font-semibold text-rose-900'}>Filter by Tag</h2>
         {selectedTags.length > 0 && (
           <button
             onClick={handleClearFilters}

@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About",
   description: "Learn about Cute & Creative Toppers, a handmade celebration brand creating custom 3D cake toppers and party decor in Amanzimtoti.",
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 export default function About() {

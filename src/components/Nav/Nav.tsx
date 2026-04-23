@@ -129,7 +129,7 @@ export default function Nav({ categories }: NavProps) {
 
         <div className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden">
           <Popover className="relative">
-            <PopoverButton className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white transition hover:bg-white/15">
+            <PopoverButton aria-label="Open navigation menu" className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white/10 p-1.5 text-white transition hover:bg-white/15">
               <Bars3Icon className="size-6" />
             </PopoverButton>
             <PopoverPanel anchor="bottom end" className="z-50 mt-2 w-[min(92vw,22rem)] overflow-hidden rounded-[22px] border border-rose-200 bg-white p-2.5 shadow-[0_24px_60px_-34px_rgba(15,23,42,0.55)] sm:w-[88vw] sm:max-w-sm sm:p-3">

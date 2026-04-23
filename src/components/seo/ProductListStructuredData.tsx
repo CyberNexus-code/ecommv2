@@ -1,13 +1,12 @@
 import type { ItemType } from "@/types/itemType";
 import { getProductPath } from "@/lib/items/routes";
+import { siteUrl } from '@/lib/site'
 
 type ProductListStructuredDataProps = {
   items: ItemType[];
   title: string;
   description: string;
 };
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default function ProductListStructuredData({ items, title, description }: ProductListStructuredDataProps) {
   const structuredData = {

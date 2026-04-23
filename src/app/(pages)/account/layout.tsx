@@ -1,5 +1,14 @@
 import React from "react";
+import type { Metadata } from 'next'
 import { getUserWithProfile } from "@/lib/profiles/profiles";
+
+export const metadata: Metadata = {
+  title: 'My Account',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function AccountsLayout({
   children,

@@ -1,7 +1,7 @@
 'use client'
 
-import { AdjustmentsHorizontalIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
+import { AdjustmentsHorizontalIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 import TagFilter from '@/components/TagFilter'
 import type { TagType } from '@/types/itemType'
 
@@ -29,7 +29,14 @@ export default function CatalogFiltersPanel({
   mode = 'mobile',
 }: CatalogFiltersPanelProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktopTagsOpen, setDesktopTagsOpen] = useState(selectedTags.length > 0)
   const activeFilterCount = selectedTags.length + (searchInput.trim() ? 1 : 0)
+
+  useEffect(() => {
+    if (selectedTags.length > 0) {
+      setDesktopTagsOpen(true)
+    }
+  }, [selectedTags.length])
 
   if (mode === 'desktop') {
     return (
@@ -51,7 +58,27 @@ export default function CatalogFiltersPanel({
             </div>
           </div>
 
-          <TagFilter tags={tags} selectedTags={selectedTags} compact />
+          <div className='rounded-2xl border border-rose-100 bg-rose-50/45 p-3'>
+            <button
+              type='button'
+              onClick={() => setDesktopTagsOpen((current) => !current)}
+              className='flex w-full items-center justify-between gap-3 text-left'
+              aria-expanded={desktopTagsOpen}
+              aria-controls={`${searchId}-desktop-tag-filters`}
+            >
+              <span className='text-sm font-semibold text-rose-900'>Tag filters</span>
+              <span className='inline-flex items-center gap-2 text-xs font-medium text-rose-700'>
+                {selectedTags.length > 0 ? `${selectedTags.length} active` : desktopTagsOpen ? 'Hide' : 'Show'}
+                <ChevronDownIcon className={`size-4 transition-transform ${desktopTagsOpen ? 'rotate-180' : ''}`} />
+              </span>
+            </button>
+
+            {desktopTagsOpen ? (
+              <div id={`${searchId}-desktop-tag-filters`} className='mt-3'>
+                <TagFilter tags={tags} selectedTags={selectedTags} compact />
+              </div>
+            ) : null}
+          </div>
         </div>
       </aside>
     )

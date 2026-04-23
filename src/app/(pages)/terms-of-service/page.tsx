@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
     'Read the terms governing use of the Cute & Creative Toppers website, custom orders, and online purchases in South Africa.',
+  alternates: {
+    canonical: '/terms-of-service',
+  },
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

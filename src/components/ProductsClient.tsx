@@ -109,7 +109,7 @@ export default function ProductsClient({ initialItems, initialTags }: ProductsCl
                   </span>
                   {selectedTags.length > 0 || searchTerm.length > 0 ? <span className='text-xs font-medium uppercase tracking-[0.16em] text-rose-500'>Filtered view</span> : null}
                 </div>
-                <div className='relative grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3'>
+                  <div className='relative grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3'>
                   {filteredItems.map((item) => (
                     <ProductCard key={item.id} item={item} />
                   ))}

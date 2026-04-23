@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { siteDescription } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: "Home",
-  description: "Browse handmade cake toppers, party boxes, and custom celebration decor for birthdays, weddings, and special occasions.",
+  title: 'Handmade Cake Toppers & Party Decor',
+  description: siteDescription,
+  alternates: {
+    canonical: '/',
+  },
 };
 
 type HomePageProps = {
