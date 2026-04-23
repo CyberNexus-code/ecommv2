@@ -1,5 +1,3 @@
-'use server'
-
 import type { Metadata } from 'next'
 import { getBasket } from "@/lib/baskets/basket";
 import { setItemQuantity, removeBasketItem } from "@/app/_actions/basketActions";
