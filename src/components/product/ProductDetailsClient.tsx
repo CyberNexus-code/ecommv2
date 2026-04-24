@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { addToBasket } from '@/lib/baskets/basket'
 import ProductCard from '@/components/ProductCard/ProductCard'
@@ -16,18 +16,33 @@ type ProductDetailsClientProps = {
 }
 
 export default function ProductDetailsClient({ item, relatedItems }: ProductDetailsClientProps) {
-  const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const enlargeLabelId = useId()
   const enlargeNameId = useId()
   const description = item.description?.trim() || item.meta_description?.trim() || 'This handmade product is made to order.'
   const descriptionRef = useRef<HTMLDivElement | null>(null)
+  const descriptionIndicatorRef = useRef<HTMLDivElement | null>(null)
+  const descriptionDragStateRef = useRef<{ pointerId: number; trackHeight: number; thumbHeight: number } | null>(null)
+  const relatedRailRef = useRef<HTMLDivElement | null>(null)
+  const relatedRailIndicatorRef = useRef<HTMLDivElement | null>(null)
+  const relatedRailDragStateRef = useRef<{ pointerId: number; trackWidth: number; thumbWidth: number } | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
   const [isCoarsePointer, setIsCoarsePointer] = useState(false)
   const [showAllTags, setShowAllTags] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [descriptionCanExpand, setDescriptionCanExpand] = useState(false)
+  const [descriptionScrollMetrics, setDescriptionScrollMetrics] = useState({
+    hasOverflow: false,
+    thumbHeightPercent: 100,
+    thumbOffsetPercent: 0,
+  })
+  const [relatedRailMetrics, setRelatedRailMetrics] = useState({
+    hasOverflow: false,
+    thumbWidthPercent: 100,
+    thumbOffsetPercent: 0,
+  })
   const sortedImages = useMemo(
     () => [...item.item_images].sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0)),
     [item.item_images],
@@ -66,21 +81,43 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
 
   const categoryName = item.categories?.name?.replace(/-/g, ' ') ?? 'Collection'
   const categoryPath = item.categories?.name ? getCategoryPath(item.categories.name) : '/products'
+  const browseState = useMemo(() => {
+    const rawBrowseHref = searchParams.get('browse')
 
-  function handleBackNavigation() {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back()
-
-      window.setTimeout(() => {
-        if (window.location.pathname === pathname) {
-          router.push(categoryPath)
-        }
-      }, 150)
-
-      return
+    if (!rawBrowseHref) {
+      return {
+        href: categoryPath,
+        pathname: categoryPath,
+      }
     }
 
-    router.push(categoryPath)
+    try {
+      const parsedBrowseUrl = new URL(rawBrowseHref, 'https://browse.local')
+
+      if (parsedBrowseUrl.origin !== 'https://browse.local' || !parsedBrowseUrl.pathname.startsWith('/products')) {
+        return {
+          href: categoryPath,
+          pathname: categoryPath,
+        }
+      }
+
+      return {
+        href: `${parsedBrowseUrl.pathname}${parsedBrowseUrl.search}${parsedBrowseUrl.hash}`,
+        pathname: parsedBrowseUrl.pathname,
+      }
+    } catch {
+      return {
+        href: categoryPath,
+        pathname: categoryPath,
+      }
+    }
+  }, [categoryPath, searchParams])
+  const browseHref = browseState.href
+  const productsBreadcrumbHref = browseState.pathname === '/products' ? browseHref : '/products'
+  const categoryBreadcrumbHref = browseState.pathname === categoryPath ? browseHref : categoryPath
+
+  function handleBackNavigation() {
+    router.push(browseHref)
   }
 
   useEffect(() => {
@@ -145,17 +182,187 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
       }
 
       setDescriptionCanExpand(currentElement.scrollHeight > currentElement.clientHeight + 1)
+
+      if (!isDescriptionExpanded) {
+        setDescriptionScrollMetrics({
+          hasOverflow: false,
+          thumbHeightPercent: 100,
+          thumbOffsetPercent: 0,
+        })
+        return
+      }
+
+      const maxScrollTop = Math.max(currentElement.scrollHeight - currentElement.clientHeight, 0)
+      const hasOverflow = maxScrollTop > 0
+      const thumbHeightPercent = hasOverflow ? Math.max((currentElement.clientHeight / currentElement.scrollHeight) * 100, 22) : 100
+      const availableTrackPercent = Math.max(100 - thumbHeightPercent, 0)
+      const thumbOffsetPercent = hasOverflow && maxScrollTop > 0
+        ? (currentElement.scrollTop / maxScrollTop) * availableTrackPercent
+        : 0
+
+      setDescriptionScrollMetrics({
+        hasOverflow,
+        thumbHeightPercent,
+        thumbOffsetPercent,
+      })
     }
 
     syncDescriptionOverflow()
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => syncDescriptionOverflow())
+
+    resizeObserver?.observe(element)
+    element.addEventListener('scroll', syncDescriptionOverflow, { passive: true })
     window.addEventListener('resize', syncDescriptionOverflow)
 
-    return () => window.removeEventListener('resize', syncDescriptionOverflow)
+    return () => {
+      resizeObserver?.disconnect()
+      element.removeEventListener('scroll', syncDescriptionOverflow)
+      window.removeEventListener('resize', syncDescriptionOverflow)
+    }
   }, [description, isDescriptionExpanded])
 
   useEffect(() => {
     setIsDescriptionExpanded(false)
   }, [description])
+
+  useEffect(() => {
+    const rail = relatedRailRef.current
+
+    if (!rail) {
+      return
+    }
+
+    function syncRelatedRailMetrics() {
+      const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0)
+      const hasOverflow = maxScrollLeft > 0
+      const thumbWidthPercent = hasOverflow ? Math.max((rail.clientWidth / rail.scrollWidth) * 100, 18) : 100
+      const availableTrackPercent = Math.max(100 - thumbWidthPercent, 0)
+      const thumbOffsetPercent = hasOverflow && maxScrollLeft > 0
+        ? (rail.scrollLeft / maxScrollLeft) * availableTrackPercent
+        : 0
+
+      setRelatedRailMetrics({
+        hasOverflow,
+        thumbWidthPercent,
+        thumbOffsetPercent,
+      })
+    }
+
+    syncRelatedRailMetrics()
+    rail.addEventListener('scroll', syncRelatedRailMetrics, { passive: true })
+    window.addEventListener('resize', syncRelatedRailMetrics)
+
+    return () => {
+      rail.removeEventListener('scroll', syncRelatedRailMetrics)
+      window.removeEventListener('resize', syncRelatedRailMetrics)
+    }
+  }, [relatedItems.length])
+
+  useEffect(() => {
+    function handlePointerMove(event: PointerEvent) {
+      const descriptionDragState = descriptionDragStateRef.current
+      const descriptionElement = descriptionRef.current
+      const descriptionIndicator = descriptionIndicatorRef.current
+
+      if (descriptionDragState && descriptionElement && descriptionIndicator) {
+        const rect = descriptionIndicator.getBoundingClientRect()
+        const availableTrackHeight = Math.max(descriptionDragState.trackHeight - descriptionDragState.thumbHeight, 0)
+        const nextOffset = Math.min(Math.max(event.clientY - rect.top - descriptionDragState.thumbHeight / 2, 0), availableTrackHeight)
+        const maxScrollTop = Math.max(descriptionElement.scrollHeight - descriptionElement.clientHeight, 0)
+
+        descriptionElement.scrollTop = availableTrackHeight > 0 ? (nextOffset / availableTrackHeight) * maxScrollTop : 0
+      }
+
+      const dragState = relatedRailDragStateRef.current
+      const rail = relatedRailRef.current
+      const indicator = relatedRailIndicatorRef.current
+
+      if (!dragState || !rail || !indicator) {
+        return
+      }
+
+      const rect = indicator.getBoundingClientRect()
+      const availableTrackWidth = Math.max(dragState.trackWidth - dragState.thumbWidth, 0)
+      const nextOffset = Math.min(Math.max(event.clientX - rect.left - dragState.thumbWidth / 2, 0), availableTrackWidth)
+      const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0)
+
+      rail.scrollLeft = availableTrackWidth > 0 ? (nextOffset / availableTrackWidth) * maxScrollLeft : 0
+    }
+
+    function handlePointerUp(event: PointerEvent) {
+      if (descriptionDragStateRef.current && descriptionDragStateRef.current.pointerId === event.pointerId) {
+        descriptionDragStateRef.current = null
+      }
+
+      if (!relatedRailDragStateRef.current || relatedRailDragStateRef.current.pointerId !== event.pointerId) {
+        return
+      }
+
+      relatedRailDragStateRef.current = null
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+    }
+  }, [])
+
+  function startRelatedRailDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const rail = relatedRailRef.current
+    const indicator = relatedRailIndicatorRef.current
+
+    if (!rail || !indicator || !relatedRailMetrics.hasOverflow) {
+      return
+    }
+
+    const trackWidth = indicator.clientWidth
+    const thumbWidth = (trackWidth * relatedRailMetrics.thumbWidthPercent) / 100
+
+    relatedRailDragStateRef.current = {
+      pointerId: event.pointerId,
+      trackWidth,
+      thumbWidth,
+    }
+
+    const rect = indicator.getBoundingClientRect()
+    const availableTrackWidth = Math.max(trackWidth - thumbWidth, 0)
+    const nextOffset = Math.min(Math.max(event.clientX - rect.left - thumbWidth / 2, 0), availableTrackWidth)
+    const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0)
+
+    rail.scrollLeft = availableTrackWidth > 0 ? (nextOffset / availableTrackWidth) * maxScrollLeft : 0
+  }
+
+  function startDescriptionDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const descriptionElement = descriptionRef.current
+    const indicator = descriptionIndicatorRef.current
+
+    if (!descriptionElement || !indicator || !descriptionScrollMetrics.hasOverflow) {
+      return
+    }
+
+    const trackHeight = indicator.clientHeight
+    const thumbHeight = (trackHeight * descriptionScrollMetrics.thumbHeightPercent) / 100
+
+    descriptionDragStateRef.current = {
+      pointerId: event.pointerId,
+      trackHeight,
+      thumbHeight,
+    }
+
+    const rect = indicator.getBoundingClientRect()
+    const availableTrackHeight = Math.max(trackHeight - thumbHeight, 0)
+    const nextOffset = Math.min(Math.max(event.clientY - rect.top - thumbHeight / 2, 0), availableTrackHeight)
+    const maxScrollTop = Math.max(descriptionElement.scrollHeight - descriptionElement.clientHeight, 0)
+
+    descriptionElement.scrollTop = availableTrackHeight > 0 ? (nextOffset / availableTrackHeight) * maxScrollTop : 0
+  }
 
   function selectImage(imageUrl: string) {
     setSelectedImageUrl(imageUrl)
@@ -191,9 +398,9 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
       </button>
 
       <div className='mb-6 flex flex-wrap items-center gap-2 text-sm text-rose-700/80'>
-        <Link href='/products' className='transition hover:text-rose-900'>Products</Link>
+        <Link href={productsBreadcrumbHref} className='transition hover:text-rose-900'>Products</Link>
         <span>/</span>
-        <Link href={categoryPath} className='transition hover:text-rose-900'>{categoryName}</Link>
+        <Link href={categoryBreadcrumbHref} className='transition hover:text-rose-900'>{categoryName}</Link>
         <span>/</span>
         <span className='text-rose-950'>{item.name}</span>
       </div>
@@ -269,11 +476,32 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
                 <h1 className='text-2xl font-semibold tracking-tight text-rose-950 sm:text-3xl md:text-4xl'>{item.name}</h1>
                 <p className='text-2xl font-bold text-rose-700 sm:text-3xl'>R{item.price.toFixed(2)}</p>
                 <div className='max-w-2xl'>
-                  <div
-                    ref={descriptionRef}
-                    className={`overflow-hidden text-sm leading-6 text-stone-700 transition-[max-height] duration-300 ease-out sm:text-base sm:leading-7 ${isDescriptionExpanded ? 'max-h-48 overflow-y-auto pr-2 sm:max-h-52' : 'max-h-28 sm:max-h-32'}`}
-                  >
-                    <p>{description}</p>
+                  <div className='relative pr-4'>
+                    <div
+                      ref={descriptionRef}
+                      className={`text-sm leading-6 text-stone-700 transition-[max-height] duration-300 ease-out sm:text-base sm:leading-7 ${isDescriptionExpanded ? 'no-scrollbar max-h-48 overflow-y-auto pr-3 sm:max-h-52' : 'overflow-hidden max-h-28 sm:max-h-32'}`}
+                    >
+                      <p>{description}</p>
+                    </div>
+                    {!isDescriptionExpanded && descriptionCanExpand ? (
+                      <div aria-hidden='true' className='pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#fffafa] via-[#fffafa]/92 to-transparent' />
+                    ) : null}
+                    {isDescriptionExpanded && descriptionScrollMetrics.hasOverflow ? (
+                      <div
+                        ref={descriptionIndicatorRef}
+                        role='presentation'
+                        onPointerDown={startDescriptionDrag}
+                        className='absolute right-0 top-1 bottom-1 hidden w-2.5 cursor-grab justify-center rounded-full bg-rose-100/90 active:cursor-grabbing md:flex'
+                      >
+                        <div
+                          className='w-full rounded-full bg-gradient-to-b from-rose-400 via-rose-500 to-rose-700 transition-[height,transform] duration-150 ease-out'
+                          style={{
+                            height: `${descriptionScrollMetrics.thumbHeightPercent}%`,
+                            transform: `translateY(${descriptionScrollMetrics.thumbOffsetPercent}%)`,
+                          }}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                   {descriptionCanExpand ? (
                     <button
@@ -363,16 +591,37 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
               <h2 className='text-2xl font-semibold text-rose-950'>Related products</h2>
               <p className='text-sm text-rose-700/80'>Similar handmade picks from the same collection and themes.</p>
             </div>
-            <Link href='/products' className='text-sm font-medium text-rose-700 transition hover:text-rose-900'>Browse all</Link>
+            <Link href={browseHref} className='text-sm font-medium text-rose-700 transition hover:text-rose-900'>Browse all</Link>
           </div>
-          <div className='-mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 pb-2 [touch-action:pan-x]'>
-            <div className='inline-flex min-w-max gap-3 snap-x snap-mandatory pr-4 lg:gap-4'>
-              {relatedItems.map((relatedItem) => (
-                <div key={relatedItem.id} className='w-44 shrink-0 snap-start md:w-48 lg:w-52'>
-                  <ProductCard item={relatedItem} compact />
-                </div>
-              ))}
+          <div className='relative -mx-4 px-4'>
+            <div ref={relatedRailRef} className='no-scrollbar overflow-x-auto pb-2 [touch-action:pan-x]'>
+              <div className='flex w-max min-w-full gap-3 snap-x snap-mandatory pr-4 lg:gap-4'>
+                {relatedItems.map((relatedItem) => (
+                  <div key={relatedItem.id} className='w-44 shrink-0 snap-start md:w-48 lg:w-52'>
+                    <ProductCard item={relatedItem} compact browseHref={browseHref} />
+                  </div>
+                ))}
+              </div>
             </div>
+            <div aria-hidden='true' className='pointer-events-none absolute inset-y-0 right-4 w-10 bg-gradient-to-l from-[#fffafa] via-[#fffafa]/90 to-transparent' />
+            {relatedRailMetrics.hasOverflow ? (
+              <div className='mt-3 hidden justify-center md:flex'>
+                <div
+                  ref={relatedRailIndicatorRef}
+                  role='presentation'
+                  onPointerDown={startRelatedRailDrag}
+                  className='h-2 w-40 cursor-grab overflow-hidden rounded-full bg-rose-100/90 active:cursor-grabbing'
+                >
+                  <div
+                    className='h-full rounded-full bg-gradient-to-r from-rose-400 via-rose-500 to-rose-700 transition-[width,transform] duration-150 ease-out'
+                    style={{
+                      width: `${relatedRailMetrics.thumbWidthPercent}%`,
+                      transform: `translateX(${relatedRailMetrics.thumbOffsetPercent}%)`,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}

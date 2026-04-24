@@ -3,6 +3,7 @@
 import { CameraIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ItemType } from "@/types/itemType";
 import { useMemo, useState } from "react";
 import { addToBasket } from "@/lib/baskets/basket";
@@ -11,9 +12,12 @@ import { getProductPath } from "@/lib/items/routes";
 type ProductCardVariantProps = {
     item: ItemType;
     compact?: boolean;
+    browseHref?: string;
 };
 
-export default function ProductCard({ item, compact = false }: ProductCardVariantProps) {
+export default function ProductCard({ item, compact = false, browseHref }: ProductCardVariantProps) {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
 
@@ -21,6 +25,10 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
         return item.item_images.find((img) => img.is_thumbnail) ?? item.item_images[0] ?? null;
     }, [item.item_images]);
     const imageCount = item.item_images.length;
+    const defaultBrowseHref = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
+    const productHref = browseHref
+        ? `${getProductPath(item)}?browse=${encodeURIComponent(browseHref)}`
+        : `${getProductPath(item)}?browse=${encodeURIComponent(defaultBrowseHref)}`;
 
     function min() {
         if (quantity > 1) {
@@ -44,7 +52,7 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
 
     return (
         <article className={`group flex h-full min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_8px_24px_-18px_rgba(190,24,93,0.6)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_-20px_rgba(190,24,93,0.55)] ${compact ? 'rounded-[1.4rem]' : ''}`}>
-            <Link href={getProductPath(item)} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2">
+            <Link href={productHref} className="flex flex-1 flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2">
                 <div className={`relative w-full overflow-hidden bg-rose-50 ${compact ? 'aspect-square' : 'aspect-[4/3.8]'}`}>
                     {thumbnail ? (
                         <Image
@@ -70,8 +78,8 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
                     ) : null}
                 </div>
 
-                <div className={`flex flex-1 flex-col justify-between ${compact ? 'p-3' : 'p-4'}`}>
-                    <div className="space-y-2.5">
+                <div className={`flex flex-1 flex-col ${compact ? 'p-3' : 'p-4'}`}>
+                    <div className="flex flex-1 flex-col gap-2.5">
                         <div className="flex items-start justify-between gap-3">
                             <p className={`font-semibold uppercase tracking-[0.16em] text-rose-600 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             {item.categories?.name?.replace("-", " ") ?? "Collection"}
@@ -80,7 +88,7 @@ export default function ProductCard({ item, compact = false }: ProductCardVarian
                         </div>
                         <h2 className={`line-clamp-2 font-semibold text-rose-950 group-hover:text-rose-800 ${compact ? 'text-sm md:text-base' : 'text-base md:text-lg'}`}>{item.name}</h2>
                         <p className={`line-clamp-2 leading-5 text-stone-600 ${compact ? 'text-xs' : 'text-sm'}`}>{item.description}</p>
-                        <p className={`font-medium text-rose-700 ${compact ? 'text-xs' : 'text-sm'}`}>View product details and gallery</p>
+                        <p className={`mt-auto pt-1 font-medium text-rose-700 ${compact ? 'text-xs' : 'text-sm'}`}>View product details and gallery</p>
                     </div>
                 </div>
             </Link>

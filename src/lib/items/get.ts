@@ -3,6 +3,7 @@ import type { CategoryType } from "@/types/categoryType";
 import type { ItemTag, ItemType } from "@/types/itemType";
 import { logServerError } from "@/lib/logging/server";
 import { normalizeCategoryName } from "@/lib/items/categories";
+import { getCategorySlug, isSemanticTagSlug } from '@/lib/items/tagMetadata';
 
 const itemSelect = '*, categories (name), item_images (id, item_id, image_url, storage_path, sort_order, is_thumbnail, alt_text), items_tags (item_id, tag_id, tags (id, name, slug, description))'
 
@@ -101,7 +102,7 @@ export async function getItemById(id: string){
     return { item, error }
 }
 
-export async function getRelatedItems(item: { id: string; category_id: string | null; items_tags?: { tags: { slug: string } | null }[] }, limit = 3) {
+export async function getRelatedItems(item: { id: string; category_id: string | null; items_tags?: { tags: { slug: string } | null }[] }, limit = 6) {
 
     const supabase = await createServer();
     const { data: items, error } = await supabase
@@ -122,34 +123,64 @@ export async function getRelatedItems(item: { id: string; category_id: string | 
             .map((tag) => tag.tags?.slug)
             .filter((slug): slug is string => Boolean(slug))
     );
-    const currentTagCount = currentTagSlugs.size;
+    const currentCategorySlug = 'categories' in item ? getCategorySlug(item.categories?.name) : null
 
     const relatedItems = ((items ?? []) as ItemType[])
         .map((candidate) => {
-            const candidateTagSlugs = (candidate.items_tags ?? [])
+            const candidateTagSlugs = new Set((candidate.items_tags ?? [])
                 .map((tag: ItemTag) => tag.tags?.slug)
-                .filter((slug): slug is string => Boolean(slug));
+                .filter((slug): slug is string => Boolean(slug)));
+            const candidateCategorySlug = getCategorySlug(candidate.categories?.name)
+            const categorySlugs = new Set<string>()
 
-            const sharedTagCount = candidateTagSlugs.reduce((count, slug) => count + (currentTagSlugs.has(slug) ? 1 : 0), 0);
-            const sameCategoryScore = candidate.category_id && candidate.category_id === item.category_id ? 4 : 0;
-            const sharedTagScore = sharedTagCount * 3;
-            const coverageScore = currentTagCount > 0 ? (sharedTagCount / currentTagCount) * 2 : 0;
+            if (currentCategorySlug) {
+                categorySlugs.add(currentCategorySlug)
+            }
+
+            if (candidateCategorySlug) {
+                categorySlugs.add(candidateCategorySlug)
+            }
+
+            const semanticSharedTagCount = Array.from(currentTagSlugs).reduce((count, slug) => {
+                if (!candidateTagSlugs.has(slug)) {
+                    return count
+                }
+
+                return count + (isSemanticTagSlug(slug, categorySlugs) ? 1 : 0)
+            }, 0)
+            const genericSharedTagCount = Array.from(currentTagSlugs).reduce((count, slug) => {
+                if (!candidateTagSlugs.has(slug)) {
+                    return count
+                }
+
+                return count + (isSemanticTagSlug(slug, categorySlugs) ? 0 : 1)
+            }, 0)
+            const hasSemanticOverlap = semanticSharedTagCount > 0 ? 1 : 0
+            const sameCategoryScore = candidate.category_id && candidate.category_id === item.category_id ? 1 : 0;
             const imageScore = Math.min(candidate.item_images.length, 4) * 0.25;
             const currentPrice = 'price' in item && typeof item.price === 'number' ? item.price : null;
             const priceDistance = currentPrice === null ? 0 : Math.abs(candidate.price - currentPrice);
             const priceScore = currentPrice === null
                 ? 0
                 : Math.max(0, 2 - priceDistance / Math.max(currentPrice, 1));
-            const score = sameCategoryScore + sharedTagScore + coverageScore + imageScore + priceScore;
 
             return {
                 candidate,
-                score,
-                sharedTagCount,
+                hasSemanticOverlap,
+                semanticSharedTagCount,
+                genericSharedTagCount,
                 sameCategoryScore,
+                priceScore,
+                imageScore,
             };
         })
-        .sort((left, right) => right.score - left.score || right.sharedTagCount - left.sharedTagCount || right.sameCategoryScore - left.sameCategoryScore || left.candidate.name.localeCompare(right.candidate.name))
+        .sort((left, right) => right.hasSemanticOverlap - left.hasSemanticOverlap
+            || right.semanticSharedTagCount - left.semanticSharedTagCount
+            || right.sameCategoryScore - left.sameCategoryScore
+            || right.genericSharedTagCount - left.genericSharedTagCount
+            || right.priceScore - left.priceScore
+            || right.imageScore - left.imageScore
+            || left.candidate.name.localeCompare(right.candidate.name))
         .slice(0, limit)
         .map((entry) => entry.candidate);
 

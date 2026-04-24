@@ -3,6 +3,7 @@
 import { createServer } from "@/lib/supabase/server";
 import type { ItemType, TagType } from "@/types/itemType";
 import { logServerError } from "@/lib/logging/server";
+import { getCategorySlug, toTagSlug } from '@/lib/items/tagMetadata';
 
 type ItemTagRow = {
     item_id: string
@@ -17,6 +18,36 @@ type ItemTagRow = {
 
 type TaggedItemRow = {
     items: ItemType[] | null
+}
+
+type CategoryNameRow = {
+    name: string
+}
+
+type ItemCategoryRow = {
+    categories: { name: string } | null
+}
+
+async function assertTagNameDoesNotDuplicateCategory(name: string) {
+    const supabase = await createServer();
+    const candidateSlug = toTagSlug(name)
+    const { data: categories, error } = await supabase
+        .from('categories')
+        .select('name')
+        .eq('is_deleted', false)
+
+    if (error) {
+        await logServerError('tags.assertTagNameDoesNotDuplicateCategory', error, { name, candidateSlug })
+        throw new Error('Unable to validate tag name against categories')
+    }
+
+    const categorySlugs = new Set(((categories ?? []) as CategoryNameRow[])
+        .map((category) => getCategorySlug(category.name))
+        .filter((slug): slug is string => Boolean(slug)))
+
+    if (categorySlugs.has(candidateSlug)) {
+        throw new Error('Tag names cannot match a category name. Use a more specific theme or attribute.')
+    }
 }
 
 export async function getAllTags() {
@@ -37,9 +68,10 @@ export async function getAllTags() {
 
 export async function createTag(name: string, description?: string) {
     const supabase = await createServer();
+    await assertTagNameDoesNotDuplicateCategory(name)
     
     // Create slug from name
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = toTagSlug(name);
     
     const { data: tag, error } = await supabase
         .from('tags')
@@ -57,8 +89,9 @@ export async function createTag(name: string, description?: string) {
 
 export async function updateTag(id: string, name: string, description?: string) {
     const supabase = await createServer();
+    await assertTagNameDoesNotDuplicateCategory(name)
     
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = toTagSlug(name);
     
     const { data: tag, error } = await supabase
         .from('tags')
@@ -91,6 +124,24 @@ export async function deleteTag(id: string) {
 
 export async function addTagToItem(itemId: string, tagId: string) {
     const supabase = await createServer();
+    const [{ data: item }, { data: tag }] = await Promise.all([
+        supabase
+            .from('items')
+            .select('categories(name)')
+            .eq('id', itemId)
+            .maybeSingle(),
+        supabase
+            .from('tags')
+            .select('slug')
+            .eq('id', tagId)
+            .maybeSingle(),
+    ])
+
+    const itemCategorySlug = getCategorySlug(((item as ItemCategoryRow | null)?.categories?.name) ?? null)
+
+    if (itemCategorySlug && tag?.slug === itemCategorySlug) {
+        throw new Error('This tag duplicates the product category. Use a more specific theme or attribute instead.')
+    }
     
     const { error } = await supabase
         .from('items_tags')

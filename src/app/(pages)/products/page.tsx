@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getAllItems } from '@/lib/items/get';
-import { getAllTags } from '@/lib/items/tags';
+import { getStorefrontTagsForItems } from '@/lib/items/storefrontTags';
 import ProductsClient from '@/components/ProductsClient';
 import ProductListStructuredData from '@/components/seo/ProductListStructuredData';
 
@@ -22,7 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Products(){
     const { items } = await getAllItems();
-    const { tags } = await getAllTags();
     const structuredDataDescription = 'Shop handmade cake toppers, party boxes, and celebration decor across the full Cute & Creative collection.';
 
     if (!items || items.length === 0) {
@@ -36,7 +35,7 @@ export default async function Products(){
     return (
         <>
             <ProductListStructuredData items={items} title="Shop Our Collection" description={structuredDataDescription} />
-            <ProductsClient initialItems={items} initialTags={tags} />
+            <ProductsClient initialItems={items} initialTags={getStorefrontTagsForItems(items)} />
         </>
     );
 }

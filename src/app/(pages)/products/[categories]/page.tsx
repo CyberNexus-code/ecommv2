@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getItemsByCategory } from "@/lib/items/get";
-import { getAllTags } from "@/lib/items/tags";
+import { getStorefrontTagsForItems } from "@/lib/items/storefrontTags";
 import { formatCategoryDisplayName } from "@/lib/items/categories";
 import ProductsCategoryClient from "@/components/ProductsCategoryClient";
 import ProductListStructuredData from '@/components/seo/ProductListStructuredData';
@@ -31,7 +31,6 @@ export default async function ProductCategories({ params }: Props){
     const displayCategory = formatCategoryDisplayName(categories);
 
     const {items, error} = await getItemsByCategory(categories);
-    const { tags } = await getAllTags();
 
     if(error){
         return <div>Error Loading Products</div>
@@ -49,7 +48,7 @@ export default async function ProductCategories({ params }: Props){
                         <ProductsCategoryClient 
                             categoryName={categories} 
                             initialItems={items}
-                            initialTags={tags}
+                            initialTags={getStorefrontTagsForItems(items)}
                         />
                 </>
     );
