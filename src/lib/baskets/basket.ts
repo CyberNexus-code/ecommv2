@@ -27,6 +27,13 @@ type PlacedOrderRow = {
     }[]
 }
 
+type OrderUpdateFields = Partial<{
+    recipient_name: string
+    recipient_age: number
+    recipient_date: string
+    comments: string | null
+}>
+
 export async function addToBasket(itemId: string, quantity: number) {
 
     const supabase = await createServer();
@@ -73,7 +80,7 @@ export async function placeOrderLogic(
 
     // Update the order with the new fields
     if (options) {
-        const updateFields: Record<string, any> = {};
+        const updateFields: OrderUpdateFields = {};
         if (options.recipient_name) updateFields.recipient_name = options.recipient_name;
         if (options.recipient_age !== undefined) updateFields.recipient_age = options.recipient_age;
         if (options.recipient_date) updateFields.recipient_date = options.recipient_date;

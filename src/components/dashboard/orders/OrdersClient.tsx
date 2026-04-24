@@ -5,7 +5,7 @@ import OrderListContianer from "@/components/dashboard/orders/orderlistcontainer
 import type { Order } from "@/types/order";
 
 export default function OrdersClient({ orders, referencePrefix }: { orders: Order[]; referencePrefix: string }) {
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const filteredOrders = (orders ?? []).filter(order => {

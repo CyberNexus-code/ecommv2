@@ -9,6 +9,16 @@ type PlaceOrderFormProps = {
   basketId: string
 }
 
+type PlaceOrderFormState = {
+  error: string | null
+  success: boolean
+}
+
+const initialState: PlaceOrderFormState = {
+  error: null,
+  success: false,
+}
+
 export default function PlaceOrderForm({ basketId }: PlaceOrderFormProps) {
   const [recipientDate, setRecipientDate] = useState("");
   const [recipientName, setRecipientName] = useState("");
@@ -16,7 +26,7 @@ export default function PlaceOrderForm({ basketId }: PlaceOrderFormProps) {
   const [comments, setComments] = useState("");
   const [hasConfirmedCheckout, setHasConfirmedCheckout] = useState(false);
   const [inlineErrors, setInlineErrors] = useState<{[key:string]:string}>({});
-  const [state, formAction, pending] = useActionState(async (prevState: any, formData: FormData) => {
+  const [state, formAction, pending] = useActionState(async (_prevState: PlaceOrderFormState, formData: FormData) => {
     try {
       await placeOrder(formData)
       // Reset form fields on success
@@ -26,16 +36,16 @@ export default function PlaceOrderForm({ basketId }: PlaceOrderFormProps) {
       setComments("");
       setHasConfirmedCheckout(false);
       return { error: null, success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       // On error, repopulate state from formData
       setRecipientDate(formData.get("recipient_date") as string || "");
       setRecipientName(formData.get("recipient_name") as string || "");
       setRecipientAge(formData.get("recipient_age") as string || "");
       setComments(formData.get("comments") as string || "");
       setHasConfirmedCheckout(formData.get("checkout_confirmation") === "accepted");
-      return { error: err.message || 'An error occurred.', success: false };
+      return { error: err instanceof Error ? err.message : 'An error occurred.', success: false };
     }
-  }, { error: null, success: false })
+  }, initialState)
 
   function validateInline() {
     const errors: {[key:string]:string} = {};

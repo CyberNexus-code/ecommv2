@@ -234,13 +234,15 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
       return
     }
 
+    const railElement = rail
+
     function syncRelatedRailMetrics() {
-      const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0)
+      const maxScrollLeft = Math.max(railElement.scrollWidth - railElement.clientWidth, 0)
       const hasOverflow = maxScrollLeft > 0
-      const thumbWidthPercent = hasOverflow ? Math.max((rail.clientWidth / rail.scrollWidth) * 100, 18) : 100
+      const thumbWidthPercent = hasOverflow ? Math.max((railElement.clientWidth / railElement.scrollWidth) * 100, 18) : 100
       const availableTrackPercent = Math.max(100 - thumbWidthPercent, 0)
       const thumbOffsetPercent = hasOverflow && maxScrollLeft > 0
-        ? (rail.scrollLeft / maxScrollLeft) * availableTrackPercent
+        ? (railElement.scrollLeft / maxScrollLeft) * availableTrackPercent
         : 0
 
       setRelatedRailMetrics({
@@ -251,11 +253,11 @@ export default function ProductDetailsClient({ item, relatedItems }: ProductDeta
     }
 
     syncRelatedRailMetrics()
-    rail.addEventListener('scroll', syncRelatedRailMetrics, { passive: true })
+    railElement.addEventListener('scroll', syncRelatedRailMetrics, { passive: true })
     window.addEventListener('resize', syncRelatedRailMetrics)
 
     return () => {
-      rail.removeEventListener('scroll', syncRelatedRailMetrics)
+      railElement.removeEventListener('scroll', syncRelatedRailMetrics)
       window.removeEventListener('resize', syncRelatedRailMetrics)
     }
   }, [relatedItems.length])

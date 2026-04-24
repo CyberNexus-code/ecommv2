@@ -102,7 +102,12 @@ export async function getItemById(id: string){
     return { item, error }
 }
 
-export async function getRelatedItems(item: { id: string; category_id: string | null; items_tags?: { tags: { slug: string } | null }[] }, limit = 6) {
+export async function getRelatedItems(
+    item: Pick<ItemType, 'id' | 'category_id' | 'categories'> & {
+        items_tags?: { tags: { slug: string } | null }[]
+    },
+    limit = 6,
+) {
 
     const supabase = await createServer();
     const { data: items, error } = await supabase

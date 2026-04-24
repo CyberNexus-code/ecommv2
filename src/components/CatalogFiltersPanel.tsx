@@ -1,7 +1,7 @@
 'use client'
 
 import { AdjustmentsHorizontalIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import TagFilter from '@/components/TagFilter'
 import type { TagType } from '@/types/itemType'
 
@@ -31,12 +31,6 @@ export default function CatalogFiltersPanel({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [desktopTagsOpen, setDesktopTagsOpen] = useState(selectedTags.length > 0)
   const activeFilterCount = selectedTags.length + (searchInput.trim() ? 1 : 0)
-
-  useEffect(() => {
-    if (selectedTags.length > 0) {
-      setDesktopTagsOpen(true)
-    }
-  }, [selectedTags.length])
 
   if (mode === 'desktop') {
     return (

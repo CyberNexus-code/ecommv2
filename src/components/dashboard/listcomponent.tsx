@@ -5,7 +5,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
 import dynamic from "next/dynamic"
-import { Suspense } from "react"
 const EditProductModal = dynamic(() => import("./editproductmodal"), { loading: () => <div className="flex items-center justify-center p-8"><span>Loading...</span></div> })
 const EditCategoriesModal = dynamic(() => import("./editcategoriesmodal"), { loading: () => <div className="flex items-center justify-center p-8"><span>Loading...</span></div> })
 const AlertModal = dynamic(() => import("./alertModal"), { loading: () => <div className="flex items-center justify-center p-8"><span>Loading...</span></div> })

@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "start:test": "next start --hostname 127.0.0.1 --port 3000",
-    "lint": "eslint",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "test:lint": "npm run lint",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "db:introspect:dev": "node scripts/dev/export-supabase-introspection.mjs"
+    "db:introspect:dev": "node scripts/dev/export-supabase-introspection.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -33,6 +36,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.2",
+    "husky": "^9.1.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
