@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import Nav from '@/components/Nav/Nav'
+import BuiltByBlauwbyteBadge from '@/components/built-by-blauwbyte-badge'
 import { isAuthPath } from '@/lib/auth/paths'
 import { AuthProvider } from '@/lib/auth/context'
+import { siteName, siteShortName } from '@/lib/site'
 import type { CategoryType } from '@/types/categoryType'
 
 type AppShellProps = {
@@ -33,13 +35,21 @@ export default function AppShell({ categories, children }: AppShellProps) {
       <div className='no-scrollbar flex-1 overflow-y-auto'>
         <div className="flex min-h-full flex-col">
           <main id="main-content" className="flex-1">{children}</main>
-          <footer className="border-t border-rose-100 bg-white/85 px-4 py-5 backdrop-blur md:px-6">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 text-sm text-stone-600 md:flex-row md:items-center md:justify-between">
-              <p>© 2026 Cute & Creative Toppers. All rights reserved.</p>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <Link href="/privacy-policy" className="transition hover:text-rose-700">Privacy Policy</Link>
-                <Link href="/terms-of-service" className="transition hover:text-rose-700">Terms of Service</Link>
-                <Link href="/contact" className="transition hover:text-rose-700">Contact</Link>
+          <footer className="border-t border-rose-100 bg-white/85 px-4 py-4 backdrop-blur sm:py-5 md:px-6">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 text-sm text-stone-600 md:flex-row md:items-start md:justify-between md:gap-6">
+              <p className="leading-6">© 2026 {siteName}. All rights reserved.</p>
+              <div className="flex flex-col gap-2.5 md:max-w-[19rem] md:items-end">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 md:justify-end">
+                  <Link href="/privacy-policy" className="transition hover:text-rose-700">Privacy Policy</Link>
+                  <Link href="/terms-of-service" className="transition hover:text-rose-700">Terms of Service</Link>
+                  <Link href="/contact" className="transition hover:text-rose-700">Contact</Link>
+                </div>
+                <BuiltByBlauwbyteBadge
+                  className="max-w-[18rem] opacity-[0.78] transition-opacity hover:opacity-100 md:max-w-[19rem] md:justify-end"
+                  compact
+                  label={null}
+                  slogan={`The studio behind ${siteShortName}.`}
+                />
               </div>
             </div>
           </footer>
